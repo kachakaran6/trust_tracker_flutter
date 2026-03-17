@@ -5,6 +5,7 @@ import 'package:trust_tracker_flutter/core/constants/app_constants.dart';
 import 'package:trust_tracker_flutter/core/utils/extensions.dart';
 import 'package:trust_tracker_flutter/features/categories/data/models/category_model.dart';
 import 'package:trust_tracker_flutter/features/categories/data/repositories/category_repository.dart';
+import 'package:trust_tracker_flutter/core/utils/category_utils.dart';
 
 final categoryDropdownOptionsProvider =
     StreamProvider.autoDispose.family<List<CategoryModel>, CategoryType>(
@@ -79,8 +80,10 @@ class _TransactionCategoryDropdownState
             DropdownMenuEntry<int>(
               value: category.id,
               label: category.name,
-              leadingIcon:
-                  _CategoryDot(color: Color(category.colorHex.toColorInt())),
+              leadingIcon: Text(
+                CategoryUtils.getEmoji(category.iconName),
+                style: const TextStyle(fontSize: 18),
+              ),
             ),
           DropdownMenuEntry<int>(
             value: _addCategoryValue,
@@ -409,7 +412,7 @@ class _AddCategoryDialogState extends State<_AddCategoryDialog> {
           _selectedType,
           existingCategories.length,
         ),
-        iconName: 'category',
+        iconName: '📦', // Default for now, could be enhanced with a picker
         type: _selectedType,
       );
 

@@ -6,11 +6,13 @@ import 'package:go_router/go_router.dart';
 import 'package:trust_tracker_flutter/core/router/app_router.dart';
 import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
 import 'package:trust_tracker_flutter/core/utils/extensions.dart';
+import 'package:trust_tracker_flutter/core/utils/greeting_helper.dart';
 import 'package:trust_tracker_flutter/features/categories/data/repositories/category_repository.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
 import 'package:trust_tracker_flutter/features/transactions/presentation/providers/transaction_provider.dart';
 import 'package:trust_tracker_flutter/features/categories/data/models/category_model.dart';
+import 'package:trust_tracker_flutter/generated/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 // --- Providers ---
@@ -62,6 +64,7 @@ class DashboardPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final settings = ref.watch(settingsProvider);
     final summary = ref.watch(dashboardSummaryProvider);
     final recentAsync = ref.watch(recentTransactionsProvider);
@@ -96,11 +99,11 @@ class DashboardPage extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Recent Transactions',
+                    Text(l10n.recentTransactions,
                         style: Theme.of(context).textTheme.titleLarge),
                     TextButton(
                       onPressed: () => context.go('/transactions'),
-                      child: const Text('See all'),
+                      child: Text(l10n.seeAll),
                     ),
                   ],
                 ),
@@ -153,14 +156,14 @@ class DashboardPage extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Delete Transaction?'),
+        title: Text(AppLocalizations.of(context)!.deleteConfirmationTitle),
         content: Text(
-          'Are you sure you want to delete "${t.description}"?\nThis action cannot be undone.',
+          AppLocalizations.of(context)!.deleteConfirmationMessage(t.description),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -168,7 +171,7 @@ class DashboardPage extends ConsumerWidget {
               backgroundColor: const Color(0xFFEF4444),
               foregroundColor: Colors.white,
             ),
-            child: const Text('Delete'),
+            child: Text(AppLocalizations.of(context)!.delete),
           ),
         ],
       ),
@@ -195,15 +198,7 @@ class DashboardPage extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.end,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                      'Good ${_greeting()}, ${settings.userName.isNotEmpty ? settings.userName.split(' ').first : 'there'} 👋',
-                      style: GoogleFonts.inter(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: Theme.of(context)
-                              .textTheme
-                              .displayMedium
-                              ?.color)),
+                  _GreetingText(userName: settings.userName),
                   Text(now.toDisplayShort(),
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
@@ -230,11 +225,35 @@ class DashboardPage extends ConsumerWidget {
     );
   }
 
-  String _greeting() {
-    final h = DateTime.now().hour;
-    if (h < 12) return 'Morning';
-    if (h < 17) return 'Afternoon';
-    return 'Evening';
+}
+
+class _GreetingText extends StatelessWidget {
+  final String userName;
+  const _GreetingText({required this.userName});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final hour = DateTime.now().hour;
+    final name = userName.isNotEmpty ? userName.split(' ').first : 'there';
+
+    String greeting;
+    if (hour >= 5 && hour < 12) {
+      greeting = l10n.goodMorning(name);
+    } else if (hour >= 12 && hour < 17) {
+      greeting = l10n.goodAfternoon(name);
+    } else {
+      greeting = l10n.goodEvening(name);
+    }
+
+    return Text(
+      greeting,
+      style: GoogleFonts.inter(
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+        color: Theme.of(context).textTheme.displayMedium?.color,
+      ),
+    );
   }
 }
 
@@ -346,7 +365,7 @@ class _DashboardTransactionTile extends StatelessWidget {
               backgroundColor: cs3.primary,
               foregroundColor: cs3.onPrimary,
               icon: Icons.edit_outlined,
-              label: 'Edit',
+              label: AppLocalizations.of(context)!.edit,
               borderRadius: BorderRadius.circular(14),
             ),
           ],
@@ -360,7 +379,7 @@ class _DashboardTransactionTile extends StatelessWidget {
               backgroundColor: const Color(0xFFEF4444),
               foregroundColor: Colors.white,
               icon: Icons.delete_outline,
-              label: 'Delete',
+              label: AppLocalizations.of(context)!.delete,
               borderRadius: BorderRadius.circular(14),
             ),
           ],
@@ -406,7 +425,7 @@ class _DashboardTransactionTile extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis),
           Text(
-            '${category?.name ?? 'Uncategorized'} · ${transaction.date.toDisplayShort()}',
+            '${category?.name ?? AppLocalizations.of(context)!.uncategorized} · ${transaction.date.toDisplayShort()}',
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ]),
@@ -453,7 +472,7 @@ class _SummarySection extends StatelessWidget {
           ],
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Net Balance',
+          Text(AppLocalizations.of(context)!.netBalance,
               style: GoogleFonts.inter(
                   color: Colors.white.withOpacity(0.8), fontSize: 13)),
           const SizedBox(height: 4),
@@ -463,7 +482,7 @@ class _SummarySection extends StatelessWidget {
                   fontSize: 32,
                   fontWeight: FontWeight.w700)),
           const SizedBox(height: 4),
-          Text('This month',
+          Text(AppLocalizations.of(context)!.thisMonth,
               style: GoogleFonts.inter(
                   color: Colors.white.withOpacity(0.6), fontSize: 12)),
         ]),
@@ -472,7 +491,7 @@ class _SummarySection extends StatelessWidget {
       Row(children: [
         Expanded(
             child: _MiniCard(
-                label: 'Income',
+                label: AppLocalizations.of(context)!.income,
                 amount: income,
                 currency: currency,
                 color: AppColors.success500,
@@ -480,7 +499,7 @@ class _SummarySection extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
             child: _MiniCard(
-                label: 'Expenses',
+                label: AppLocalizations.of(context)!.expenses,
                 amount: expense,
                 currency: currency,
                 color: AppColors.danger500,
@@ -580,6 +599,7 @@ class _EmptyTransactions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 32),
@@ -587,7 +607,7 @@ class _EmptyTransactions extends StatelessWidget {
           Icon(Icons.receipt_long_outlined,
               size: 56, color: cs.onSurface.withOpacity(0.2)),
           const SizedBox(height: 12),
-          Text('No transactions yet',
+          Text(l10n.noTransactionsYet,
               style: GoogleFonts.inter(
                   color: cs.onSurface.withOpacity(0.45),
                   fontWeight: FontWeight.w500,
@@ -596,7 +616,7 @@ class _EmptyTransactions extends StatelessWidget {
           ElevatedButton.icon(
             onPressed: onAdd,
             icon: const Icon(Icons.add),
-            label: const Text('Add First Transaction'),
+            label: Text(l10n.addFirstTransaction),
           ),
         ]),
       ),

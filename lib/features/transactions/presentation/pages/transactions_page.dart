@@ -12,6 +12,7 @@ import 'package:trust_tracker_flutter/features/settings/presentation/providers/s
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:trust_tracker_flutter/features/transactions/presentation/widgets/export_bottom_sheet.dart';
+import 'package:trust_tracker_flutter/generated/app_localizations.dart';
 
 // ── Data structures ───────────────────────────────────────────────────────────
 
@@ -151,14 +152,14 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Delete Transaction?'),
+        title: Text(AppLocalizations.of(context)!.deleteConfirmationTitle),
         content: Text(
-          'Are you sure you want to delete "${t.description}"?\nThis action cannot be undone.',
+          AppLocalizations.of(context)!.deleteConfirmationMessage(t.description),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -166,7 +167,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
               backgroundColor: const Color(0xFFEF4444),
               foregroundColor: Colors.white,
             ),
-            child: const Text('Delete'),
+            child: Text(AppLocalizations.of(context)!.delete),
           ),
         ],
       ),
@@ -181,7 +182,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Transaction deleted'),
+          content: Text(AppLocalizations.of(context)!.transactionDeleted),
           behavior: SnackBarBehavior.floating,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -196,7 +197,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     txnsAsync.whenData((txns) {
       if (txns.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No transactions to export')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.noTransactionsExport)),
         );
         return;
       }
@@ -227,7 +228,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
         backgroundColor: theme.scaffoldBackgroundColor,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        title: Text('Transactions',
+        title: Text(AppLocalizations.of(context)!.transactions,
             style: GoogleFonts.inter(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
@@ -258,7 +259,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                   .read(_txnFilterProvider.notifier)
                   .update((s) => s.copyWith(search: v.toLowerCase())),
               decoration: InputDecoration(
-                hintText: 'Search transactions...',
+                hintText: AppLocalizations.of(context)!.searchTransactions,
                 prefixIcon: Icon(Icons.search_rounded,
                     color: cs.onSurface.withOpacity(0.4), size: 20),
                 suffixIcon: filter.search.isNotEmpty
@@ -278,17 +279,25 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
           ),
           const SizedBox(height: 10),
 
-          // ── Filter chips ────────────────────────────────────────────
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: ['all', 'income', 'expense'].map((f) {
                 final isSelected = filter.filter == f;
+                String label;
+                if (f == 'all') {
+                  label = AppLocalizations.of(context)!.all;
+                } else if (f == 'income') {
+                  label = AppLocalizations.of(context)!.income;
+                } else {
+                  label = AppLocalizations.of(context)!.expense;
+                }
+
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: FilterChip(
-                    label: Text(f[0].toUpperCase() + f.substring(1)),
+                    label: Text(label),
                     selected: isSelected,
                     onSelected: (_) => ref
                         .read(_txnFilterProvider.notifier)
@@ -328,8 +337,8 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                 const SizedBox(width: 4),
                 Text(
                   isTapMode
-                      ? 'Tap to edit  •  Use ✕ icon to delete'
-                      : 'Swipe for Edit or Delete • Tap icon to Duplicate',
+                      ? AppLocalizations.of(context)!.tapToEdit
+                      : AppLocalizations.of(context)!.swipeToEdit,
                   style: GoogleFonts.inter(
                       fontSize: 11, color: cs.onSurface.withOpacity(0.4)),
                 ),
@@ -416,7 +425,7 @@ class _DaySection extends StatelessWidget {
             children: [
               Text(
                 group.date.isSameDay(DateTime.now())
-                    ? 'Today'
+                    ? AppLocalizations.of(context)!.today
                     : group.date.toDisplayShort(),
                 style: GoogleFonts.inter(
                     fontSize: 12,
@@ -566,7 +575,7 @@ class _SwipeableTransactionTile extends StatelessWidget {
               backgroundColor: const Color(0xFFEF4444),
               foregroundColor: Colors.white,
               icon: Icons.delete_outline,
-              label: 'Delete',
+              label: AppLocalizations.of(context)!.delete,
               borderRadius: BorderRadius.circular(14),
             ),
           ],
@@ -580,7 +589,7 @@ class _SwipeableTransactionTile extends StatelessWidget {
               backgroundColor: cs.primary,
               foregroundColor: cs.onPrimary,
               icon: Icons.edit_outlined,
-              label: 'Edit',
+              label: AppLocalizations.of(context)!.edit,
               borderRadius: BorderRadius.circular(14),
             ),
           ],
@@ -641,7 +650,7 @@ class _SwipeableTransactionTile extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                '${category?.name ?? 'Uncategorized'} · ${transaction.createdAt.toTimestamp()}',
+                '${category?.name ?? AppLocalizations.of(context)!.uncategorized} · ${transaction.createdAt.toTimestamp()}',
                 style: GoogleFonts.inter(
                     fontSize: 11, color: cs.onSurface.withOpacity(0.45)),
                 maxLines: 1,
@@ -700,14 +709,14 @@ class _EmptyState extends StatelessWidget {
           Icon(Icons.receipt_long_outlined,
               size: 64, color: cs.onSurface.withOpacity(0.2)),
           const SizedBox(height: 12),
-          Text('No transactions found',
+          Text(AppLocalizations.of(context)!.noTransactions,
               style: GoogleFonts.inter(
                   color: cs.onSurface.withOpacity(0.45), fontSize: 15)),
           const SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: onAdd,
             icon: const Icon(Icons.add),
-            label: const Text('Add Transaction'),
+            label: Text(AppLocalizations.of(context)!.addTransaction),
           ),
         ],
       ),

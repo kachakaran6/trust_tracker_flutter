@@ -118,7 +118,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
-          return SetPinPage(isChangingPin: extra?['changing'] == true);
+          return SetPinPage(
+            isChangingPin: extra?['changing'] == true,
+            isDisabling: extra?['disabling'] == true,
+          );
         },
       ),
       // ── Stateful Shell — preserves tab state across switches ─────────────

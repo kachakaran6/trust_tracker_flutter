@@ -18,6 +18,12 @@ class AppConstants {
     {'code': 'MXN', 'symbol': '\$', 'name': 'Mexican Peso'},
   ];
 
+  static const List<String> categoryIcons = [
+    '💰', '💸', '🥗', '🚋', '🛒', '📚', '💊', '🏠', '💻', '📈', '🎬', '⚡', '📦',
+    '🍔', '☕', '🚗', '🛠️', '🎁', '✈️', '🎮', '🕹️', '👗', '🏋️', '🐱', '🐶', '🍕',
+    '🚲', '⛽', '🍿', '💡', '🧼', '🍼', '🍎', '🍰', '🏟️', '🏖️'
+  ];
+
   // Default category color options
   static const List<String> categoryColors = [
     '#3B82F6', // Blue
@@ -40,69 +46,70 @@ class AppConstants {
       'name': 'Salary',
       'type': 'income',
       'color': '#10B981',
-      'icon': 'briefcase'
+      'icon': '💰'
     },
     {
       'name': 'Freelance',
       'type': 'income',
       'color': '#3B82F6',
-      'icon': 'laptop'
+      'icon': '💻'
     },
     {
       'name': 'Investment',
       'type': 'income',
       'color': '#8B5CF6',
-      'icon': 'trending_up'
+      'icon': '📈'
     },
     {
       'name': 'Food & Dining',
       'type': 'expense',
       'color': '#F97316',
-      'icon': 'restaurant'
+      'icon': '🥗'
     },
-    {'name': 'Transport', 'type': 'expense', 'color': '#06B6D4', 'icon': 'car'},
+    {'name': 'Transport', 'type': 'expense', 'color': '#06B6D4', 'icon': '🚋'},
     {
       'name': 'Shopping',
       'type': 'expense',
       'color': '#EC4899',
-      'icon': 'shopping_bag'
+      'icon': '🛒'
     },
     {
       'name': 'Entertainment',
       'type': 'expense',
       'color': '#8B5CF6',
-      'icon': 'movie'
+      'icon': '🎬'
     },
-    {'name': 'Health', 'type': 'expense', 'color': '#EF4444', 'icon': 'heart'},
+    {'name': 'Health', 'type': 'expense', 'color': '#EF4444', 'icon': '💊'},
     {
       'name': 'Utilities',
       'type': 'expense',
       'color': '#6366F1',
-      'icon': 'bolt'
+      'icon': '⚡'
     },
     {
       'name': 'Education',
       'type': 'expense',
       'color': '#F59E0B',
-      'icon': 'school'
+      'icon': '📚'
     },
     {
       'name': 'Rent/Housing',
       'type': 'expense',
       'color': '#14B8A6',
-      'icon': 'home'
+      'icon': '🏠'
     },
     {
       'name': 'Other',
       'type': 'expense',
       'color': '#6B7280',
-      'icon': 'category'
+      'icon': '📦'
     },
   ];
 
   // SharedPreferences Keys
   static const String prefCurrency = 'pref_currency';
   static const String prefTheme = 'pref_theme';
+  static const String prefLanguage = 'pref_language';
   static const String prefUserName = 'pref_user_name';
   static const String prefIsFirstRun = 'pref_is_first_run';
 }

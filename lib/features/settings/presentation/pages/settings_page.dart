@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:trust_tracker_flutter/core/services/update_service.dart';
+import 'package:trust_tracker_flutter/generated/app_localizations.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -47,12 +48,14 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
     final isTapMode =
         settings.transactionActionMode == TransactionActionMode.tap;
 
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: Text(l10n.settings)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // â”€â”€ Profile card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          // ── Profile card ──────────────────────────────────────────
           _SectionCard(
             children: [
               Row(children: [
@@ -76,10 +79,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                       children: [
                         Text(
                             settings.userName.isEmpty
-                                ? 'Set your name'
+                                ? l10n.setName
                                 : settings.userName,
                             style: theme.textTheme.headlineSmall),
-                        Text('Trust Tracker User',
+                        Text(l10n.trustTrackerUser,
                             style: theme.textTheme.bodySmall),
                       ]),
                 ),
@@ -87,9 +90,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
               const SizedBox(height: 16),
               TextField(
                 controller: _nameController,
-                decoration: const InputDecoration(
-                  hintText: 'Your name',
-                  prefixIcon: Icon(Icons.person_outline),
+                decoration: InputDecoration(
+                  hintText: l10n.yourName,
+                  prefixIcon: const Icon(Icons.person_outline),
                 ),
                 onChanged: (v) =>
                     ref.read(settingsProvider.notifier).setUserName(v),
@@ -98,13 +101,40 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
           ),
           const SizedBox(height: 16),
 
-          // â”€â”€ Appearance â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          // ── Appearance ─────────────────────────────────────────────
           _SettingsSection(
-            title: 'Appearance',
+            title: l10n.language,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: DropdownButtonFormField<String>(
+                  value: settings.languageCode,
+                  dropdownColor: cs.surface,
+                  decoration: InputDecoration(
+                    prefixIcon: Icon(Icons.language, color: cs.onSurface.withOpacity(0.6)),
+                  ),
+                  items: [
+                    DropdownMenuItem(value: 'en', child: Text(l10n.english)),
+                    DropdownMenuItem(value: 'hi', child: Text(l10n.hindi)),
+                    DropdownMenuItem(value: 'gu', child: Text(l10n.gujarati)),
+                  ],
+                  onChanged: (code) {
+                    if (code != null) {
+                      ref.read(settingsProvider.notifier).setLanguage(code);
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          _SettingsSection(
+            title: l10n.appearance,
             children: [
               _SettingsToggle(
                 icon: Icons.dark_mode_outlined,
-                label: 'Dark Mode',
+                label: l10n.darkMode,
                 value: settings.isDarkMode,
                 onChanged: (v) =>
                     ref.read(settingsProvider.notifier).setDarkMode(v),
@@ -113,9 +143,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
           ),
           const SizedBox(height: 16),
 
-          // â”€â”€ Currency â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          // ── Currency ──────────────────────────────────────────────
           _SettingsSection(
-            title: 'Currency',
+            title: l10n.currency,
             children: [
               Padding(
                 padding:
@@ -131,7 +161,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                       .map((c) => DropdownMenuItem(
                           value: c['code'],
                           child: Text(
-                              '${c['code']} â€” ${c['name']} (${c['symbol']})',
+                              '${c['code']} — ${c['name']} (${c['symbol']})',
                               style: GoogleFonts.inter(
                                   fontSize: 13, color: cs.onSurface))))
                       .toList(),
@@ -146,9 +176,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
           ),
           const SizedBox(height: 16),
 
-          // â”€â”€ Transaction Interaction â”€â”€ Issue 8 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          // ── Transaction Interaction ── Issue 8 ──────────────────
           _SettingsSection(
-            title: 'Transactions',
+            title: l10n.transactions,
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
@@ -167,13 +197,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Transaction Action Mode',
+                            Text(l10n.transactionActionMode,
                                 style: theme.textTheme.bodyMedium),
                             const SizedBox(height: 2),
                             Text(
                               isTapMode
-                                  ? 'Tap to edit â€¢ Delete icon visible'
-                                  : 'Swipe right to delete â€¢ Swipe left to edit',
+                                  ? l10n.tapModeDetails
+                                  : l10n.swipeModeDetails,
                               style: GoogleFonts.inter(
                                   fontSize: 11,
                                   color: cs.onSurface.withOpacity(0.4)),
@@ -189,6 +219,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                     // Premium Sliding Segmented Control
                     _SlidingSegmentedControl(
                       isSelected: isTapMode,
+                      l10n: l10n,
                       onModeChanged: (mode) => ref
                           .read(settingsProvider.notifier)
                           .setTransactionActionMode(mode),
@@ -203,11 +234,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
 
 
           _SettingsSection(
-            title: 'Security',
+            title: l10n.security,
             children: [
               _SettingsTile(
                 icon: Icons.lock_outline,
-                label: security.isPinEnabled ? 'Change PIN' : 'Set PIN Lock',
+                label: security.isPinEnabled ? l10n.changePin : l10n.setPin,
                 trailing: security.isPinEnabled
                     ? Container(
                         padding: const EdgeInsets.symmetric(
@@ -228,42 +259,40 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
               if (security.isPinEnabled)
                 _SettingsTile(
                   icon: Icons.lock_open_outlined,
-                  label: 'Disable PIN Lock',
+                  label: l10n.disablePin,
                   iconColor: cs.error,
                   onTap: () async {
                     final confirm = await showDialog<bool>(
                       context: context,
                       builder: (dialogCtx) => AlertDialog(
-                        title: const Text('Disable PIN?'),
-                        content: const Text(
-                            'Your app will no longer require a PIN to open.'),
+                        title: Text(l10n.disablePinConfirm),
+                        content: Text(
+                            l10n.disablePinDetails),
                         actions: [
                           TextButton(
                               onPressed: () =>
                                   Navigator.of(dialogCtx).pop(false),
-                              child: const Text('Cancel')),
+                              child: Text(l10n.cancel)),
                           ElevatedButton(
                               onPressed: () =>
                                   Navigator.of(dialogCtx).pop(true),
                               style: ElevatedButton.styleFrom(
                                   backgroundColor: cs.error,
                                   foregroundColor: cs.onError),
-                              child: const Text('Disable')),
+                              child: Text(l10n.disablePin)),
                         ],
                       ),
                     );
 
                     if (confirm == true && mounted) {
-                      // FIX Issue 3: Ensure the dialog is completely gone
-                      // before we trigger a state update that forces a router refresh.
-                      await ref.read(securityProvider.notifier).disablePin();
+                      context.push('/set-pin', extra: {'disabling': true});
                     }
                   },
                 ),
               if (security.canUseBiometrics && security.isPinEnabled)
                 _SettingsToggle(
                   icon: Icons.fingerprint,
-                  label: 'Biometric Unlock',
+                  label: l10n.biometricUnlock,
                   value: security.isBiometricEnabled,
                   onChanged: (v) =>
                       ref.read(securityProvider.notifier).setBiometric(v),
@@ -272,13 +301,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
           ),
           const SizedBox(height: 16),
 
-          // â”€â”€ Support â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          // ── Support ────────────────────────────────────────────────
           _SettingsSection(
-            title: 'Support',
+            title: l10n.support,
             children: [
               _SettingsTile(
                 icon: Icons.star_outline_rounded,
-                label: 'Rate App',
+                label: l10n.rateApp,
                 iconColor: const Color(0xFFF59E0B),
                 onTap: () async {
                   const url =
@@ -291,7 +320,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
               ),
               _SettingsTile(
                 icon: Icons.share_outlined,
-                label: 'Share App',
+                label: l10n.shareApp,
                 iconColor: const Color(0xFF6366F1),
                 onTap: () {
                 Share.share(
@@ -315,27 +344,27 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
           const SizedBox(height: 16),
 
           _SettingsSection(
-            title: 'Data',
+            title: l10n.data,
             children: [
               _SettingsTile(
                 icon: Icons.category_outlined,
-                label: 'Manage Categories',
+                label: l10n.manageCategories,
                 onTap: () => context.push('/categories'),
               ),
               _SettingsTile(
                 icon: Icons.account_balance_wallet_outlined,
-                label: 'Set Monthly Budgets',
+                label: l10n.setMonthlyBudgets,
                 onTap: () => context.push('/budget'),
               ),
             ],
           ),
 
           _SettingsSection(
-            title: 'About',
+            title: l10n.about,
             children: [
               _SettingsTile(
                 icon: Icons.update_rounded,
-                label: 'Check for Updates',
+                label: l10n.checkForUpdates,
                 onTap: () async {
                   final updateService = ref.read(updateServiceProvider);
                   final hasUpdate = await updateService.manualCheck(context);
@@ -344,7 +373,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content:
-                            const Text('You are already on the latest version'),
+                            Text(l10n.latestVersion),
                         behavior: SnackBarBehavior.floating,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
@@ -355,7 +384,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
               ),
               _SettingsTile(
                 icon: Icons.info_outline_rounded,
-                label: 'Terms & Privacy',
+                label: l10n.termsPrivacy,
                 onTap: () {},
               ),
             ],
@@ -370,7 +399,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
               builder: (context, snapshot) {
                 final version = snapshot.data ?? '1.0.0';
                 return Text(
-                  'Trust Tracker v$version\nOffline & Private â€” Your data stays on your device',
+                  'Trust Tracker v$version\n${l10n.offlineNote}',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.inter(
                       color: cs.onSurface.withOpacity(0.35),
@@ -387,15 +416,17 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
   }
 }
 
-// â”€â”€ Sliding Segmented Control â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Sliding Segmented Control ──────────────────────────────────
 
 class _SlidingSegmentedControl extends StatelessWidget {
   final bool isSelected; // false = Swipe, true = Tap
   final ValueChanged<TransactionActionMode> onModeChanged;
+  final AppLocalizations l10n;
 
   const _SlidingSegmentedControl({
     required this.isSelected,
     required this.onModeChanged,
+    required this.l10n,
   });
 
   @override
@@ -446,7 +477,7 @@ class _SlidingSegmentedControl extends StatelessWidget {
             children: [
               _ModeLabel(
                 icon: Icons.swipe_rounded,
-                label: 'Swipe Mode',
+                label: l10n.swipeMode,
                 selected: !isSelected,
                 onTap: () {
                   HapticFeedback.lightImpact();
@@ -455,7 +486,7 @@ class _SlidingSegmentedControl extends StatelessWidget {
               ),
               _ModeLabel(
                 icon: Icons.touch_app_outlined,
-                label: 'Tap Mode',
+                label: l10n.tapMode,
                 selected: isSelected,
                 onTap: () {
                   HapticFeedback.lightImpact();
@@ -522,7 +553,7 @@ class _ModeLabel extends StatelessWidget {
   }
 }
 
-// â”€â”€ Reusable UI components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Reusable UI components ────────────────────────────────────
 
 class _SectionCard extends StatelessWidget {
   final List<Widget> children;

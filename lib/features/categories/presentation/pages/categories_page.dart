@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
 import 'package:trust_tracker_flutter/core/constants/app_constants.dart';
 import 'package:trust_tracker_flutter/core/utils/extensions.dart';
+import 'package:trust_tracker_flutter/core/utils/category_utils.dart';
 import 'package:trust_tracker_flutter/features/categories/data/models/category_model.dart';
 import 'package:trust_tracker_flutter/features/categories/data/repositories/category_repository.dart';
 // FIX Issue 9: Import analytics providers so we can invalidate them
 import 'package:trust_tracker_flutter/features/analytics/presentation/pages/analytics_page.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:trust_tracker_flutter/generated/app_localizations.dart';
 
 // FIX Issue 9: Use autoDispose so the provider refreshes each time this
 // screen is opened (no stale cache).
@@ -37,7 +39,9 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
   Future<void> _showCategoryDialog({CategoryModel? editing}) async {
     final nameCtrl = TextEditingController(text: editing?.name ?? '');
     String selectedColor = editing?.colorHex ?? '#3B82F6';
+    String selectedIcon = editing?.iconName ?? '📦';
     CategoryType selectedType = editing?.type ?? CategoryType.expense;
+    final l10n = AppLocalizations.of(context)!;
 
     await showModalBottomSheet(
       context: context,
@@ -52,16 +56,16 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
               top: 24,
               bottom: MediaQuery.of(context).viewInsets.bottom + 32),
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(editing == null ? 'New Category' : 'Edit Category',
+            Text(editing == null ? l10n.newCategory : l10n.editCategory,
                 style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700)),
             const SizedBox(height: 16),
             TextField(
               controller: nameCtrl,
               autofocus: true,
-              decoration: const InputDecoration(hintText: 'Category name'),
+              decoration: InputDecoration(hintText: l10n.categoryName),
             ),
             const SizedBox(height: 16),
-            Text('Type', style: Theme.of(context).textTheme.labelLarge),
+            Text(l10n.type, style: Theme.of(context).textTheme.labelLarge),
             const SizedBox(height: 8),
             Row(children: CategoryType.values.map((t) {
               final isSelected = selectedType == t;
@@ -79,7 +83,7 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        t == CategoryType.income ? '💰 Income' : '💸 Expense',
+                        t == CategoryType.income ? '💰 ${l10n.income}' : '💸 ${l10n.expense}',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.inter(
                             fontWeight: FontWeight.w600,
@@ -91,11 +95,42 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
               );
             }).toList()),
             const SizedBox(height: 16),
-            Text('Color', style: Theme.of(context).textTheme.labelLarge),
+            Text(l10n.icon, style: Theme.of(context).textTheme.labelLarge),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 44,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: AppConstants.categoryIcons.map((emoji) {
+                  final isSelected = selectedIcon == emoji;
+                  return GestureDetector(
+                    onTap: () => setModalState(() => selectedIcon = emoji),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(
+                        color: isSelected ? AppColors.primary500 : AppColors.gray100,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isSelected ? Colors.white : Colors.transparent,
+                          width: 2,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(emoji, style: const TextStyle(fontSize: 20)),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(l10n.color, style: Theme.of(context).textTheme.labelLarge),
             const SizedBox(height: 8),
             Wrap(
-              spacing: 10,
-              runSpacing: 8,
+              spacing: 12,
+              runSpacing: 10,
               children: AppConstants.categoryColors.map((hex) {
                 final color = Color(hex.toColorInt());
                 final isSelected = selectedColor == hex;
@@ -131,20 +166,21 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
                   if (editing != null) {
                     editing.name = name;
                     editing.colorHex = selectedColor;
+                    editing.iconName = selectedIcon;
                     editing.type = selectedType;
                     await repo.update(editing);
                   } else {
                     await repo.add(CategoryModel.create(
                         name: name,
                         colorHex: selectedColor,
-                        iconName: 'category',
+                        iconName: selectedIcon,
                         type: selectedType));
                   }
                   // FIX: Invalidate and pop modal context
                   _invalidateAll();
                   if (mounted) Navigator.of(ctx).pop();
                 },
-                child: Text(editing == null ? 'Create Category' : 'Update'),
+                child: Text(editing == null ? l10n.createCategory : l10n.update),
               ),
             ),
           ]),
@@ -156,10 +192,11 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
   @override
   Widget build(BuildContext context) {
     final catsAsync = ref.watch(_allCategoriesListProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Categories'),
+        title: Text(AppLocalizations.of(context)!.categories),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -170,7 +207,7 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
       body: catsAsync.when(
         data: (cats) {
           if (cats.isEmpty) {
-            return const Center(child: Text('No categories yet.'));
+            return Center(child: Text(AppLocalizations.of(context)!.noCategoriesYet));
           }
           final income = cats.where((c) => c.type == CategoryType.income).toList();
           final expense = cats.where((c) => c.type == CategoryType.expense).toList();
@@ -179,14 +216,14 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
             padding: const EdgeInsets.all(16),
             children: [
               if (income.isNotEmpty) ...[
-                _SectionHeader(label: 'Income (${income.length})'),
+                _SectionHeader(label: '${l10n.income} (${income.length})'),
                 ...income.map((c) => _CategoryTile(
                     cat: c,
                     onEdit: () => _showCategoryDialog(editing: c),
                     onDelete: () async {
                       if (c.isDefault) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Can't delete default categories")));
+                          SnackBar(content: Text(AppLocalizations.of(context)!.cantDeleteDefault)));
                         return;
                       }
                       await ref.read(categoryRepositoryProvider).delete(c.id);
@@ -195,14 +232,14 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
               ],
               if (expense.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                _SectionHeader(label: 'Expense (${expense.length})'),
+                _SectionHeader(label: '${l10n.expense} (${expense.length})'),
                 ...expense.map((c) => _CategoryTile(
                     cat: c,
                     onEdit: () => _showCategoryDialog(editing: c),
                     onDelete: () async {
                       if (c.isDefault) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Can't delete default categories")));
+                          SnackBar(content: Text(AppLocalizations.of(context)!.cantDeleteDefault)));
                         return;
                       }
                       await ref.read(categoryRepositoryProvider).delete(c.id);
@@ -259,8 +296,8 @@ class _CategoryTile extends StatelessWidget {
           decoration:
               BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(12)),
           child: Center(
-            child: Text(cat.name[0].toUpperCase(),
-                style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: color)),
+            child: Text(CategoryUtils.getEmoji(cat.iconName),
+                style: const TextStyle(fontSize: 20)),
           ),
         ),
         const SizedBox(width: 12),
@@ -273,7 +310,7 @@ class _CategoryTile extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
                 color: AppColors.gray100, borderRadius: BorderRadius.circular(8)),
-            child: Text('Default',
+            child: Text(AppLocalizations.of(context)!.defaultLabel,
                 style: GoogleFonts.inter(fontSize: 10, color: AppColors.gray500)),
           ),
         IconButton(icon: const Icon(Icons.edit_outlined, size: 18), onPressed: onEdit),

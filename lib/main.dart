@@ -9,6 +9,7 @@ import 'package:trust_tracker_flutter/core/di/providers.dart';
 import 'package:trust_tracker_flutter/core/security/security_provider.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
 import 'package:trust_tracker_flutter/core/services/update_service.dart';
+import 'package:trust_tracker_flutter/generated/app_localizations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -96,6 +97,9 @@ class _TrustTrackerAppState extends ConsumerState<TrustTrackerApp>
       darkTheme: AppTheme.dark,
       themeMode: settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
       routerConfig: router,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      locale: Locale(settings.languageCode),
     );
   }
 }

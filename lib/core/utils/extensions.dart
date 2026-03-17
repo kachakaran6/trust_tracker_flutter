@@ -20,21 +20,11 @@ extension CurrencyFormat on double {
   }
 
   static String _getSymbol(String code) {
-    const symbols = {
-      'USD': '\$',
-      'EUR': '€',
-      'GBP': '£',
-      'INR': '₹',
-      'JPY': '¥',
-      'CAD': 'C\$',
-      'AUD': 'A\$',
-      'BRL': 'R\$',
-      'CNY': '¥',
-      'CHF': 'CHF',
-      'KRW': '₩',
-      'MXN': '\$',
-    };
-    return symbols[code] ?? code;
+    try {
+      return NumberFormat.simpleCurrency(name: code).currencySymbol;
+    } catch (_) {
+      return code;
+    }
   }
 }
 

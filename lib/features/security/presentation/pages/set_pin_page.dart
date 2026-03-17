@@ -6,6 +6,8 @@ import 'package:trust_tracker_flutter/core/security/security_provider.dart';
 import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:trust_tracker_flutter/generated/app_localizations.dart';
+
 /// Multi-step PIN setup/change screen.
 ///
 /// Modes:
@@ -13,7 +15,12 @@ import 'package:google_fonts/google_fonts.dart';
 ///  - [isChangingPin] = true  → Change PIN flow: Verify Old → Enter New → Confirm New → Save
 class SetPinPage extends ConsumerStatefulWidget {
   final bool isChangingPin;
-  const SetPinPage({super.key, this.isChangingPin = false});
+  final bool isDisabling;
+  const SetPinPage({
+    super.key,
+    this.isChangingPin = false,
+    this.isDisabling = false,
+  });
 
   @override
   ConsumerState<SetPinPage> createState() => _SetPinPageState();
@@ -37,7 +44,9 @@ class _SetPinPageState extends ConsumerState<SetPinPage>
   @override
   void initState() {
     super.initState();
-    _step = widget.isChangingPin ? _PinStep.verifyOld : _PinStep.enterNew;
+    _step = (widget.isChangingPin || widget.isDisabling)
+        ? _PinStep.verifyOld
+        : _PinStep.enterNew;
     _shakeController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
@@ -54,30 +63,35 @@ class _SetPinPageState extends ConsumerState<SetPinPage>
   }
 
   String get _title {
+    final l10n = AppLocalizations.of(context)!;
     switch (_step) {
       case _PinStep.verifyOld:
-        return 'Verify Current PIN';
+        return widget.isDisabling ? l10n.disablePin : l10n.verifyCurrentPin;
       case _PinStep.enterNew:
-        return widget.isChangingPin ? 'Enter New PIN' : 'Set a PIN';
+        return widget.isChangingPin ? l10n.enterNewPin : l10n.setPin;
       case _PinStep.confirmNew:
-        return 'Confirm PIN';
+        return l10n.confirmPin;
     }
   }
 
   String get _subtitle {
+    final l10n = AppLocalizations.of(context)!;
     switch (_step) {
       case _PinStep.verifyOld:
-        return 'Enter your existing PIN to continue';
+        return widget.isDisabling
+            ? l10n.enterPinToDisable
+            : l10n.enterExistingPin;
       case _PinStep.enterNew:
         return widget.isChangingPin
-            ? 'Choose a new 4-digit PIN'
-            : 'This protects your financial data';
+            ? l10n.chooseNewPin
+            : l10n.protectFinancialData;
       case _PinStep.confirmNew:
-        return 'Re-enter your PIN to confirm';
+        return l10n.reEnterPinToConfirm;
     }
   }
 
   int get _stepNumber {
+    if (widget.isDisabling) return 1;
     if (!widget.isChangingPin) return _step == _PinStep.enterNew ? 1 : 2;
     switch (_step) {
       case _PinStep.verifyOld:
@@ -89,7 +103,10 @@ class _SetPinPageState extends ConsumerState<SetPinPage>
     }
   }
 
-  int get _totalSteps => widget.isChangingPin ? 3 : 2;
+  int get _totalSteps {
+    if (widget.isDisabling) return 1;
+    return widget.isChangingPin ? 3 : 2;
+  }
 
   void _onKeyTap(String digit) {
     if (_pin.length >= 4 || _isLoading) return;
@@ -117,11 +134,31 @@ class _SetPinPageState extends ConsumerState<SetPinPage>
         final isValid =
             await ref.read(securityProvider.notifier).verifyOldPin(enteredPin);
         if (isValid) {
-          setState(() {
-            _pin.clear();
-            _step = _PinStep.enterNew;
-            _isLoading = false;
-          });
+          if (widget.isDisabling) {
+            await ref.read(securityProvider.notifier).disablePin();
+            setState(() => _isLoading = false);
+            if (mounted) {
+              final messenger = ScaffoldMessenger.of(context);
+              final l10n = AppLocalizations.of(context)!;
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text('✅ ${l10n.pinDisabledSuccess}'),
+                  backgroundColor: AppColors.success500,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+              );
+              await Future.delayed(const Duration(milliseconds: 600));
+              if (mounted) context.pop();
+            }
+          } else {
+            setState(() {
+              _pin.clear();
+              _step = _PinStep.enterNew;
+              _isLoading = false;
+            });
+          }
         } else {
           await _showError();
         }
@@ -145,12 +182,13 @@ class _SetPinPageState extends ConsumerState<SetPinPage>
             // in tree, then pop. Using a post-frame callback for the pop
             // ensures the snackbar message is queued before navigation.
             final messenger = ScaffoldMessenger.of(context);
+            final l10n = AppLocalizations.of(context)!;
             messenger.showSnackBar(
               SnackBar(
                 content: Text(
                   widget.isChangingPin
-                      ? '✅ PIN changed successfully'
-                      : '✅ PIN set successfully',
+                      ? '✅ ${l10n.pinChangedSuccess}'
+                      : '✅ ${l10n.pinSetSuccess}',
                 ),
                 backgroundColor: AppColors.success500,
                 behavior: SnackBarBehavior.floating,
@@ -272,8 +310,10 @@ class _SetPinPageState extends ConsumerState<SetPinPage>
               child: Text(
                 _hasError
                     ? (_step == _PinStep.verifyOld
-                        ? 'Incorrect PIN. Please try again.'
-                        : 'PINs don\'t match. Starting over.')
+                        ? (widget.isDisabling
+                            ? AppLocalizations.of(context)!.incorrectPinDisable
+                            : AppLocalizations.of(context)!.incorrectPin)
+                        : AppLocalizations.of(context)!.pinsDontMatch)
                     : _subtitle,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(

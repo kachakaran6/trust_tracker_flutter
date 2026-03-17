@@ -15,12 +15,15 @@ class SettingsState {
   final bool isFirstRun;
   final TransactionActionMode transactionActionMode;
 
+  final String languageCode;
+
   const SettingsState({
     this.currency = 'USD',
     this.userName = '',
     this.isDarkMode = false,
     this.isFirstRun = true,
     this.transactionActionMode = TransactionActionMode.swipe,
+    this.languageCode = 'en',
   });
 
   SettingsState copyWith({
@@ -29,6 +32,7 @@ class SettingsState {
     bool? isDarkMode,
     bool? isFirstRun,
     TransactionActionMode? transactionActionMode,
+    String? languageCode,
   }) {
     return SettingsState(
       currency: currency ?? this.currency,
@@ -37,6 +41,7 @@ class SettingsState {
       isFirstRun: isFirstRun ?? this.isFirstRun,
       transactionActionMode:
           transactionActionMode ?? this.transactionActionMode,
+      languageCode: languageCode ?? this.languageCode,
     );
   }
 }
@@ -56,6 +61,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
           transactionActionMode: _prefs.getString(_kTxnActionMode) == 'tap'
               ? TransactionActionMode.tap
               : TransactionActionMode.swipe,
+          languageCode: _prefs.getString(AppConstants.prefLanguage) ?? 'en',
         ));
 
   Future<void> setCurrency(String code) async {
@@ -77,6 +83,11 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     await _prefs.setString(
         _kTxnActionMode, mode == TransactionActionMode.tap ? 'tap' : 'swipe');
     state = state.copyWith(transactionActionMode: mode);
+  }
+
+  Future<void> setLanguage(String code) async {
+    await _prefs.setString(AppConstants.prefLanguage, code);
+    state = state.copyWith(languageCode: code);
   }
 
 
