@@ -5,8 +5,12 @@ import 'package:trust_tracker_flutter/core/constants/app_constants.dart';
 import 'package:trust_tracker_flutter/core/utils/extensions.dart';
 import 'package:trust_tracker_flutter/features/categories/data/models/category_model.dart';
 import 'package:trust_tracker_flutter/features/categories/data/repositories/category_repository.dart';
+// FIX Issue 9: Import analytics providers so we can invalidate them
+import 'package:trust_tracker_flutter/features/analytics/presentation/pages/analytics_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+// FIX Issue 9: Use autoDispose so the provider refreshes each time this
+// screen is opened (no stale cache).
 final _allCategoriesListProvider = FutureProvider.autoDispose<List<CategoryModel>>((ref) {
   return ref.watch(categoryRepositoryProvider).getAll();
 });
@@ -19,6 +23,17 @@ class CategoriesPage extends ConsumerStatefulWidget {
 }
 
 class _CategoriesPageState extends ConsumerState<CategoriesPage> {
+  /// Invalidates all providers that depend on categories so real-time
+  /// updates propagate immediately — no app restart needed.
+  void _invalidateAll() {
+    ref.invalidate(_allCategoriesListProvider);
+    // Keep analytics category labels/colors and monthly pie data in sync.
+    ref.invalidate(expenseSpendingProvider);
+    ref.invalidate(incomeSpendingProvider);
+    ref.invalidate(trendDataProvider);
+    ref.invalidate(analyticsExpenseCatsProvider);
+  }
+
   Future<void> _showCategoryDialog({CategoryModel? editing}) async {
     final nameCtrl = TextEditingController(text: editing?.name ?? '');
     String selectedColor = editing?.colorHex ?? '#3B82F6';
@@ -42,6 +57,7 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
             const SizedBox(height: 16),
             TextField(
               controller: nameCtrl,
+              autofocus: true,
               decoration: const InputDecoration(hintText: 'Category name'),
             ),
             const SizedBox(height: 16),
@@ -124,8 +140,9 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
                         iconName: 'category',
                         type: selectedType));
                   }
-                  ref.invalidate(_allCategoriesListProvider);
-                  if (mounted) Navigator.pop(context);
+                  // FIX: Invalidate and pop modal context
+                  _invalidateAll();
+                  if (mounted) Navigator.of(ctx).pop();
                 },
                 child: Text(editing == null ? 'Create Category' : 'Update'),
               ),
@@ -173,7 +190,7 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
                         return;
                       }
                       await ref.read(categoryRepositoryProvider).delete(c.id);
-                      ref.invalidate(_allCategoriesListProvider);
+                      _invalidateAll();
                     })),
               ],
               if (expense.isNotEmpty) ...[
@@ -189,7 +206,7 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
                         return;
                       }
                       await ref.read(categoryRepositoryProvider).delete(c.id);
-                      ref.invalidate(_allCategoriesListProvider);
+                      _invalidateAll();
                     })),
               ],
               const SizedBox(height: 80),
@@ -267,5 +284,3 @@ class _CategoryTile extends StatelessWidget {
     );
   }
 }
-
-

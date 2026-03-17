@@ -50,11 +50,10 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
   Future<void> _tryBiometric() async {
     final security = ref.read(securityProvider);
     if (!security.isBiometricEnabled) return;
-    final success =
-        await ref.read(securityProvider.notifier).authenticateBiometric();
-    if (success && mounted) {
-      context.go('/dashboard');
-    }
+    
+    // Slight delay to ensure the UI is ready for the native prompt
+    await Future.delayed(const Duration(milliseconds: 300));
+    await ref.read(securityProvider.notifier).authenticateBiometric();
   }
 
   void _onKeyTap(String digit) {
@@ -79,9 +78,7 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
     final success = await ref
         .read(securityProvider.notifier)
         .verifyPin(_pin.join());
-    if (success && mounted) {
-      context.go('/dashboard');
-    } else {
+    if (!success) {
       HapticFeedback.vibrate();
       _shakeController.forward(from: 0);
       await Future.delayed(const Duration(milliseconds: 400));
@@ -94,6 +91,7 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
         if (mounted) setState(() => _hasError = false);
       }
     }
+    // Navigation is handled automatically by GoRouter via refreshListenable
   }
 
   @override

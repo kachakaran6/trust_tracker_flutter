@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:trust_tracker_flutter/core/constants/app_constants.dart';
@@ -7,6 +8,7 @@ import 'package:trust_tracker_flutter/features/settings/presentation/providers/s
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:trust_tracker_flutter/core/services/update_service.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -15,21 +17,26 @@ class SettingsPage extends ConsumerStatefulWidget {
   ConsumerState<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends ConsumerState<SettingsPage> {
+class _SettingsPageState extends ConsumerState<SettingsPage>
+    with WidgetsBindingObserver {
   late TextEditingController _nameController;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _nameController =
         TextEditingController(text: ref.read(settingsProvider).userName);
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _nameController.dispose();
     super.dispose();
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -37,13 +44,15 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final security = ref.watch(securityProvider);
     final cs = Theme.of(context).colorScheme;
     final theme = Theme.of(context);
+    final isTapMode =
+        settings.transactionActionMode == TransactionActionMode.tap;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // ── Profile card ──────────────────────────────────────────
+          // â”€â”€ Profile card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           _SectionCard(
             children: [
               Row(children: [
@@ -89,7 +98,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           ),
           const SizedBox(height: 16),
 
-          // ── Appearance ────────────────────────────────────────────
+          // â”€â”€ Appearance â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           _SettingsSection(
             title: 'Appearance',
             children: [
@@ -104,7 +113,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           ),
           const SizedBox(height: 16),
 
-          // ── Currency ──────────────────────────────────────────────
+          // â”€â”€ Currency â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           _SettingsSection(
             title: 'Currency',
             children: [
@@ -122,7 +131,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       .map((c) => DropdownMenuItem(
                           value: c['code'],
                           child: Text(
-                              '${c['code']} — ${c['name']} (${c['symbol']})',
+                              '${c['code']} â€” ${c['name']} (${c['symbol']})',
                               style: GoogleFonts.inter(
                                   fontSize: 13, color: cs.onSurface))))
                       .toList(),
@@ -137,7 +146,62 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           ),
           const SizedBox(height: 16),
 
-          // ── Security ──────────────────────────────────────────────
+          // â”€â”€ Transaction Interaction â”€â”€ Issue 8 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          _SettingsSection(
+            title: 'Transactions',
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(children: [
+                      Icon(
+                          isTapMode
+                              ? Icons.touch_app_outlined
+                              : Icons.swipe_rounded,
+                          size: 20,
+                          color: cs.onSurface.withOpacity(0.55)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Transaction Action Mode',
+                                style: theme.textTheme.bodyMedium),
+                            const SizedBox(height: 2),
+                            Text(
+                              isTapMode
+                                  ? 'Tap to edit â€¢ Delete icon visible'
+                                  : 'Swipe right to delete â€¢ Swipe left to edit',
+                              style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  color: cs.onSurface.withOpacity(0.4)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ]),
+                    const SizedBox(height: 12),
+                    const SizedBox(height: 12),
+                    // Polished Segmented Control for Action Mode
+                    const SizedBox(height: 12),
+                    // Premium Sliding Segmented Control
+                    _SlidingSegmentedControl(
+                      isSelected: isTapMode,
+                      onModeChanged: (mode) => ref
+                          .read(settingsProvider.notifier)
+                          .setTransactionActionMode(mode),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+
           _SettingsSection(
             title: 'Security',
             children: [
@@ -159,8 +223,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       )
                     : null,
                 onTap: () => context.push('/set-pin',
-                    extra:
-                        security.isPinEnabled ? {'changing': true} : null),
+                    extra: security.isPinEnabled ? {'changing': true} : null),
               ),
               if (security.isPinEnabled)
                 _SettingsTile(
@@ -170,16 +233,18 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   onTap: () async {
                     final confirm = await showDialog<bool>(
                       context: context,
-                      builder: (_) => AlertDialog(
+                      builder: (dialogCtx) => AlertDialog(
                         title: const Text('Disable PIN?'),
                         content: const Text(
                             'Your app will no longer require a PIN to open.'),
                         actions: [
                           TextButton(
-                              onPressed: () => Navigator.pop(context, false),
+                              onPressed: () =>
+                                  Navigator.of(dialogCtx).pop(false),
                               child: const Text('Cancel')),
                           ElevatedButton(
-                              onPressed: () => Navigator.pop(context, true),
+                              onPressed: () =>
+                                  Navigator.of(dialogCtx).pop(true),
                               style: ElevatedButton.styleFrom(
                                   backgroundColor: cs.error,
                                   foregroundColor: cs.onError),
@@ -187,10 +252,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                         ],
                       ),
                     );
-                    if (confirm == true) {
-                      await ref
-                          .read(securityProvider.notifier)
-                          .disablePin();
+
+                    if (confirm == true && mounted) {
+                      // FIX Issue 3: Ensure the dialog is completely gone
+                      // before we trigger a state update that forces a router refresh.
+                      await ref.read(securityProvider.notifier).disablePin();
                     }
                   },
                 ),
@@ -206,7 +272,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           ),
           const SizedBox(height: 16),
 
-          // ── Support ───────────────────────────────────────────────
+          // â”€â”€ Support â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           _SettingsSection(
             title: 'Support',
             children: [
@@ -215,7 +281,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 label: 'Rate App',
                 iconColor: const Color(0xFFF59E0B),
                 onTap: () async {
-                  const url = 'https://play.google.com/store/apps/details?id=YOUR_APP_PACKAGE';
+                  const url =
+                      'https://play.google.com/store/apps/details?id=com.trusttracker.trust_tracker_flutter';
                   final uri = Uri.parse(url);
                   if (await canLaunchUrl(uri)) {
                     await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -227,10 +294,20 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 label: 'Share App',
                 iconColor: const Color(0xFF6366F1),
                 onTap: () {
-                  Share.share(
-                    'Check out Trust Tracker — a private, offline-first expense tracker:\nhttps://play.google.com/store/apps/details?id=YOUR_APP_PACKAGE',
-                    subject: 'Trust Tracker App',
-                  );
+                Share.share(
+  'Take control of your personal finances with Trust Tracker.\n\n'
+  'Trust Tracker is a private, offline-first expense tracker designed to help you manage your income, expenses, and budgets with ease.\n\n'
+  'Key Features:\n'
+  '• Simple expense and income tracking\n'
+  '• Budget management and financial insights\n'
+  '• Secure PIN and biometric protection\n'
+  '• Completely offline and privacy focused\n'
+  '• Clean and easy-to-use interface\n\n'
+  'Download the app from the Google Play Store:\n'
+  'https://play.google.com/store/apps/details?id=com.trusttracker.trust_tracker_flutter\n\n'
+  'Your feedback and support would mean a lot.',
+  subject: 'Trust Tracker – Smart Expense Tracker',
+);
                 },
               ),
             ],
@@ -253,17 +330,54 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ],
           ),
 
+          _SettingsSection(
+            title: 'About',
+            children: [
+              _SettingsTile(
+                icon: Icons.update_rounded,
+                label: 'Check for Updates',
+                onTap: () async {
+                  final updateService = ref.read(updateServiceProvider);
+                  final hasUpdate = await updateService.manualCheck(context);
+
+                  if (!hasUpdate && mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content:
+                            const Text('You are already on the latest version'),
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                    );
+                  }
+                },
+              ),
+              _SettingsTile(
+                icon: Icons.info_outline_rounded,
+                label: 'Terms & Privacy',
+                onTap: () {},
+              ),
+            ],
+          ),
+
           const SizedBox(height: 24),
 
           // App info
           Center(
-            child: Text(
-              'Trust Tracker v1.0.0\nOffline & Private — Your data stays on your device',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                  color: cs.onSurface.withOpacity(0.35),
-                  fontSize: 12,
-                  height: 1.8),
+            child: FutureBuilder<String>(
+              future: ref.read(updateServiceProvider).getCurrentVersion(),
+              builder: (context, snapshot) {
+                final version = snapshot.data ?? '1.0.0';
+                return Text(
+                  'Trust Tracker v$version\nOffline & Private â€” Your data stays on your device',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                      color: cs.onSurface.withOpacity(0.35),
+                      fontSize: 12,
+                      height: 1.8),
+                );
+              },
             ),
           ),
           const SizedBox(height: 80),
@@ -273,7 +387,142 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 }
 
-// ── Reusable UI components ────────────────────────────────────────────────────
+// â”€â”€ Sliding Segmented Control â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+class _SlidingSegmentedControl extends StatelessWidget {
+  final bool isSelected; // false = Swipe, true = Tap
+  final ValueChanged<TransactionActionMode> onModeChanged;
+
+  const _SlidingSegmentedControl({
+    required this.isSelected,
+    required this.onModeChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      height: 48,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: isDark
+            ? const Color(0xFF1F2937).withOpacity(0.5)
+            : cs.surfaceContainerHighest.withOpacity(0.4),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: cs.outlineVariant.withOpacity(isDark ? 0.1 : 0.3),
+        ),
+      ),
+      child: Stack(
+        children: [
+          // The Sliding Pill
+          AnimatedAlign(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOutCubic,
+            alignment:
+                isSelected ? Alignment.centerRight : Alignment.centerLeft,
+            child: FractionallySizedBox(
+              widthFactor: 0.5,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: cs.primary,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: cs.primary.withOpacity(0.35),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // Interactive Labels
+          Row(
+            children: [
+              _ModeLabel(
+                icon: Icons.swipe_rounded,
+                label: 'Swipe Mode',
+                selected: !isSelected,
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  onModeChanged(TransactionActionMode.swipe);
+                },
+              ),
+              _ModeLabel(
+                icon: Icons.touch_app_outlined,
+                label: 'Tap Mode',
+                selected: isSelected,
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  onModeChanged(TransactionActionMode.tap);
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ModeLabel extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _ModeLabel({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Center(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: selected
+                    ? Colors.white
+                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  color: selected
+                      ? Colors.white
+                      : Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.4),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// â”€â”€ Reusable UI components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _SectionCard extends StatelessWidget {
   final List<Widget> children;
@@ -324,6 +573,7 @@ class _SettingsSection extends StatelessWidget {
     ]);
   }
 }
+
 
 class _SettingsToggle extends StatelessWidget {
   final IconData icon;
@@ -380,11 +630,12 @@ class _SettingsTile extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(children: [
-          Icon(icon, size: 20, color: iconColor ?? cs.onSurface.withOpacity(0.55)),
+          Icon(icon,
+              size: 20, color: iconColor ?? cs.onSurface.withOpacity(0.55)),
           const SizedBox(width: 12),
           Expanded(
-              child: Text(label,
-                  style: Theme.of(context).textTheme.bodyMedium)),
+              child:
+                  Text(label, style: Theme.of(context).textTheme.bodyMedium)),
           if (trailing != null) ...[trailing!, const SizedBox(width: 4)],
           Icon(Icons.chevron_right,
               color: cs.onSurface.withOpacity(0.3), size: 18),

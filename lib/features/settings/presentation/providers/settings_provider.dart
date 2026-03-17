@@ -3,17 +3,24 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trust_tracker_flutter/core/constants/app_constants.dart';
 import 'package:trust_tracker_flutter/core/utils/currency_detector.dart';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Transaction Action Mode — Issue 8
+// ─────────────────────────────────────────────────────────────────────────────
+enum TransactionActionMode { swipe, tap }
+
 class SettingsState {
   final String currency;
   final String userName;
   final bool isDarkMode;
   final bool isFirstRun;
+  final TransactionActionMode transactionActionMode;
 
   const SettingsState({
     this.currency = 'USD',
     this.userName = '',
     this.isDarkMode = false,
     this.isFirstRun = true,
+    this.transactionActionMode = TransactionActionMode.swipe,
   });
 
   SettingsState copyWith({
@@ -21,28 +28,34 @@ class SettingsState {
     String? userName,
     bool? isDarkMode,
     bool? isFirstRun,
+    TransactionActionMode? transactionActionMode,
   }) {
     return SettingsState(
       currency: currency ?? this.currency,
       userName: userName ?? this.userName,
       isDarkMode: isDarkMode ?? this.isDarkMode,
       isFirstRun: isFirstRun ?? this.isFirstRun,
+      transactionActionMode:
+          transactionActionMode ?? this.transactionActionMode,
     );
   }
 }
+
+const _kTxnActionMode = 'txn_action_mode';
 
 class SettingsNotifier extends StateNotifier<SettingsState> {
   final SharedPreferences _prefs;
 
   SettingsNotifier(this._prefs)
       : super(SettingsState(
-          // If the user has previously saved a currency, use that.
-          // Otherwise detect from the device locale (first install).
           currency: _prefs.getString(AppConstants.prefCurrency) ??
               CurrencyDetector.detectSupported(),
           userName: _prefs.getString(AppConstants.prefUserName) ?? '',
           isDarkMode: _prefs.getBool(AppConstants.prefTheme) ?? false,
           isFirstRun: _prefs.getBool(AppConstants.prefIsFirstRun) ?? true,
+          transactionActionMode: _prefs.getString(_kTxnActionMode) == 'tap'
+              ? TransactionActionMode.tap
+              : TransactionActionMode.swipe,
         ));
 
   Future<void> setCurrency(String code) async {
@@ -60,6 +73,13 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     state = state.copyWith(isDarkMode: dark);
   }
 
+  Future<void> setTransactionActionMode(TransactionActionMode mode) async {
+    await _prefs.setString(
+        _kTxnActionMode, mode == TransactionActionMode.tap ? 'tap' : 'swipe');
+    state = state.copyWith(transactionActionMode: mode);
+  }
+
+
   Future<void> completeOnboarding(String name, String currency) async {
     await _prefs.setString(AppConstants.prefUserName, name);
     await _prefs.setString(AppConstants.prefCurrency, currency);
@@ -76,4 +96,3 @@ final settingsProvider =
     StateNotifierProvider<SettingsNotifier, SettingsState>((ref) {
   throw UnimplementedError('Initialize with SharedPreferences override');
 });
-

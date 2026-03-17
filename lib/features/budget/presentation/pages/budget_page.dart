@@ -7,6 +7,7 @@ import 'package:trust_tracker_flutter/features/budget/data/models/budget_model.d
 import 'package:trust_tracker_flutter/features/budget/presentation/providers/budget_provider.dart';
 import 'package:trust_tracker_flutter/features/categories/data/models/category_model.dart';
 import 'package:trust_tracker_flutter/features/categories/data/repositories/category_repository.dart';
+import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/repositories/transaction_repository.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -25,7 +26,7 @@ final _monthSpendingProvider =
   final monthKey = DateTime.now().toMonthKey();
   return ref
       .watch(transactionRepositoryProvider)
-      .getCategorySpendingForMonth(monthKey);
+      .getCategorySpendingForMonth(monthKey, TransactionType.expense);
 });
 
 // ── Page ──────────────────────────────────────────────────────────────────────

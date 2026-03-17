@@ -7,28 +7,59 @@ import 'package:trust_tracker_flutter/features/categories/data/models/category_m
 import 'package:trust_tracker_flutter/features/transactions/data/repositories/transaction_repository.dart';
 import 'package:trust_tracker_flutter/features/categories/data/repositories/category_repository.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
+import 'package:trust_tracker_flutter/features/transactions/presentation/providers/transaction_provider.dart';
+import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 
 // ── Providers ─────────────────────────────────────────────────────────────────
+// FIX (Issues 5, 9, 10): Watch transactionListProvider so analytics rebuilds
+// automatically whenever a transaction is added / edited / deleted.
+
+final selectedMonthProvider = StateProvider.autoDispose<DateTime>((ref) {
+  final now = DateTime.now();
+  return DateTime(now.year, now.month);
+});
 
 final trendDataProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) {
+  ref.watch(transactionListProvider);
   return ref.watch(transactionRepositoryProvider).getLast6MonthsTrend();
 });
 
-final categorySpendingProvider =
-    FutureProvider.autoDispose<Map<int, double>>((ref) {
-  final now = DateTime.now();
+final monthlySummaryProvider =
+    FutureProvider.autoDispose<Map<String, double>>((ref) {
+  ref.watch(transactionListProvider);
+  final month = ref.watch(selectedMonthProvider);
   return ref
       .watch(transactionRepositoryProvider)
-      .getCategorySpendingForMonth(now.toMonthKey());
+      .getMonthlySummary(month.toMonthKey());
 });
 
-/// Pre-load ALL expense categories to avoid FutureBuilder per legend row (old bug).
-final _analyticsExpenseCatsProvider =
+final expenseSpendingProvider =
+    FutureProvider.autoDispose<Map<int, double>>((ref) {
+  ref.watch(transactionListProvider);
+  final month = ref.watch(selectedMonthProvider);
+  return ref
+      .watch(transactionRepositoryProvider)
+      .getCategorySpendingForMonth(month.toMonthKey(), TransactionType.expense);
+});
+
+final incomeSpendingProvider =
+    FutureProvider.autoDispose<Map<int, double>>((ref) {
+  ref.watch(transactionListProvider);
+  final month = ref.watch(selectedMonthProvider);
+  return ref
+      .watch(transactionRepositoryProvider)
+      .getCategorySpendingForMonth(month.toMonthKey(), TransactionType.income);
+});
+
+/// Pre-load ALL categories — public so categories_page can invalidate it (Issue 9)
+final analyticsExpenseCatsProvider =
     FutureProvider.autoDispose<List<CategoryModel>>((ref) {
   return ref.watch(categoryRepositoryProvider).getAll();
 });
+
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
@@ -40,20 +71,176 @@ class AnalyticsPage extends ConsumerStatefulWidget {
 }
 
 class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
-  int _touchedIndex = -1;
+  int _touchedExpenseIndex = -1;
+  int _touchedIncomeIndex = -1;
+
+  void _previousMonth() {
+    final current = ref.read(selectedMonthProvider);
+    ref
+        .read(selectedMonthProvider.notifier)
+        .state = DateTime(current.year, current.month - 1);
+  }
+
+  void _nextMonth() {
+    final current = ref.read(selectedMonthProvider);
+    final now = DateTime.now();
+    final candidate = DateTime(current.year, current.month + 1);
+    if (candidate.isAfter(DateTime(now.year, now.month))) return;
+    ref.read(selectedMonthProvider.notifier).state = candidate;
+  }
 
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
+    final selectedMonth = ref.watch(selectedMonthProvider);
     final trendAsync = ref.watch(trendDataProvider);
-    final catSpendAsync = ref.watch(categorySpendingProvider);
-    final allCatsAsync = ref.watch(_analyticsExpenseCatsProvider);
+    final extAsync = ref.watch(expenseSpendingProvider);
+    final incAsync = ref.watch(incomeSpendingProvider);
+    final allCatsAsync = ref.watch(analyticsExpenseCatsProvider);
+    final summaryAsync = ref.watch(monthlySummaryProvider);
+    final cs = Theme.of(context).colorScheme;
+
+    final now = DateTime.now();
+    final canGoForward = selectedMonth.year < now.year ||
+        (selectedMonth.year == now.year && selectedMonth.month < now.month);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Analytics')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
         children: [
+          // ── Month Selector ──────────────────────────────────────────
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.chevron_left_rounded, size: 28),
+                onPressed: _previousMonth,
+                color: cs.onSurface,
+              ),
+              Text(
+                selectedMonth.toMonthYear(),
+                style: GoogleFonts.inter(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: cs.onSurface),
+              ),
+              IconButton(
+                icon: Icon(Icons.chevron_right_rounded, size: 28),
+                onPressed: canGoForward ? _nextMonth : null,
+                color: canGoForward
+                    ? cs.onSurface
+                    : cs.onSurface.withOpacity(0.2),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // ── Monthly Summary ──────────────────────────────────────────
+          summaryAsync.when(
+            data: (summary) {
+              final inc = summary['income'] ?? 0;
+              final exp = summary['expense'] ?? 0;
+              final bal = summary['balance'] ?? 0;
+
+              if (inc == 0 && exp == 0) {
+                return Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: cs.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'No transactions found for this month.',
+                      style: GoogleFonts.inter(
+                          color: cs.onSurface.withOpacity(0.5)),
+                    ),
+                  ),
+                );
+              }
+
+              return Row(
+                children: [
+                  Expanded(
+                    child: _SummaryCard(
+                      title: 'Income',
+                      amount: inc,
+                      currency: settings.currency,
+                      color: AppColors.success500,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _SummaryCard(
+                      title: 'Expense',
+                      amount: exp,
+                      currency: settings.currency,
+                      color: AppColors.danger500,
+                    ),
+                  ),
+                ],
+              );
+            },
+            loading: () => const _ChartSkeleton(height: 80),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
+          const SizedBox(height: 32),
+
+          // ── Expenses Pie Chart ──────────────────────────────────────
+          Text('Expense Breakdown',
+              style: Theme.of(context).textTheme.headlineSmall),
+          const SizedBox(height: 16),
+          extAsync.when(
+            data: (spendData) => allCatsAsync.when(
+              data: (cats) {
+                if (spendData.isEmpty) {
+                  return const _EmptyNamedChart(label: 'expenses');
+                }
+                return _PieChartSection(
+                  spendingData: spendData,
+                  categories: cats,
+                  currency: settings.currency,
+                  touchedIndex: _touchedExpenseIndex,
+                  onTouched: (idx) => setState(() => _touchedExpenseIndex = idx),
+                  themeMode: Theme.of(context).brightness,
+                );
+              },
+              loading: () => const _ChartSkeleton(height: 220),
+              error: (_, __) => const SizedBox.shrink(),
+            ),
+            loading: () => const _ChartSkeleton(height: 280),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
+          const SizedBox(height: 32),
+
+          // ── Income Pie Chart ──────────────────────────────────────
+          Text('Income Sources',
+              style: Theme.of(context).textTheme.headlineSmall),
+          const SizedBox(height: 16),
+          incAsync.when(
+            data: (spendData) => allCatsAsync.when(
+              data: (cats) {
+                if (spendData.isEmpty) {
+                  return const _EmptyNamedChart(label: 'income');
+                }
+                return _PieChartSection(
+                  spendingData: spendData,
+                  categories: cats,
+                  currency: settings.currency,
+                  touchedIndex: _touchedIncomeIndex,
+                  onTouched: (idx) => setState(() => _touchedIncomeIndex = idx),
+                  themeMode: Theme.of(context).brightness,
+                );
+              },
+              loading: () => const _ChartSkeleton(height: 220),
+              error: (_, __) => const SizedBox.shrink(),
+            ),
+            loading: () => const _ChartSkeleton(height: 280),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
+          const SizedBox(height: 32),
+
           // ── 6-month trend ──────────────────────────────────────────
           Text('6-Month Trend',
               style: Theme.of(context).textTheme.headlineSmall),
@@ -64,127 +251,158 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
             loading: () => const _ChartSkeleton(height: 220),
             error: (_, __) => const SizedBox.shrink(),
           ),
-          const SizedBox(height: 32),
-
-          // ── Category spending pie chart ─────────────────────────────
-          Text('Spending by Category',
-              style: Theme.of(context).textTheme.headlineSmall),
-          const SizedBox(height: 4),
-          Text(DateTime.now().toMonthYear(),
-              style: Theme.of(context).textTheme.bodySmall),
-          const SizedBox(height: 16),
-
-          catSpendAsync.when(
-            data: (catSpend) => allCatsAsync.when(
-              data: (cats) {
-                if (catSpend.isEmpty) {
-                  return const _EmptyChart();
-                }
-
-                // Build a lookup map for O(1) category name resolution
-                final catMap = {for (final c in cats) c.id: c};
-                final colors = kChartColors;
-                final entries = catSpend.entries.toList();
-                final total =
-                    entries.fold<double>(0, (s, e) => s + e.value);
-
-                return Column(children: [
-                  SizedBox(
-                    height: 220,
-                    child: PieChart(
-                      PieChartData(
-                        pieTouchData: PieTouchData(
-                          touchCallback: (event, resp) {
-                            if (!event.isInterestedForInteractions) return;
-                            setState(() {
-                              _touchedIndex = resp?.touchedSection
-                                      ?.touchedSectionIndex ??
-                                  -1;
-                            });
-                          },
-                        ),
-                        borderData: FlBorderData(show: false),
-                        sectionsSpace: 3,
-                        centerSpaceRadius: 60,
-                        sections: entries.asMap().entries.map((e) {
-                          final isTouched = e.key == _touchedIndex;
-                          final color = colors[e.key % colors.length];
-                          final pct = (e.value.value / total * 100)
-                              .toStringAsFixed(1);
-                          return PieChartSectionData(
-                            color: color,
-                            value: e.value.value,
-                            title: isTouched ? '$pct%' : '',
-                            radius: isTouched ? 65 : 55,
-                            titleStyle: GoogleFonts.inter(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 12),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  // Legend — NO FutureBuilder per row! Use the pre-loaded catMap.
-                  ...entries.asMap().entries.map((e) {
-                    final color = colors[e.key % colors.length];
-                    final pct =
-                        (e.value.value / total * 100).toStringAsFixed(1);
-                    final catName =
-                        catMap[e.value.key]?.name ?? 'Cat #${e.value.key}';
-                    final catColor = catMap[e.value.key] != null
-                        ? Color(catMap[e.value.key]!.colorHex.toColorInt())
-                        : color;
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).cardTheme.color,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                            color: Theme.of(context).brightness ==
-                                    Brightness.dark
-                                ? const Color(0xFF2D3748)
-                                : AppColors.gray200),
-                      ),
-                      child: Row(children: [
-                        Container(
-                          width: 12,
-                          height: 12,
-                          decoration: BoxDecoration(
-                              color: catColor,
-                              borderRadius: BorderRadius.circular(3)),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(catName,
-                              style: Theme.of(context).textTheme.bodyMedium),
-                        ),
-                        Text('$pct%',
-                            style: GoogleFonts.inter(
-                                fontWeight: FontWeight.w600, fontSize: 13)),
-                        const SizedBox(width: 8),
-                        Text(
-                          e.value.value.toCurrency(settings.currency),
-                          style: GoogleFonts.inter(
-                              color: AppColors.gray500, fontSize: 12),
-                        ),
-                      ]),
-                    );
-                  }),
-                ]);
-              },
-              loading: () => const _ChartSkeleton(height: 220),
-              error: (_, __) => const SizedBox.shrink(),
-            ),
-            loading: () => const _ChartSkeleton(height: 280),
-            error: (_, __) => const SizedBox.shrink(),
-          ),
         ],
       ),
     );
+  }
+}
+
+class _SummaryCard extends StatelessWidget {
+  final String title;
+  final double amount;
+  final String currency;
+  final Color color;
+
+  const _SummaryCard({
+    required this.title,
+    required this.amount,
+    required this.currency,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title,
+              style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: cs.onSurface.withOpacity(0.6))),
+          const SizedBox(height: 4),
+          Text(amount.toCurrency(currency),
+              style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: color)),
+        ],
+      ),
+    );
+  }
+}
+
+class _PieChartSection extends StatelessWidget {
+  final Map<int, double> spendingData;
+  final List<CategoryModel> categories;
+  final String currency;
+  final int touchedIndex;
+  final ValueChanged<int> onTouched;
+  final Brightness themeMode;
+
+  const _PieChartSection({
+    required this.spendingData,
+    required this.categories,
+    required this.currency,
+    required this.touchedIndex,
+    required this.onTouched,
+    required this.themeMode,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final catMap = {for (final c in categories) c.id: c};
+    final colors = kChartColors;
+    final entries = spendingData.entries.toList();
+    final total = entries.fold<double>(0, (s, e) => s + e.value);
+
+    return Column(children: [
+      SizedBox(
+        height: 220,
+        child: PieChart(
+          PieChartData(
+            pieTouchData: PieTouchData(
+              touchCallback: (event, resp) {
+                if (!event.isInterestedForInteractions) return;
+                onTouched(resp?.touchedSection?.touchedSectionIndex ?? -1);
+              },
+            ),
+            borderData: FlBorderData(show: false),
+            sectionsSpace: 3,
+            centerSpaceRadius: 60,
+            sections: entries.asMap().entries.map((e) {
+              final isTouched = e.key == touchedIndex;
+              final color = colors[e.key % colors.length];
+              final pct = (e.value.value / total * 100).toStringAsFixed(1);
+              final catColor = catMap[e.value.key] != null
+                  ? Color(catMap[e.value.key]!.colorHex.toColorInt())
+                  : color;
+              
+              return PieChartSectionData(
+                color: catColor,
+                value: e.value.value,
+                title: isTouched ? '$pct%' : '',
+                radius: isTouched ? 65 : 55,
+                titleStyle: GoogleFonts.inter(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12),
+              );
+            }).toList(),
+          ),
+        ),
+      ),
+      const SizedBox(height: 16),
+      ...entries.asMap().entries.map((e) {
+        final color = colors[e.key % colors.length];
+        final pct = (e.value.value / total * 100).toStringAsFixed(1);
+        final catName = catMap[e.value.key]?.name ?? 'Cat #${e.value.key}';
+        final catColor = catMap[e.value.key] != null
+            ? Color(catMap[e.value.key]!.colorHex.toColorInt())
+            : color;
+        return Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardTheme.color,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+                color: themeMode == Brightness.dark
+                    ? const Color(0xFF2D3748)
+                    : AppColors.gray200),
+          ),
+          child: Row(children: [
+            Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                  color: catColor, borderRadius: BorderRadius.circular(3)),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child:
+                  Text(catName, style: Theme.of(context).textTheme.bodyMedium),
+            ),
+            Text('$pct%',
+                style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w600, fontSize: 13)),
+            const SizedBox(width: 8),
+            Text(
+              e.value.value.toCurrency(currency),
+              style: GoogleFonts.inter(color: AppColors.gray500, fontSize: 12),
+            ),
+          ]),
+        );
+      }),
+    ]);
   }
 }
 
@@ -328,18 +546,21 @@ class _ChartSkeleton extends StatelessWidget {
   }
 }
 
-class _EmptyChart extends StatelessWidget {
-  const _EmptyChart();
+class _EmptyNamedChart extends StatelessWidget {
+  final String label;
+
+  const _EmptyNamedChart({required this.label});
+
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.symmetric(vertical: 24),
         child: Column(children: [
-          const Icon(Icons.pie_chart_outline,
-              size: 52, color: AppColors.gray300),
+          Icon(Icons.pie_chart_outline,
+              size: 42, color: AppColors.gray300.withOpacity(0.5)),
           const SizedBox(height: 12),
-          Text('No expense data for this month',
+          Text('No $label data to display',
               style: GoogleFonts.inter(color: AppColors.gray500)),
         ]),
       ),

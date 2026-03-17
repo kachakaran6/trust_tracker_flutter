@@ -63,12 +63,13 @@ class TransactionRepository {
     return {'income': income, 'expense': expense, 'balance': income - expense};
   }
 
-  // Category spending for a month
-  Future<Map<int, double>> getCategorySpendingForMonth(String monthKey) async {
+  // Category spending for a month by transaction type
+  Future<Map<int, double>> getCategorySpendingForMonth(
+      String monthKey, TransactionType type) async {
     final txns = await _db.transactionModels
         .filter()
         .monthKeyEqualTo(monthKey)
-        .typeEqualTo(TransactionType.expense)
+        .typeEqualTo(type)
         .findAll();
 
     final Map<int, double> result = {};

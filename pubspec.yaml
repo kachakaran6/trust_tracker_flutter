@@ -1,7 +1,7 @@
 name: trust_tracker_flutter
 description: Trust Tracker - Offline-first personal finance manager
 publish_to: 'none'
-version: 1.0.0+2
+version: 1.0.0+6
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -36,10 +36,17 @@ dependencies:
   flutter_slidable: ^3.1.0
   url_launcher: ^6.3.0
   share_plus: ^10.0.2
+  package_info_plus: ^8.0.0
+  in_app_update: ^4.0.0
 
   # Security
   local_auth: ^2.3.0
   flutter_secure_storage: ^9.2.2
+
+  # Export & Documents
+  pdf: ^3.10.10
+  printing: ^5.11.1
+  excel: ^4.0.5
 
 dev_dependencies:
   flutter_test:

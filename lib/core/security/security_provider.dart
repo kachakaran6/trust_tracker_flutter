@@ -83,16 +83,25 @@ class SecurityNotifier extends StateNotifier<SecurityState> {
   /// Attempt biometric authentication. On success, unlocks the app.
   Future<bool> authenticateBiometric() async {
     try {
+      final canCheck = await _localAuth.canCheckBiometrics;
+      final isSupported = await _localAuth.isDeviceSupported();
+      
+      if (!canCheck || !isSupported) return false;
+
       final success = await _localAuth.authenticate(
-        localizedReason: 'Authenticate to open Trust Tracker',
+        localizedReason: 'Authenticate to access your finances',
         options: const AuthenticationOptions(
-          biometricOnly: false,
+          biometricOnly: true,
           stickyAuth: true,
+          useErrorDialogs: true,
         ),
       );
-      if (success) state = state.copyWith(isLocked: false);
+      
+      if (success) {
+        state = state.copyWith(isLocked: false);
+      }
       return success;
-    } catch (_) {
+    } catch (e) {
       return false;
     }
   }
@@ -105,9 +114,11 @@ class SecurityNotifier extends StateNotifier<SecurityState> {
   }
 
   Future<void> disablePin() async {
+    // Clear all security keys
     await _storage.delete(key: _kPin);
-    await _storage.write(key: _kPinEnabled, value: 'false');
-    await _storage.write(key: _kBioEnabled, value: 'false');
+    await _storage.delete(key: _kPinEnabled);
+    await _storage.delete(key: _kBioEnabled);
+    
     state = state.copyWith(
       isPinEnabled: false,
       isBiometricEnabled: false,

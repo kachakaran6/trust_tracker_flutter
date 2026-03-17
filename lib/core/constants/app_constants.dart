@@ -36,18 +36,68 @@ class AppConstants {
 
   // Default categories (seeded on first run)
   static const List<Map<String, dynamic>> defaultCategories = [
-    {'name': 'Salary', 'type': 'income', 'color': '#10B981', 'icon': 'briefcase'},
-    {'name': 'Freelance', 'type': 'income', 'color': '#3B82F6', 'icon': 'laptop'},
-    {'name': 'Investment', 'type': 'income', 'color': '#8B5CF6', 'icon': 'trending_up'},
-    {'name': 'Food & Dining', 'type': 'expense', 'color': '#F97316', 'icon': 'restaurant'},
+    {
+      'name': 'Salary',
+      'type': 'income',
+      'color': '#10B981',
+      'icon': 'briefcase'
+    },
+    {
+      'name': 'Freelance',
+      'type': 'income',
+      'color': '#3B82F6',
+      'icon': 'laptop'
+    },
+    {
+      'name': 'Investment',
+      'type': 'income',
+      'color': '#8B5CF6',
+      'icon': 'trending_up'
+    },
+    {
+      'name': 'Food & Dining',
+      'type': 'expense',
+      'color': '#F97316',
+      'icon': 'restaurant'
+    },
     {'name': 'Transport', 'type': 'expense', 'color': '#06B6D4', 'icon': 'car'},
-    {'name': 'Shopping', 'type': 'expense', 'color': '#EC4899', 'icon': 'shopping_bag'},
-    {'name': 'Entertainment', 'type': 'expense', 'color': '#8B5CF6', 'icon': 'movie'},
+    {
+      'name': 'Shopping',
+      'type': 'expense',
+      'color': '#EC4899',
+      'icon': 'shopping_bag'
+    },
+    {
+      'name': 'Entertainment',
+      'type': 'expense',
+      'color': '#8B5CF6',
+      'icon': 'movie'
+    },
     {'name': 'Health', 'type': 'expense', 'color': '#EF4444', 'icon': 'heart'},
-    {'name': 'Utilities', 'type': 'expense', 'color': '#6366F1', 'icon': 'bolt'},
-    {'name': 'Education', 'type': 'expense', 'color': '#F59E0B', 'icon': 'school'},
-    {'name': 'Rent/Housing', 'type': 'expense', 'color': '#14B8A6', 'icon': 'home'},
-    {'name': 'Other', 'type': 'expense', 'color': '#6B7280', 'icon': 'category'},
+    {
+      'name': 'Utilities',
+      'type': 'expense',
+      'color': '#6366F1',
+      'icon': 'bolt'
+    },
+    {
+      'name': 'Education',
+      'type': 'expense',
+      'color': '#F59E0B',
+      'icon': 'school'
+    },
+    {
+      'name': 'Rent/Housing',
+      'type': 'expense',
+      'color': '#14B8A6',
+      'icon': 'home'
+    },
+    {
+      'name': 'Other',
+      'type': 'expense',
+      'color': '#6B7280',
+      'icon': 'category'
+    },
   ];
 
   // SharedPreferences Keys

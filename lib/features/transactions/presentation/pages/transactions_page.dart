@@ -11,6 +11,7 @@ import 'package:trust_tracker_flutter/features/transactions/presentation/provide
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:trust_tracker_flutter/features/transactions/presentation/widgets/export_bottom_sheet.dart';
 
 // ── Data structures ───────────────────────────────────────────────────────────
 
@@ -35,8 +36,11 @@ final allTransactionsProvider =
   return ref.watch(transactionListProvider);
 });
 
+// FIX Issue 9: autoDispose so it refreshes whenever this provider
+// is watched fresh (e.g. after returning from categories page).
 final _transactionCategoriesProvider =
     FutureProvider.autoDispose<Map<int, CategoryModel>>((ref) async {
+  ref.watch(transactionListProvider);
   final cats = await ref.watch(categoryRepositoryProvider).getAll();
   return {for (final c in cats) c.id: c};
 });
@@ -47,8 +51,8 @@ class _FilterState {
   final String filter;
   final String search;
   const _FilterState({this.filter = 'all', this.search = ''});
-  _FilterState copyWith({String? filter, String? search}) =>
-      _FilterState(filter: filter ?? this.filter, search: search ?? this.search);
+  _FilterState copyWith({String? filter, String? search}) => _FilterState(
+      filter: filter ?? this.filter, search: search ?? this.search);
 }
 
 final _txnFilterProvider =
@@ -73,8 +77,9 @@ final _groupedTransactionsProvider = Provider.autoDispose<
           // Apply filter
           var filtered = allTxns;
           if (filter.filter == 'income') {
-            filtered =
-                filtered.where((t) => t.type == TransactionType.income).toList();
+            filtered = filtered
+                .where((t) => t.type == TransactionType.income)
+                .toList();
           } else if (filter.filter == 'expense') {
             filtered = filtered
                 .where((t) => t.type == TransactionType.expense)
@@ -136,6 +141,41 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     context.push('/add-transaction', extra: {'edit': t});
   }
 
+  void _duplicateTransaction(TransactionModel t) {
+    context.push('/add-transaction', extra: {'duplicate': t});
+  }
+
+  Future<void> _confirmAndDeleteTransaction(TransactionModel t) async {
+    // FIX Issue 1: Show confirmation dialog before deleting
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Delete Transaction?'),
+        content: Text(
+          'Are you sure you want to delete "${t.description}"?\nThis action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFEF4444),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      await _deleteTransaction(t);
+    }
+  }
+
   Future<void> _deleteTransaction(TransactionModel t) async {
     await ref.read(transactionListProvider.notifier).deleteTransaction(t.id);
     if (mounted) {
@@ -151,6 +191,24 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     }
   }
 
+  void _openExportBottomSheet() {
+    final txnsAsync = ref.read(transactionListProvider);
+    txnsAsync.whenData((txns) {
+      if (txns.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No transactions to export')),
+        );
+        return;
+      }
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => ExportBottomSheet(transactions: txns),
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final groupedAsync = ref.watch(_groupedTransactionsProvider);
@@ -158,6 +216,10 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     final settings = ref.watch(settingsProvider);
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+
+    // Issue 8: Read action mode
+    final isTapMode =
+        settings.transactionActionMode == TransactionActionMode.tap;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -172,9 +234,16 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                 color: cs.onSurface)),
         actions: [
           IconButton(
+            icon: Icon(Icons.file_download_outlined,
+                color: cs.onSurface.withOpacity(0.65), size: 24),
+            onPressed: () => _openExportBottomSheet(),
+            tooltip: 'Export',
+          ),
+          IconButton(
             icon: Icon(Icons.add_circle_outline_rounded,
                 color: cs.primary, size: 26),
             onPressed: () => context.push('/add-transaction'),
+            tooltip: 'Add',
           ),
         ],
       ),
@@ -244,18 +313,25 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
             ),
           ),
 
+          // ── Interaction hint ─────────────────────────────────────────
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             child: Row(
               children: [
-                Icon(Icons.swipe_rounded,
-                    size: 14, color: cs.onSurface.withOpacity(0.35)),
+                Icon(
+                    isTapMode
+                        ? Icons.touch_app_outlined
+                        : Icons.swipe_rounded,
+                    size: 14,
+                    color: cs.onSurface.withOpacity(0.35)),
                 const SizedBox(width: 4),
                 Text(
-                  'Swipe right to edit • Swipe left to delete',
+                  isTapMode
+                      ? 'Tap to edit  •  Use ✕ icon to delete'
+                      : 'Swipe for Edit or Delete • Tap icon to Duplicate',
                   style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color: cs.onSurface.withOpacity(0.35)),
+                      fontSize: 11, color: cs.onSurface.withOpacity(0.4)),
                 ),
               ],
             ),
@@ -286,9 +362,11 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                       catMap: catMap,
                       currency: settings.currency,
                       onEdit: _editTransaction,
-                      onDelete: _deleteTransaction,
+                      onDuplicate: _duplicateTransaction,
+                      onDelete: _confirmAndDeleteTransaction,
                       // Animate newly added first group
                       animate: i == 0,
+                      isTapMode: isTapMode,
                     );
                   },
                 );
@@ -308,15 +386,19 @@ class _DaySection extends StatelessWidget {
   final Map<int, CategoryModel> catMap;
   final String currency;
   final void Function(TransactionModel) onEdit;
+  final void Function(TransactionModel) onDuplicate;
   final Future<void> Function(TransactionModel) onDelete;
   final bool animate;
+  final bool isTapMode;
 
   const _DaySection({
     required this.group,
     required this.catMap,
     required this.currency,
     required this.onEdit,
+    required this.onDuplicate,
     required this.onDelete,
+    required this.isTapMode,
     this.animate = false,
   });
 
@@ -365,16 +447,17 @@ class _DaySection extends StatelessWidget {
               category: catMap[t.categoryId],
               currency: currency,
               onEdit: () => onEdit(t),
+              onDuplicate: () => onDuplicate(t),
               onDelete: () => onDelete(t),
+              isTapMode: isTapMode,
+              // Issue 7: In Transactions page, tap opens edit form
+              onTap: () => onEdit(t),
             ),
           );
 
           if (animate && idx == 0) {
-            tile = tile
-                .animate()
-                .fadeIn(duration: 250.ms)
-                .slideY(begin: -0.15, end: 0, duration: 250.ms,
-                    curve: Curves.easeOut);
+            tile = tile.animate().fadeIn(duration: 250.ms).slideY(
+                begin: -0.15, end: 0, duration: 250.ms, curve: Curves.easeOut);
           }
           return tile;
         }),
@@ -390,7 +473,10 @@ class _SwipeableTransactionTile extends StatelessWidget {
   final CategoryModel? category;
   final String currency;
   final VoidCallback onEdit;
+  final VoidCallback onDuplicate;
   final VoidCallback onDelete;
+  final VoidCallback onTap;
+  final bool isTapMode;
 
   const _SwipeableTransactionTile({
     super.key,
@@ -398,7 +484,10 @@ class _SwipeableTransactionTile extends StatelessWidget {
     this.category,
     required this.currency,
     required this.onEdit,
+    required this.onDuplicate,
     required this.onDelete,
+    required this.onTap,
+    required this.isTapMode,
   });
 
   @override
@@ -412,104 +501,185 @@ class _SwipeableTransactionTile extends StatelessWidget {
         ? Color(category!.colorHex.toColorInt())
         : cs.onSurface.withOpacity(0.3);
 
-    return Slidable(
-      startActionPane: ActionPane(
-        motion: const BehindMotion(),
-        extentRatio: 0.22,
+    // Shared inner layout
+    final innerContent = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(
         children: [
-          SlidableAction(
-            onPressed: (_) => onEdit(),
-            backgroundColor: cs.primary,
-            foregroundColor: cs.onPrimary,
-            icon: Icons.edit_outlined,
-            label: 'Edit',
-            borderRadius: BorderRadius.circular(14),
+          Expanded(
+            child: _buildTileContent(context, cs, catColor, amtColor, isIncome),
           ),
+          const SizedBox(width: 8),
+          // --- Persistent Duplicate Action ---
+          _ActionButton(
+            icon: Icons.content_copy_rounded,
+            color: cs.primary.withOpacity(0.8),
+            onTap: onDuplicate,
+          ),
+          if (isTapMode) ...[
+            const SizedBox(width: 8),
+            _ActionButton(
+              icon: Icons.edit_outlined,
+              color: cs.primary,
+              onTap: onEdit,
+            ),
+            const SizedBox(width: 8),
+            _ActionButton(
+              icon: Icons.delete_outline,
+              color: const Color(0xFFEF4444),
+              onTap: onDelete,
+            ),
+          ],
         ],
       ),
-      endActionPane: ActionPane(
-        motion: const BehindMotion(),
-        extentRatio: 0.22,
-        children: [
-          SlidableAction(
-            onPressed: (_) => onDelete(),
-            backgroundColor: const Color(0xFFEF4444),
-            foregroundColor: Colors.white,
-            icon: Icons.delete_outline,
-            label: 'Delete',
-            borderRadius: BorderRadius.circular(14),
-          ),
-        ],
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(14),
+    );
+
+    if (isTapMode) {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
           color: theme.cardTheme.color ?? cs.surface,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: cs.outlineVariant.withOpacity(0.5),
           ),
         ),
-        child: Row(
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: innerContent,
+        ),
+      );
+    }
+
+    // Swipe Mode
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Slidable(
+        key: ValueKey(transaction.id),
+        endActionPane: ActionPane(
+          motion: const BehindMotion(),
+          extentRatio: 0.25,
           children: [
-            // Category avatar
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: catColor.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Center(
-                child: Text(
-                  transaction.description.isNotEmpty
-                      ? transaction.description[0].toUpperCase()
-                      : '?',
-                  style: GoogleFonts.inter(
-                      fontWeight: FontWeight.w700,
-                      color: catColor,
-                      fontSize: 16),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            // Info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    transaction.description,
-                    style: GoogleFonts.inter(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14,
-                        color: cs.onSurface),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${category?.name ?? 'Uncategorized'} · ${transaction.createdAt.toTimestamp()}',
-                    style: GoogleFonts.inter(
-                        fontSize: 11, color: cs.onSurface.withOpacity(0.45)),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            // Amount
-            Text(
-              '${isIncome ? '+' : '-'}${transaction.amount.toCurrency(currency)}',
-              style: GoogleFonts.inter(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                  color: amtColor),
+            SlidableAction(
+              onPressed: (_) => onDelete(),
+              backgroundColor: const Color(0xFFEF4444),
+              foregroundColor: Colors.white,
+              icon: Icons.delete_outline,
+              label: 'Delete',
+              borderRadius: BorderRadius.circular(14),
             ),
           ],
         ),
+        startActionPane: ActionPane(
+          motion: const BehindMotion(),
+          extentRatio: 0.25,
+          children: [
+            SlidableAction(
+              onPressed: (_) => onEdit(),
+              backgroundColor: cs.primary,
+              foregroundColor: cs.onPrimary,
+              icon: Icons.edit_outlined,
+              label: 'Edit',
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ],
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: theme.cardTheme.color ?? cs.surface,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: cs.outlineVariant.withOpacity(0.5),
+            ),
+          ),
+          child: innerContent,
+        ),
       ),
+    );
+  }
+
+  Widget _buildTileContent(BuildContext context, ColorScheme cs, Color catColor,
+      Color amtColor, bool isIncome) {
+    // Issue 6: Show notes in Transactions page
+    final hasNote = transaction.note != null && transaction.note!.isNotEmpty;
+
+    return Row(
+      children: [
+        // Category avatar
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: catColor.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Center(
+            child: Text(
+              transaction.description.isNotEmpty
+                  ? transaction.description[0].toUpperCase()
+                  : '?',
+              style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w700, color: catColor, fontSize: 16),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        // Info
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                transaction.description,
+                style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                    color: cs.onSurface),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '${category?.name ?? 'Uncategorized'} · ${transaction.createdAt.toTimestamp()}',
+                style: GoogleFonts.inter(
+                    fontSize: 11, color: cs.onSurface.withOpacity(0.45)),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              // FIX Issue 6: Show note below in Transactions page only
+              if (hasNote) ...[
+                const SizedBox(height: 3),
+                Row(
+                  children: [
+                    Icon(Icons.sticky_note_2_outlined,
+                        size: 11, color: cs.onSurface.withOpacity(0.3)),
+                    const SizedBox(width: 3),
+                    Expanded(
+                      child: Text(
+                        transaction.note!,
+                        style: GoogleFonts.inter(
+                            fontSize: 11,
+                            color: cs.onSurface.withOpacity(0.4),
+                            fontStyle: FontStyle.italic),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        // Amount
+        Text(
+          '${isIncome ? '+' : '-'}${transaction.amount.toCurrency(currency)}',
+          style: GoogleFonts.inter(
+              fontWeight: FontWeight.w700, fontSize: 14, color: amtColor),
+        ),
+      ],
     );
   }
 }
@@ -540,6 +710,34 @@ class _EmptyState extends StatelessWidget {
             label: const Text('Add Transaction'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ActionButton({
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: color.withOpacity(0.08),
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          child: Icon(icon, size: 18, color: color),
+        ),
       ),
     );
   }

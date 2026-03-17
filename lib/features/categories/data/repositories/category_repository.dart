@@ -8,11 +8,28 @@ class CategoryRepository {
   CategoryRepository(this._db);
 
   Future<List<CategoryModel>> getAll() {
-    return _db.categoryModels.where().findAll();
+    return _db.categoryModels.where().sortByName().findAll();
   }
 
   Future<List<CategoryModel>> getByType(CategoryType type) {
-    return _db.categoryModels.filter().typeEqualTo(type).findAll();
+    return _db.categoryModels.filter().typeEqualTo(type).sortByName().findAll();
+  }
+
+  Stream<List<CategoryModel>> watchAll() {
+    return _db.categoryModels
+        .where()
+        .sortByName()
+        .build()
+        .watch(fireImmediately: true);
+  }
+
+  Stream<List<CategoryModel>> watchByType(CategoryType type) {
+    return _db.categoryModels
+        .filter()
+        .typeEqualTo(type)
+        .sortByName()
+        .build()
+        .watch(fireImmediately: true);
   }
 
   Future<CategoryModel?> getById(int id) {

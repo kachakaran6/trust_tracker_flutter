@@ -41,12 +41,12 @@ class TransactionListNotifier
 
     // --- Step 2: Persist to Isar ---
     try {
-      final newId = await _repo.addTransaction(t);
+      await _repo.addTransaction(t);
       // t.id is now set by Isar (autoIncrement mutates the object)
       // Re-read the list so the id is properly reflected
       final updated = await _repo.getAll();
       if (mounted) state = AsyncValue.data(updated);
-    } catch (e, st) {
+    } catch (e) {
       // Rollback on failure
       if (mounted) state = AsyncValue.data(current);
       rethrow;
@@ -66,7 +66,7 @@ class TransactionListNotifier
       // Re-sort (date may have changed) by reloading
       final updated = await _repo.getAll();
       if (mounted) state = AsyncValue.data(updated);
-    } catch (e, st) {
+    } catch (e) {
       if (mounted) state = AsyncValue.data(current);
       rethrow;
     }
@@ -80,7 +80,7 @@ class TransactionListNotifier
 
     try {
       await _repo.deleteTransaction(id);
-    } catch (e, st) {
+    } catch (e) {
       if (mounted) state = AsyncValue.data(current); // rollback
       rethrow;
     }

@@ -8,6 +8,7 @@ import 'package:trust_tracker_flutter/core/storage/isar_service.dart';
 import 'package:trust_tracker_flutter/core/di/providers.dart';
 import 'package:trust_tracker_flutter/core/security/security_provider.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
+import 'package:trust_tracker_flutter/core/services/update_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,6 +52,17 @@ class _TrustTrackerAppState extends ConsumerState<TrustTrackerApp>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    // Run initial update check
+    _checkForUpdate();
+  }
+
+  Future<void> _checkForUpdate() async {
+    // Small delay to ensure everything is ready
+    await Future.delayed(const Duration(seconds: 2));
+    if (mounted) {
+      await ref.read(updateServiceProvider).checkForUpdate();
+    }
   }
 
   @override
@@ -64,6 +76,11 @@ class _TrustTrackerAppState extends ConsumerState<TrustTrackerApp>
     // Lock the app when it goes to background
     if (state == AppLifecycleState.paused) {
       ref.read(securityProvider.notifier).lock();
+    }
+
+    // Trigger update check when app returns to foreground
+    if (state == AppLifecycleState.resumed) {
+      _checkForUpdate();
     }
   }
 

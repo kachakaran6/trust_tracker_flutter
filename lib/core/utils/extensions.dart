@@ -21,9 +21,18 @@ extension CurrencyFormat on double {
 
   static String _getSymbol(String code) {
     const symbols = {
-      'USD': '\$', 'EUR': '€', 'GBP': '£', 'INR': '₹', 'JPY': '¥',
-      'CAD': 'C\$', 'AUD': 'A\$', 'BRL': 'R\$', 'CNY': '¥', 'CHF': 'CHF',
-      'KRW': '₩', 'MXN': '\$',
+      'USD': '\$',
+      'EUR': '€',
+      'GBP': '£',
+      'INR': '₹',
+      'JPY': '¥',
+      'CAD': 'C\$',
+      'AUD': 'A\$',
+      'BRL': 'R\$',
+      'CNY': '¥',
+      'CHF': 'CHF',
+      'KRW': '₩',
+      'MXN': '\$',
     };
     return symbols[code] ?? code;
   }
@@ -34,8 +43,7 @@ extension DateFormatExt on DateTime {
   String toMonthKey() => DateFormat('yyyy-MM').format(this);
   String toDisplayShort() => DateFormat('MMM d, yyyy').format(this);
   String toDisplayFull() => DateFormat('EEEE, MMMM d, yyyy').format(this);
-  /// e.g. "12 Mar 2026 • 08:42 PM"
-  String toTimestamp() => DateFormat('d MMM yyyy • hh:mm a').format(this);
+  String toTimestamp() => DateFormat('dd MMM yyyy - hh:mm a').format(this);
   String toTimeOnly() => DateFormat('hh:mm a').format(this);
   bool isSameMonth(DateTime other) =>
       year == other.year && month == other.month;

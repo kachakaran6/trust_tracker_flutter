@@ -141,8 +141,11 @@ class _SetPinPageState extends ConsumerState<SetPinPage>
           await ref.read(securityProvider.notifier).setPin(enteredPin);
           setState(() => _isLoading = false);
           if (mounted) {
-            context.pop();
-            ScaffoldMessenger.of(context).showSnackBar(
+            // FIX Issue 3: Show the SnackBar FIRST while scaffold is still
+            // in tree, then pop. Using a post-frame callback for the pop
+            // ensures the snackbar message is queued before navigation.
+            final messenger = ScaffoldMessenger.of(context);
+            messenger.showSnackBar(
               SnackBar(
                 content: Text(
                   widget.isChangingPin
@@ -155,6 +158,9 @@ class _SetPinPageState extends ConsumerState<SetPinPage>
                     borderRadius: BorderRadius.circular(12)),
               ),
             );
+            // Auto-navigate back after a short delay so the user sees the tick
+            await Future.delayed(const Duration(milliseconds: 600));
+            if (mounted) context.pop();
           }
         } else {
           // PINs don't match → go back to Enter step
