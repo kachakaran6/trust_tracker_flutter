@@ -205,19 +205,19 @@ abstract class AppLocalizations {
   /// No description provided for @goodMorning.
   ///
   /// In en, this message translates to:
-  /// **'Good Morning, {name} 👋'**
+  /// **'Good Morning, {name}'**
   String goodMorning(Object name);
 
   /// No description provided for @goodAfternoon.
   ///
   /// In en, this message translates to:
-  /// **'Good Afternoon, {name} 👋'**
+  /// **'Good Afternoon, {name}'**
   String goodAfternoon(Object name);
 
   /// No description provided for @goodEvening.
   ///
   /// In en, this message translates to:
-  /// **'Good Evening, {name} 👋'**
+  /// **'Good Evening, {name}'**
   String goodEvening(Object name);
 
   /// No description provided for @noTransactions.

@@ -13,10 +13,8 @@ import 'package:trust_tracker_flutter/features/transactions/data/models/transact
 import 'package:trust_tracker_flutter/features/transactions/presentation/providers/transaction_provider.dart';
 import 'package:trust_tracker_flutter/features/categories/data/models/category_model.dart';
 import 'package:trust_tracker_flutter/generated/app_localizations.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 // --- Providers ---
-// Derives live summary directly from the in-memory transaction list — instant updates
 final dashboardSummaryProvider =
     Provider.autoDispose<Map<String, double>>((ref) {
   final txnsAsync = ref.watch(transactionListProvider);
@@ -44,7 +42,6 @@ final dashboardSummaryProvider =
   );
 });
 
-// Shows live recent 5 from in-memory list — no separate DB query
 final recentTransactionsProvider =
     Provider.autoDispose<AsyncValue<List<TransactionModel>>>((ref) {
   return ref.watch(transactionListProvider).whenData(
@@ -70,13 +67,14 @@ class DashboardPage extends ConsumerWidget {
     final recentAsync = ref.watch(recentTransactionsProvider);
     final categoriesAsync = ref.watch(allCategoriesProvider);
     final now = DateTime.now();
+    final theme = Theme.of(context);
+    final tt = theme.textTheme;
 
-    // Issue 8: Read action mode for dashboard tiles too
     final isTapMode =
         settings.transactionActionMode == TransactionActionMode.tap;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: CustomScrollView(
         slivers: [
           _buildAppBar(context, settings, now),
@@ -84,7 +82,6 @@ class DashboardPage extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                // Summary Cards — derived live from in-memory list
                 summary.isEmpty
                     ? _SummarySectionSkeleton()
                     : _SummarySection(
@@ -95,15 +92,14 @@ class DashboardPage extends ConsumerWidget {
                       ),
                 const SizedBox(height: 24),
 
-                // Recent Transactions
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(l10n.recentTransactions,
-                        style: Theme.of(context).textTheme.titleLarge),
+                        style: tt.headlineSmall),
                     TextButton(
                       onPressed: () => context.go('/transactions'),
-                      child: Text(l10n.seeAll),
+                      child: Text(l10n.seeAll, style: tt.labelLarge?.copyWith(color: theme.colorScheme.primary)),
                     ),
                   ],
                 ),
@@ -119,7 +115,6 @@ class DashboardPage extends ConsumerWidget {
                           final cat = cats
                               .where((c) => c.id == t.categoryId)
                               .firstOrNull;
-                          // FIX Issue 1 & 7: Swipeable tiles on dashboard
                           return _DashboardTransactionTile(
                             transaction: t,
                             category: cat,
@@ -147,23 +142,23 @@ class DashboardPage extends ConsumerWidget {
         ],
       ),
     );
-}
+  }
 
-  /// FIX Issue 1: Confirm before deleting from dashboard
   Future<void> _confirmDelete(
       BuildContext context, WidgetRef ref, TransactionModel t) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(AppLocalizations.of(context)!.deleteConfirmationTitle),
+        title: Text(AppLocalizations.of(context)!.deleteConfirmationTitle, style: Theme.of(context).textTheme.headlineSmall),
         content: Text(
           AppLocalizations.of(context)!.deleteConfirmationMessage(t.description),
+          style: Theme.of(context).textTheme.bodyMedium,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(AppLocalizations.of(context)!.cancel),
+            child: Text(AppLocalizations.of(context)!.cancel, style: Theme.of(context).textTheme.labelLarge),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -224,7 +219,6 @@ class DashboardPage extends ConsumerWidget {
       ),
     );
   }
-
 }
 
 class _GreetingText extends StatelessWidget {
@@ -236,6 +230,7 @@ class _GreetingText extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final hour = DateTime.now().hour;
     final name = userName.isNotEmpty ? userName.split(' ').first : 'there';
+    final tt = Theme.of(context).textTheme;
 
     String greeting;
     if (hour >= 5 && hour < 12) {
@@ -248,16 +243,11 @@ class _GreetingText extends StatelessWidget {
 
     return Text(
       greeting,
-      style: GoogleFonts.inter(
-        fontSize: 20,
-        fontWeight: FontWeight.w700,
-        color: Theme.of(context).textTheme.displayMedium?.color,
-      ),
+      style: tt.headlineMedium,
     );
   }
 }
 
-// --- Dashboard Transaction Tile with swipe (Issue 1) ---
 class _DashboardTransactionTile extends StatelessWidget {
   final TransactionModel transaction;
   final CategoryModel? category;
@@ -280,6 +270,8 @@ class _DashboardTransactionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isIncome = transaction.type == TransactionType.income;
+    final theme = Theme.of(context);
+    final tt = theme.textTheme;
     final color = isIncome ? AppColors.success500 : AppColors.danger500;
     final bgColor = category != null
         ? Color(category!.colorHex.toColorInt()).withOpacity(0.12)
@@ -288,9 +280,8 @@ class _DashboardTransactionTile extends StatelessWidget {
         ? Color(category!.colorHex.toColorInt())
         : AppColors.gray400;
 
-    final cs3 = Theme.of(context).colorScheme;
+    final cs3 = theme.colorScheme;
 
-    // The shared core content of the tile
     final innerContent = Padding(
       padding: const EdgeInsets.all(14),
       child: Row(
@@ -300,7 +291,6 @@ class _DashboardTransactionTile extends StatelessWidget {
                 context, isIncome, color, bgColor, iconColor, cs3),
           ),
           const SizedBox(width: 8),
-          // --- Persistent Duplicate Action ---
           GestureDetector(
             onTap: onDuplicate,
             behavior: HitTestBehavior.opaque,
@@ -316,7 +306,6 @@ class _DashboardTransactionTile extends StatelessWidget {
           ),
           if (isTapMode) ...[
             const SizedBox(width: 8),
-            // Persistent Delete in Tap Mode
             GestureDetector(
               onTap: onDelete,
               behavior: HitTestBehavior.opaque,
@@ -339,7 +328,7 @@ class _DashboardTransactionTile extends StatelessWidget {
       return Container(
         margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
-          color: Theme.of(context).cardTheme.color ?? cs3.surface,
+          color: theme.cardTheme.color ?? cs3.surface,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: cs3.outlineVariant.withOpacity(0.5)),
         ),
@@ -351,7 +340,6 @@ class _DashboardTransactionTile extends StatelessWidget {
       );
     }
 
-    // Swipe Mode
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Slidable(
@@ -386,7 +374,7 @@ class _DashboardTransactionTile extends StatelessWidget {
         ),
         child: Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).cardTheme.color ?? cs3.surface,
+            color: theme.cardTheme.color ?? cs3.surface,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: cs3.outlineVariant.withOpacity(0.5)),
           ),
@@ -398,6 +386,8 @@ class _DashboardTransactionTile extends StatelessWidget {
 
   Widget _buildContent(BuildContext context, bool isIncome, Color color,
       Color bgColor, Color iconColor, ColorScheme cs3) {
+    final theme = Theme.of(context);
+    final tt = theme.textTheme;
     return Row(children: [
       Container(
         width: 44,
@@ -409,8 +399,7 @@ class _DashboardTransactionTile extends StatelessWidget {
             transaction.description.isNotEmpty
                 ? transaction.description[0].toUpperCase()
                 : '?',
-            style: GoogleFonts.inter(
-                fontSize: 18, fontWeight: FontWeight.w700, color: iconColor),
+            style: tt.titleLarge?.copyWith(color: iconColor),
           ),
         ),
       ),
@@ -418,28 +407,23 @@ class _DashboardTransactionTile extends StatelessWidget {
       Expanded(
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(transaction.description,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleLarge
-                  ?.copyWith(fontSize: 14),
+              style: tt.titleMedium,
               maxLines: 1,
               overflow: TextOverflow.ellipsis),
           Text(
             '${category?.name ?? AppLocalizations.of(context)!.uncategorized} · ${transaction.date.toDisplayShort()}',
-            style: Theme.of(context).textTheme.bodySmall,
+            style: tt.bodySmall,
           ),
         ]),
       ),
       Text(
         '${isIncome ? '+' : '-'}${transaction.amount.toCurrency(currency)}',
-        style: GoogleFonts.inter(
-            fontWeight: FontWeight.w700, fontSize: 14, color: color),
+        style: isIncome ? tt.positiveAmount : tt.negativeAmount,
       ),
     ]);
   }
 }
 
-// --- Summary Section ---
 class _SummarySection extends StatelessWidget {
   final double income, expense, balance;
   final String currency;
@@ -451,8 +435,8 @@ class _SummarySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return Column(children: [
-      // Balance Hero Card
       Container(
         width: double.infinity,
         padding: const EdgeInsets.all(24),
@@ -473,18 +457,13 @@ class _SummarySection extends StatelessWidget {
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(AppLocalizations.of(context)!.netBalance,
-              style: GoogleFonts.inter(
-                  color: Colors.white.withOpacity(0.8), fontSize: 13)),
+              style: tt.bodySmall?.copyWith(color: Colors.white.withOpacity(0.8), fontWeight: FontWeight.w600)),
           const SizedBox(height: 4),
           Text(balance.toCurrency(currency),
-              style: GoogleFonts.inter(
-                  color: Colors.white,
-                  fontSize: 32,
-                  fontWeight: FontWeight.w700)),
+              style: tt.balanceAmount.copyWith(color: Colors.white)),
           const SizedBox(height: 4),
           Text(AppLocalizations.of(context)!.thisMonth,
-              style: GoogleFonts.inter(
-                  color: Colors.white.withOpacity(0.6), fontSize: 12)),
+              style: tt.labelSmall?.copyWith(color: Colors.white.withOpacity(0.6))),
         ]),
       ),
       const SizedBox(height: 12),
@@ -523,11 +502,13 @@ class _MiniCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs2 = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final cs2 = theme.colorScheme;
+    final tt = theme.textTheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color ?? cs2.surface,
+        color: theme.cardTheme.color ?? cs2.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: cs2.outlineVariant.withOpacity(0.5)),
       ),
@@ -544,13 +525,9 @@ class _MiniCard extends StatelessWidget {
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(label,
-                style: GoogleFonts.inter(
-                    color: cs2.onSurface.withOpacity(0.5), fontSize: 11)),
+                style: tt.labelSmall),
             Text(amount.toCurrencyCompact(currency),
-                style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                    color: cs2.onSurface)),
+                style: tt.titleSmall),
           ]),
         ),
       ]),
@@ -558,7 +535,6 @@ class _MiniCard extends StatelessWidget {
   }
 }
 
-// --- Skeletons & Empty States ---
 class _SummarySectionSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -598,7 +574,9 @@ class _EmptyTransactions extends StatelessWidget {
   const _EmptyTransactions({required this.onAdd});
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final tt = theme.textTheme;
     final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
@@ -608,10 +586,7 @@ class _EmptyTransactions extends StatelessWidget {
               size: 56, color: cs.onSurface.withOpacity(0.2)),
           const SizedBox(height: 12),
           Text(l10n.noTransactionsYet,
-              style: GoogleFonts.inter(
-                  color: cs.onSurface.withOpacity(0.45),
-                  fontWeight: FontWeight.w500,
-                  fontSize: 15)),
+              style: tt.bodyMedium?.copyWith(color: cs.onSurface.withOpacity(0.45))),
           const SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: onAdd,

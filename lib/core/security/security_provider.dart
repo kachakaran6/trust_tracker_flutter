@@ -17,12 +17,14 @@ class SecurityState {
   final bool isBiometricEnabled;
   final bool isLocked;
   final bool canUseBiometrics;
+  final bool isAppVisible; // For Recents screen protection
 
   const SecurityState({
     this.isPinEnabled = false,
     this.isBiometricEnabled = false,
     this.isLocked = false,
     this.canUseBiometrics = false,
+    this.isAppVisible = true,
   });
 
   SecurityState copyWith({
@@ -30,12 +32,14 @@ class SecurityState {
     bool? isBiometricEnabled,
     bool? isLocked,
     bool? canUseBiometrics,
+    bool? isAppVisible,
   }) {
     return SecurityState(
       isPinEnabled: isPinEnabled ?? this.isPinEnabled,
       isBiometricEnabled: isBiometricEnabled ?? this.isBiometricEnabled,
       isLocked: isLocked ?? this.isLocked,
       canUseBiometrics: canUseBiometrics ?? this.canUseBiometrics,
+      isAppVisible: isAppVisible ?? this.isAppVisible,
     );
   }
 }
@@ -53,12 +57,11 @@ class SecurityNotifier extends StateNotifier<SecurityState> {
     final bioEnabled = await _storage.read(key: _kBioEnabled);
     final canAuth = await _localAuth.canCheckBiometrics;
     final available = await _localAuth.getAvailableBiometrics();
-    final hasBio = canAuth && available.isNotEmpty;
+    final hasBio = canAuth && (available.isNotEmpty || await _localAuth.isDeviceSupported());
 
     state = state.copyWith(
       isPinEnabled: pinEnabled == 'true',
       isBiometricEnabled: bioEnabled == 'true' && hasBio,
-      // Start locked ONLY if PIN is enabled. Biometric will handle unlock without PIN prompt.
       isLocked: pinEnabled == 'true',
       canUseBiometrics: hasBio,
     );
@@ -74,7 +77,7 @@ class SecurityNotifier extends StateNotifier<SecurityState> {
     return false;
   }
 
-  /// Verify OLD pin without unlocking – used during Change PIN flow.
+  /// Verify OLD pin without unlocking – used during flows where verification is required.
   Future<bool> verifyOldPin(String pin) async {
     final stored = await _storage.read(key: _kPin);
     return stored == pin;
@@ -82,14 +85,11 @@ class SecurityNotifier extends StateNotifier<SecurityState> {
 
   /// Attempt biometric authentication. On success, unlocks the app.
   Future<bool> authenticateBiometric() async {
+    if (!state.isBiometricEnabled || !state.canUseBiometrics) return false;
+    
     try {
-      final canCheck = await _localAuth.canCheckBiometrics;
-      final isSupported = await _localAuth.isDeviceSupported();
-      
-      if (!canCheck || !isSupported) return false;
-
       final success = await _localAuth.authenticate(
-        localizedReason: 'Authenticate to access your finances',
+        localizedReason: 'Authenticate to access your Trust Tracker',
         options: const AuthenticationOptions(
           biometricOnly: true,
           stickyAuth: true,
@@ -114,7 +114,6 @@ class SecurityNotifier extends StateNotifier<SecurityState> {
   }
 
   Future<void> disablePin() async {
-    // Clear all security keys
     await _storage.delete(key: _kPin);
     await _storage.delete(key: _kPinEnabled);
     await _storage.delete(key: _kBioEnabled);
@@ -127,11 +126,23 @@ class SecurityNotifier extends StateNotifier<SecurityState> {
   }
 
   Future<void> setBiometric(bool enabled) async {
+    if (enabled && !state.isPinEnabled) return; // Feature 1: Cannot enable without PIN
+
     await _storage.write(key: _kBioEnabled, value: enabled.toString());
     state = state.copyWith(isBiometricEnabled: enabled);
   }
 
-  /// Lock the app (called on background/pause).
+  /// Update app visibility (called on background/pause).
+  /// This is used to overlay a blur/shield in the Recents screen.
+  void setVisibility(bool visible) {
+    if (state.isPinEnabled) {
+      state = state.copyWith(
+        isAppVisible: visible,
+        isLocked: !visible ? true : state.isLocked,
+      );
+    }
+  }
+
   void lock() {
     if (state.isPinEnabled) {
       state = state.copyWith(isLocked: true);

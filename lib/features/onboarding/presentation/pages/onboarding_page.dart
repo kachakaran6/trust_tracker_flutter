@@ -5,7 +5,6 @@ import 'package:trust_tracker_flutter/core/constants/app_constants.dart';
 import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
 import 'package:trust_tracker_flutter/core/utils/currency_detector.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class OnboardingPage extends ConsumerStatefulWidget {
   const OnboardingPage({super.key});
@@ -16,7 +15,6 @@ class OnboardingPage extends ConsumerStatefulWidget {
 
 class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   final _nameController = TextEditingController();
-  // Auto-detect locale currency; user can still override on the currency page.
   String _selectedCurrency = CurrencyDetector.detectSupported();
   int _currentPage = 0;
   final _pageController = PageController();
@@ -51,12 +49,14 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tt = theme.textTheme;
+
     return Scaffold(
-      backgroundColor: AppColors.primary500,
+      backgroundColor: AppColors.primary600,
       body: SafeArea(
         child: Column(
           children: [
-            // Progress dots
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 24),
               child: Row(
@@ -64,13 +64,13 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                 children: List.generate(3, (i) => AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: _currentPage == i ? 24 : 8,
-                  height: 8,
+                  width: _currentPage == i ? 32 : 10,
+                  height: 10,
                   decoration: BoxDecoration(
                     color: _currentPage == i
                         ? Colors.white
-                        : Colors.white.withOpacity(0.4),
-                    borderRadius: BorderRadius.circular(4),
+                        : Colors.white.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(5),
                   ),
                 )),
               ),
@@ -80,9 +80,9 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                 controller: _pageController,
                 onPageChanged: (i) => setState(() => _currentPage = i),
                 children: [
-                  _buildWelcomePage(),
-                  _buildNamePage(),
-                  _buildCurrencyPage(),
+                  _buildWelcomePage(tt),
+                  _buildNamePage(tt),
+                  _buildCurrencyPage(tt),
                 ],
               ),
             ),
@@ -90,22 +90,20 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
               child: SizedBox(
                 width: double.infinity,
+                height: 56,
                 child: ElevatedButton(
                   onPressed: _next,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: AppColors.primary600,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                   ),
                   child: Text(
                     _currentPage == 2 ? 'Get Started 🚀' : 'Continue',
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: tt.titleMedium?.copyWith(color: AppColors.primary600, fontWeight: FontWeight.w800),
                   ),
                 ),
               ),
@@ -116,99 +114,87 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     );
   }
 
-  Widget _buildWelcomePage() {
+  Widget _buildWelcomePage(TextTheme tt) {
     return Padding(
       padding: const EdgeInsets.all(32),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 100,
-            height: 100,
+            width: 110,
+            height: 110,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(28),
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(32),
             ),
-            child: const Icon(Icons.account_balance_wallet,
-                size: 56, color: Colors.white),
+            child: const Icon(Icons.account_balance_wallet_rounded,
+                size: 60, color: Colors.white),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 40),
           Text('Trust Tracker',
-              style: GoogleFonts.inter(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white)),
-          const SizedBox(height: 12),
+              style: tt.displayMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 16),
           Text(
             'Your private, offline-first\nfinancial companion',
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
-                fontSize: 16,
-                color: Colors.white.withOpacity(0.85),
-                height: 1.6),
+            style: tt.bodyLarge?.copyWith(color: Colors.white.withOpacity(0.9), height: 1.6, fontWeight: FontWeight.w500),
           ),
-          const SizedBox(height: 40),
-          _featureRow(Icons.lock_outline, 'Completely Private — no cloud, no server'),
-          const SizedBox(height: 12),
-          _featureRow(Icons.bar_chart, 'Smart analytics & budget tracking'),
-          const SizedBox(height: 12),
-          _featureRow(Icons.bolt, 'Blazing fast — all data lives on your phone'),
+          const SizedBox(height: 48),
+          _featureRow(Icons.lock_outline_rounded, 'Completely Private — no cloud, no servers', tt),
+          const SizedBox(height: 16),
+          _featureRow(Icons.bar_chart_rounded, 'Smart analytics & budget tracking', tt),
+          const SizedBox(height: 16),
+          _featureRow(Icons.bolt_rounded, 'Blazing fast — all data lives on your phone', tt),
         ],
       ),
     );
   }
 
-  Widget _featureRow(IconData icon, String text) {
+  Widget _featureRow(IconData icon, String text, TextTheme tt) {
     return Row(children: [
       Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(10),
+          color: Colors.white.withOpacity(0.12),
+          borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(icon, color: Colors.white, size: 18),
+        child: Icon(icon, color: Colors.white, size: 20),
       ),
-      const SizedBox(width: 12),
+      const SizedBox(width: 16),
       Expanded(
         child: Text(text,
-            style: GoogleFonts.inter(
-                color: Colors.white.withOpacity(0.9),
-                fontSize: 14,
-                fontWeight: FontWeight.w500)),
+            style: tt.bodyMedium?.copyWith(color: Colors.white.withOpacity(0.95), fontWeight: FontWeight.w600)),
       ),
     ]);
   }
 
-  Widget _buildNamePage() {
+  Widget _buildNamePage(TextTheme tt) {
     return Padding(
       padding: const EdgeInsets.all(32),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.waving_hand, color: Colors.white, size: 48),
-          const SizedBox(height: 24),
-          Text("What's your name?",
-              style: GoogleFonts.inter(
-                  fontSize: 28, fontWeight: FontWeight.w700, color: Colors.white)),
-          const SizedBox(height: 8),
-          Text("We'll use this to personalize your experience.",
-              style: GoogleFonts.inter(
-                  color: Colors.white.withOpacity(0.8), fontSize: 15)),
+          const Icon(Icons.waving_hand_rounded, color: Colors.white, size: 56),
           const SizedBox(height: 32),
+          Text("What's your name?",
+              style: tt.displaySmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 12),
+          Text("We'll use this to personalize your experience.",
+              style: tt.bodyLarge?.copyWith(color: Colors.white.withOpacity(0.85))),
+          const SizedBox(height: 40),
           TextField(
             controller: _nameController,
-            style: GoogleFonts.inter(
-                color: AppColors.gray900, fontWeight: FontWeight.w500),
+            style: tt.bodyLarge?.copyWith(color: AppColors.gray900, fontWeight: FontWeight.w700),
             decoration: InputDecoration(
               hintText: 'e.g., Alex',
               filled: true,
               fillColor: Colors.white,
               border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none),
               contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                  const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
             ),
             textCapitalization: TextCapitalization.words,
           ),
@@ -217,7 +203,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     );
   }
 
-  Widget _buildCurrencyPage() {
+  Widget _buildCurrencyPage(TextTheme tt) {
     final detectedCode = CurrencyDetector.detectSupported();
     return Padding(
       padding: const EdgeInsets.all(32),
@@ -225,101 +211,76 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 20),
-          const Icon(Icons.currency_exchange, color: Colors.white, size: 48),
-          const SizedBox(height: 24),
+          const Icon(Icons.currency_exchange_rounded, color: Colors.white, size: 56),
+          const SizedBox(height: 32),
           Text("Choose your currency",
-              style: GoogleFonts.inter(
-                  fontSize: 28, fontWeight: FontWeight.w700, color: Colors.white)),
-          const SizedBox(height: 8),
-          // Show which currency was detected and from where
+              style: tt.displaySmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 12),
           Row(children: [
-            const Icon(Icons.location_on_outlined, color: Colors.white70, size: 14),
-            const SizedBox(width: 4),
+            const Icon(Icons.location_on_rounded, color: Colors.white70, size: 16),
+            const SizedBox(width: 6),
             Expanded(
               child: Text(
-                '$detectedCode detected from your region · change anytime in Settings',
-                style: GoogleFonts.inter(
-                    color: Colors.white.withOpacity(0.8), fontSize: 13),
+                '$detectedCode detected · change anytime in Settings',
+                style: tt.labelLarge?.copyWith(color: Colors.white.withOpacity(0.8)),
               ),
             ),
           ]),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
           Expanded(
             child: ListView.separated(
               itemCount: AppConstants.currencies.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (_, i) {
                 final c = AppConstants.currencies[i];
                 final isSelected = _selectedCurrency == c['code'];
                 final isDetected = c['code'] == detectedCode;
                 return GestureDetector(
-                  onTap: () =>
-                      setState(() => _selectedCurrency = c['code']!),
+                  onTap: () => setState(() => _selectedCurrency = c['code']!),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 14),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                     decoration: BoxDecoration(
-                      color: isSelected
-                          ? Colors.white
-                          : Colors.white.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isSelected
-                            ? Colors.white
-                            : Colors.transparent,
-                        width: 2,
-                      ),
+                      color: isSelected ? Colors.white : Colors.white.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: isSelected ? Colors.white : Colors.transparent, width: 2),
                     ),
                     child: Row(children: [
                       Text(c['symbol']!,
-                          style: GoogleFonts.inter(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 18,
-                              color: isSelected
-                                  ? AppColors.primary600
-                                  : Colors.white)),
-                      const SizedBox(width: 12),
+                          style: tt.titleLarge?.copyWith(
+                              fontSize: 20,
+                              color: isSelected ? AppColors.primary600 : Colors.white)),
+                      const SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(children: [
                               Text(c['code']!,
-                                  style: GoogleFonts.inter(
-                                      fontWeight: FontWeight.w600,
-                                      color: isSelected
-                                          ? AppColors.primary700
-                                          : Colors.white)),
+                                  style: tt.titleMedium?.copyWith(
+                                      color: isSelected ? AppColors.primary700 : Colors.white,
+                                      fontWeight: FontWeight.w800)),
                               if (isDetected && !isSelected) ...[
-                                const SizedBox(width: 6),
+                                const SizedBox(width: 8),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 6, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                   decoration: BoxDecoration(
                                     color: Colors.white.withOpacity(0.2),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
-                                  child: Text('Detected',
-                                      style: GoogleFonts.inter(
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.white)),
+                                  child: Text('DETECTED',
+                                      style: tt.labelSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 8)),
                                 ),
                               ],
                             ]),
                             Text(c['name']!,
-                                style: GoogleFonts.inter(
-                                    fontSize: 12,
-                                    color: isSelected
-                                        ? AppColors.gray500
-                                        : Colors.white.withOpacity(0.7))),
+                                style: tt.labelLarge?.copyWith(
+                                    color: isSelected ? AppColors.gray500 : Colors.white.withOpacity(0.7))),
                           ],
                         ),
                       ),
                       if (isSelected)
-                        const Icon(Icons.check_circle,
-                            color: AppColors.primary600),
+                        const Icon(Icons.check_circle_rounded, color: AppColors.primary600, size: 24),
                     ]),
                   ),
                 );

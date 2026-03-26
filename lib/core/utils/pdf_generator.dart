@@ -132,11 +132,11 @@ class PdfGenerator {
               vertical: 8,
             ),
             columnWidths: const {
-              0: pw.FlexColumnWidth(2.0),
-              1: pw.FlexColumnWidth(1.7),
-              2: pw.FlexColumnWidth(1.3),
-              3: pw.FlexColumnWidth(1.7),
-              4: pw.FlexColumnWidth(1.1),
+              0: pw.FlexColumnWidth(2.0), // Date & Time
+              1: pw.FlexColumnWidth(1.6), // Transaction
+              2: pw.FlexColumnWidth(1.2), // Category
+              3: pw.FlexColumnWidth(1.3), // Notes
+              4: pw.FlexColumnWidth(1.8), // Amount
             },
             cellAlignments: {
               0: pw.Alignment.centerLeft,
@@ -153,12 +153,20 @@ class PdfGenerator {
               'Amount'
             ],
             data: rows.map((row) {
+              final amountStr = '${row.isIncome ? '+' : '-'}$currency ${row.amount.toStringAsFixed(2)}';
               return [
                 row.timestampLabel,
-                '${row.title}\n${row.typeLabel}',
+                row.title,
                 row.category,
                 row.notes.isEmpty ? '-' : row.notes,
-                '${row.isIncome ? '+' : '-'}$currency ${row.amount.toStringAsFixed(2)}',
+                pw.Text(
+                  amountStr,
+                  style: pw.TextStyle(
+                    color: row.isIncome ? PdfColors.green700 : PdfColors.red700,
+                    fontWeight: pw.FontWeight.bold,
+                    fontSize: 10,
+                  ),
+                ),
               ];
             }).toList(),
           ),

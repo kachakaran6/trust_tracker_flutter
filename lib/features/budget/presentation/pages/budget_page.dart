@@ -10,17 +10,12 @@ import 'package:trust_tracker_flutter/features/categories/data/repositories/cate
 import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/repositories/transaction_repository.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
-import 'package:google_fonts/google_fonts.dart';
-
-// ── Supporting providers ───────────────────────────────────────────────────────
 
 final _expenseCategoriesProvider =
     FutureProvider.autoDispose<List<CategoryModel>>((ref) {
   return ref.watch(categoryRepositoryProvider).getByType(CategoryType.expense);
 });
 
-/// Spending map is derived from DB (read-only, no mutation). Auto-dispose is
-/// fine here because spending data is never mutated from this page.
 final _monthSpendingProvider =
     FutureProvider.autoDispose<Map<int, double>>((ref) async {
   final monthKey = DateTime.now().toMonthKey();
@@ -29,8 +24,6 @@ final _monthSpendingProvider =
       .getCategorySpendingForMonth(monthKey, TransactionType.expense);
 });
 
-// ── Page ──────────────────────────────────────────────────────────────────────
-
 class BudgetPage extends ConsumerWidget {
   const BudgetPage({super.key});
 
@@ -38,13 +31,13 @@ class BudgetPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider);
     final catsAsync = ref.watch(_expenseCategoriesProvider);
-    // Watch budgets from the stable StateNotifier — no autoDispose FutureProvider
     final budgetState = ref.watch(budgetNotifierProvider);
     final spendAsync = ref.watch(_monthSpendingProvider);
     final now = DateTime.now();
+    final tt = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: Text('Budget — ${now.toMonthYear()}')),
+      appBar: AppBar(title: Text('Budget — ${now.toMonthYear()}', style: tt.headlineSmall)),
       body: catsAsync.when(
         data: (cats) => budgetState.budgets.when(
           data: (budgets) {
@@ -82,7 +75,6 @@ class BudgetPage extends ConsumerWidget {
                       budget: budget,
                       spent: spent,
                       currency: settings.currency,
-                      // Pass the ref so the card can open the safe sheet
                       onSet: () => _openBudgetSheet(
                           context, ref, cat, budget, settings.currency),
                     ).animate().fadeIn(delay: Duration(milliseconds: i * 50));
@@ -102,12 +94,6 @@ class BudgetPage extends ConsumerWidget {
     );
   }
 
-  // ── Budget sheet — safe save pattern ────────────────────────────────────────
-  //
-  // KEY FIX: All provider mutations happen BEFORE Navigator.pop().
-  // The sheet uses its own WidgetRef from Consumer so it is independent of
-  // the page's ref lifecycle. No ref.invalidate() is called anywhere.
-
   static Future<void> _openBudgetSheet(
     BuildContext pageContext,
     WidgetRef pageRef,
@@ -121,8 +107,6 @@ class BudgetPage extends ConsumerWidget {
       useSafeArea: true,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      // Use Consumer so the sheet has its own WidgetRef, isolated from
-      // the page ref that may be in a different lifecycle state.
       builder: (sheetCtx) => _BudgetSheet(
         cat: cat,
         existing: existing,
@@ -131,8 +115,6 @@ class BudgetPage extends ConsumerWidget {
     );
   }
 }
-
-// ── Budget sheet widget — owns its lifecycle ──────────────────────────────────
 
 class _BudgetSheet extends ConsumerStatefulWidget {
   final CategoryModel cat;
@@ -177,13 +159,7 @@ class _BudgetSheetState extends ConsumerState<_BudgetSheet> {
         amount: amount,
         monthKey: DateTime.now().toMonthKey(),
       );
-
-      // STEP 1: Update notifier state (in-memory + DB write) — no invalidation.
-      // This happens BEFORE Navigator.pop() to avoid the _dependents.isEmpty
-      // assertion that fires when route removal races with provider disposal.
       await ref.read(budgetNotifierProvider.notifier).setBudget(budget);
-
-      // STEP 2: Only now is it safe to close the sheet.
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
@@ -199,12 +175,9 @@ class _BudgetSheetState extends ConsumerState<_BudgetSheet> {
     if (widget.existing == null) return;
     setState(() => _isSaving = true);
     try {
-      // STEP 1: Remove from notifier (in-memory + DB) BEFORE pop.
       await ref
           .read(budgetNotifierProvider.notifier)
           .deleteBudget(widget.existing!.id);
-
-      // STEP 2: Safe to close.
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
@@ -219,7 +192,9 @@ class _BudgetSheetState extends ConsumerState<_BudgetSheet> {
   @override
   Widget build(BuildContext context) {
     final catColor = Color(widget.cat.colorHex.toColorInt());
-    final cs = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final tt = theme.textTheme;
+    final cs = theme.colorScheme;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -232,34 +207,29 @@ class _BudgetSheetState extends ConsumerState<_BudgetSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
           Row(children: [
             Container(
-              width: 40,
-              height: 40,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
                 color: catColor.withOpacity(0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Center(
                 child: Text(widget.cat.name[0].toUpperCase(),
-                    style: GoogleFonts.inter(
-                        fontWeight: FontWeight.w700, color: catColor)),
+                    style: tt.headlineSmall?.copyWith(color: catColor)),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text('Budget for ${widget.cat.name}',
-                  style: GoogleFonts.inter(
-                      fontSize: 18, fontWeight: FontWeight.w700,
-                      color: cs.onSurface)),
+                  style: tt.headlineSmall),
             ),
           ]),
-          const SizedBox(height: 20),
-
-          // Amount input
+          const SizedBox(height: 24),
           TextField(
             controller: _controller,
+            style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
             keyboardType:
                 const TextInputType.numberWithOptions(decimal: true),
             autofocus: true,
@@ -270,25 +240,19 @@ class _BudgetSheetState extends ConsumerState<_BudgetSheet> {
               labelText: 'Monthly limit',
             ),
           ),
-
-          const SizedBox(height: 16),
-
-          // Delete button (only when editing)
+          const SizedBox(height: 24),
           if (widget.existing != null)
             TextButton.icon(
               onPressed: _isSaving ? null : _delete,
               icon: const Icon(Icons.delete_outline,
                   color: Color(0xFFEF4444), size: 18),
               label: Text('Remove budget',
-                  style: GoogleFonts.inter(
-                      color: const Color(0xFFEF4444))),
+                  style: tt.labelLarge?.copyWith(color: const Color(0xFFEF4444))),
             ),
-
-          const SizedBox(height: 8),
-
-          // Save button
+          const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
+            height: 56,
             child: ElevatedButton(
               onPressed: _isSaving ? null : _save,
               child: _isSaving
@@ -306,8 +270,6 @@ class _BudgetSheetState extends ConsumerState<_BudgetSheet> {
   }
 }
 
-// ── Summary Card ──────────────────────────────────────────────────────────────
-
 class _BudgetSummaryCard extends StatelessWidget {
   final double totalBudgeted, totalSpent;
   final String currency;
@@ -318,6 +280,9 @@ class _BudgetSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tt = theme.textTheme;
+
     if (totalBudgeted == 0) {
       return Container(
         padding: const EdgeInsets.all(20),
@@ -332,7 +297,7 @@ class _BudgetSummaryCard extends StatelessWidget {
           Expanded(
             child: Text(
               'Tap any category below to set a monthly budget limit.',
-              style: GoogleFonts.inter(color: Colors.white, fontSize: 13),
+              style: tt.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w600),
             ),
           ),
         ]),
@@ -344,31 +309,33 @@ class _BudgetSummaryCard extends StatelessWidget {
     final isOver = totalSpent > totalBudgeted;
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isOver
               ? [AppColors.danger600, AppColors.danger500]
               : [AppColors.primary600, AppColors.primary500],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: (isOver ? AppColors.danger600 : AppColors.primary600).withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('Monthly Budget Overview',
-            style: GoogleFonts.inter(
-                color: Colors.white.withOpacity(0.8), fontSize: 13)),
-        const SizedBox(height: 4),
-        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        Text('MONTHLY BUDGET OVERVIEW',
+            style: tt.sectionLabel.copyWith(color: Colors.white.withOpacity(0.7))),
+        const SizedBox(height: 8),
+        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
           Text(totalSpent.toCurrency(currency),
-              style: GoogleFonts.inter(
-                  color: Colors.white,
-                  fontSize: 26,
-                  fontWeight: FontWeight.w700)),
+              style: tt.displaySmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
           Text('of ${totalBudgeted.toCurrency(currency)}',
-              style: GoogleFonts.inter(
-                  color: Colors.white.withOpacity(0.7), fontSize: 13)),
+              style: tt.labelLarge?.copyWith(color: Colors.white.withOpacity(0.7))),
         ]),
-        const SizedBox(height: 12),
+        const SizedBox(height: 20),
         ClipRRect(
           borderRadius: BorderRadius.circular(6),
           child: TweenAnimationBuilder<double>(
@@ -377,28 +344,23 @@ class _BudgetSummaryCard extends StatelessWidget {
             curve: Curves.easeOut,
             builder: (_, val, __) => LinearProgressIndicator(
               value: val,
-              backgroundColor: Colors.white.withOpacity(0.25),
+              backgroundColor: Colors.white.withOpacity(0.2),
               color: isOver ? Colors.orange : Colors.white,
-              minHeight: 8,
+              minHeight: 10,
             ),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         Text(
           isOver
               ? '🚨 Over budget by ${(totalSpent - totalBudgeted).toCurrency(currency)}'
               : '✅ ${remaining.toCurrency(currency)} remaining',
-          style: GoogleFonts.inter(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w600),
+          style: tt.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w700),
         ),
       ]),
     );
   }
 }
-
-// ── Category Budget Card ──────────────────────────────────────────────────────
 
 class _BudgetCategoryCard extends StatelessWidget {
   final CategoryModel category;
@@ -417,6 +379,9 @@ class _BudgetCategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tt = theme.textTheme;
+    final cs = theme.colorScheme;
     final catColor = Color(category.colorHex.toColorInt());
     final budgetAmt = budget?.amount ?? 0;
     final pct = budgetAmt > 0 ? (spent / budgetAmt).clamp(0.0, 1.0) : 0.0;
@@ -428,11 +393,10 @@ class _BudgetCategoryCard extends StatelessWidget {
             ? AppColors.warning500
             : AppColors.success500;
 
-    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color ?? cs.surface,
+        color: theme.cardTheme.color ?? cs.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
             color: isOver
@@ -451,18 +415,14 @@ class _BudgetCategoryCard extends StatelessWidget {
             child: Center(
               child: Text(
                 category.name[0].toUpperCase(),
-                style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w700, color: catColor),
+                style: tt.titleLarge?.copyWith(color: catColor),
               ),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(category.name,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleLarge
-                    ?.copyWith(fontSize: 15)),
+                style: tt.titleSmall),
           ),
           if (isOver)
             Container(
@@ -471,11 +431,8 @@ class _BudgetCategoryCard extends StatelessWidget {
               decoration: BoxDecoration(
                   color: cs.errorContainer,
                   borderRadius: BorderRadius.circular(8)),
-              child: Text('Over',
-                  style: GoogleFonts.inter(
-                      fontSize: 10,
-                      color: cs.onErrorContainer,
-                      fontWeight: FontWeight.w700)),
+              child: Text('OVER',
+                  style: tt.labelSmall?.copyWith(fontSize: 9, color: cs.onErrorContainer, fontWeight: FontWeight.bold)),
             ),
           const SizedBox(width: 4),
           TextButton(
@@ -483,26 +440,21 @@ class _BudgetCategoryCard extends StatelessWidget {
             style: TextButton.styleFrom(
               minimumSize: Size.zero,
               padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
-            child: Text(budget == null ? 'Set' : 'Edit',
-                style: GoogleFonts.inter(
-                    color: cs.primary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13)),
+            child: Text(budget == null ? 'SET' : 'EDIT',
+                style: tt.labelLarge?.copyWith(color: cs.primary, fontWeight: FontWeight.w800)),
           ),
         ]),
         if (budget != null) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             Text('${spent.toCurrency(currency)} spent',
-                style: GoogleFonts.inter(
-                    fontSize: 12, color: cs.onSurface.withOpacity(0.5))),
+                style: tt.labelSmall),
             Text('of ${budgetAmt.toCurrency(currency)}',
-                style: GoogleFonts.inter(
-                    fontSize: 12, color: cs.onSurface.withOpacity(0.5))),
+                style: tt.labelSmall),
           ]),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           ClipRRect(
             borderRadius: BorderRadius.circular(6),
             child: TweenAnimationBuilder<double>(
@@ -519,29 +471,22 @@ class _BudgetCategoryCard extends StatelessWidget {
           ),
           if (isOver)
             Padding(
-              padding: const EdgeInsets.only(top: 6),
+              padding: const EdgeInsets.only(top: 8),
               child: Text(
                   '🚨 Over by ${(spent - budgetAmt).toCurrency(currency)}',
-                  style: GoogleFonts.inter(
-                      color: AppColors.danger500,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600)),
+                  style: tt.labelSmall?.copyWith(color: AppColors.danger500, fontWeight: FontWeight.w700)),
             )
           else if (isWarning)
             Padding(
-              padding: const EdgeInsets.only(top: 6),
+              padding: const EdgeInsets.only(top: 8),
               child: Text(
                   '⚠️ ${((1 - pct) * 100).toStringAsFixed(0)}% remaining',
-                  style: GoogleFonts.inter(
-                      color: AppColors.warning600,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600)),
+                  style: tt.labelSmall?.copyWith(color: AppColors.warning600, fontWeight: FontWeight.w700)),
             ),
         ] else ...[
           const SizedBox(height: 8),
-          Text('No budget set — tap "Set" to add a limit',
-              style: GoogleFonts.inter(
-                  fontSize: 12, color: cs.onSurface.withOpacity(0.35))),
+          Text('No budget set — tap "SET" to add a limit',
+              style: tt.labelSmall?.copyWith(fontStyle: FontStyle.italic)),
         ],
       ]),
     );

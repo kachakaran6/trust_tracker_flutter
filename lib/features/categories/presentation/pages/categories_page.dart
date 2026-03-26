@@ -6,13 +6,9 @@ import 'package:trust_tracker_flutter/core/utils/extensions.dart';
 import 'package:trust_tracker_flutter/core/utils/category_utils.dart';
 import 'package:trust_tracker_flutter/features/categories/data/models/category_model.dart';
 import 'package:trust_tracker_flutter/features/categories/data/repositories/category_repository.dart';
-// FIX Issue 9: Import analytics providers so we can invalidate them
 import 'package:trust_tracker_flutter/features/analytics/presentation/pages/analytics_page.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:trust_tracker_flutter/generated/app_localizations.dart';
 
-// FIX Issue 9: Use autoDispose so the provider refreshes each time this
-// screen is opened (no stale cache).
 final _allCategoriesListProvider = FutureProvider.autoDispose<List<CategoryModel>>((ref) {
   return ref.watch(categoryRepositoryProvider).getAll();
 });
@@ -25,11 +21,8 @@ class CategoriesPage extends ConsumerStatefulWidget {
 }
 
 class _CategoriesPageState extends ConsumerState<CategoriesPage> {
-  /// Invalidates all providers that depend on categories so real-time
-  /// updates propagate immediately — no app restart needed.
   void _invalidateAll() {
     ref.invalidate(_allCategoriesListProvider);
-    // Keep analytics category labels/colors and monthly pie data in sync.
     ref.invalidate(expenseSpendingProvider);
     ref.invalidate(incomeSpendingProvider);
     ref.invalidate(trendDataProvider);
@@ -42,6 +35,8 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
     String selectedIcon = editing?.iconName ?? '📦';
     CategoryType selectedType = editing?.type ?? CategoryType.expense;
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final tt = theme.textTheme;
 
     await showModalBottomSheet(
       context: context,
@@ -57,15 +52,16 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
               bottom: MediaQuery.of(context).viewInsets.bottom + 32),
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(editing == null ? l10n.newCategory : l10n.editCategory,
-                style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700)),
+                style: tt.headlineSmall),
             const SizedBox(height: 16),
             TextField(
               controller: nameCtrl,
               autofocus: true,
+              style: tt.bodyLarge,
               decoration: InputDecoration(hintText: l10n.categoryName),
             ),
             const SizedBox(height: 16),
-            Text(l10n.type, style: Theme.of(context).textTheme.labelLarge),
+            Text(l10n.type.toUpperCase(), style: tt.sectionLabel),
             const SizedBox(height: 8),
             Row(children: CategoryType.values.map((t) {
               final isSelected = selectedType == t;
@@ -79,15 +75,15 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
                       decoration: BoxDecoration(
                         color: isSelected
                             ? (t == CategoryType.income ? AppColors.success500 : AppColors.danger500)
-                            : AppColors.gray100,
+                            : theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
                         t == CategoryType.income ? '💰 ${l10n.income}' : '💸 ${l10n.expense}',
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.inter(
-                            fontWeight: FontWeight.w600,
-                            color: isSelected ? Colors.white : AppColors.gray600),
+                        style: isSelected 
+                          ? tt.labelLarge?.copyWith(color: Colors.white)
+                          : tt.labelLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                       ),
                     ),
                   ),
@@ -95,7 +91,7 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
               );
             }).toList()),
             const SizedBox(height: 16),
-            Text(l10n.icon, style: Theme.of(context).textTheme.labelLarge),
+            Text(l10n.icon.toUpperCase(), style: tt.sectionLabel),
             const SizedBox(height: 8),
             SizedBox(
               height: 44,
@@ -110,7 +106,7 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
                       height: 44,
                       margin: const EdgeInsets.only(right: 8),
                       decoration: BoxDecoration(
-                        color: isSelected ? AppColors.primary500 : AppColors.gray100,
+                        color: isSelected ? theme.colorScheme.primary : theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: isSelected ? Colors.white : Colors.transparent,
@@ -126,7 +122,7 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
               ),
             ),
             const SizedBox(height: 16),
-            Text(l10n.color, style: Theme.of(context).textTheme.labelLarge),
+            Text(l10n.color.toUpperCase(), style: tt.sectionLabel),
             const SizedBox(height: 8),
             Wrap(
               spacing: 12,
@@ -158,6 +154,7 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
+              height: 56,
               child: ElevatedButton(
                 onPressed: () async {
                   final name = nameCtrl.text.trim();
@@ -176,7 +173,6 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
                         iconName: selectedIcon,
                         type: selectedType));
                   }
-                  // FIX: Invalidate and pop modal context
                   _invalidateAll();
                   if (mounted) Navigator.of(ctx).pop();
                 },
@@ -193,10 +189,11 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
   Widget build(BuildContext context) {
     final catsAsync = ref.watch(_allCategoriesListProvider);
     final l10n = AppLocalizations.of(context)!;
+    final tt = Theme.of(context).textTheme;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.categories),
+        title: Text(AppLocalizations.of(context)!.categories, style: tt.headlineMedium),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -207,7 +204,7 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
       body: catsAsync.when(
         data: (cats) {
           if (cats.isEmpty) {
-            return Center(child: Text(AppLocalizations.of(context)!.noCategoriesYet));
+            return Center(child: Text(AppLocalizations.of(context)!.noCategoriesYet, style: tt.bodyMedium));
           }
           final income = cats.where((c) => c.type == CategoryType.income).toList();
           final expense = cats.where((c) => c.type == CategoryType.expense).toList();
@@ -263,13 +260,9 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 8, left: 4),
       child: Text(label.toUpperCase(),
-          style: GoogleFonts.inter(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: AppColors.gray500,
-              letterSpacing: 0.8)),
+          style: Theme.of(context).textTheme.sectionLabel),
     );
   }
 }
@@ -281,14 +274,16 @@ class _CategoryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tt = theme.textTheme;
     final color = Color(cat.colorHex.toColorInt());
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color,
+        color: theme.cardTheme.color,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.gray200),
+        border: Border.all(color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
       ),
       child: Row(children: [
         Container(
@@ -303,17 +298,17 @@ class _CategoryTile extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: Text(cat.name,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 14)),
+              style: tt.titleSmall),
         ),
         if (cat.isDefault)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-                color: AppColors.gray100, borderRadius: BorderRadius.circular(8)),
+                color: theme.colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(8)),
             child: Text(AppLocalizations.of(context)!.defaultLabel,
-                style: GoogleFonts.inter(fontSize: 10, color: AppColors.gray500)),
+                style: tt.labelSmall?.copyWith(fontSize: 9, fontWeight: FontWeight.bold)),
           ),
-        IconButton(icon: const Icon(Icons.edit_outlined, size: 18), onPressed: onEdit),
+        IconButton(icon: Icon(Icons.edit_outlined, size: 18, color: theme.colorScheme.onSurface.withOpacity(0.6)), onPressed: onEdit),
         IconButton(
             icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.danger500),
             onPressed: onDelete),

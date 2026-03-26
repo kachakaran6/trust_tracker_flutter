@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -53,13 +54,10 @@ class _TrustTrackerAppState extends ConsumerState<TrustTrackerApp>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-
-    // Run initial update check
     _checkForUpdate();
   }
 
   Future<void> _checkForUpdate() async {
-    // Small delay to ensure everything is ready
     await Future.delayed(const Duration(seconds: 2));
     if (mounted) {
       await ref.read(updateServiceProvider).checkForUpdate();
@@ -74,13 +72,16 @@ class _TrustTrackerAppState extends ConsumerState<TrustTrackerApp>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Lock the app when it goes to background
-    if (state == AppLifecycleState.paused) {
-      ref.read(securityProvider.notifier).lock();
-    }
-
-    // Trigger update check when app returns to foreground
-    if (state == AppLifecycleState.resumed) {
+    // Feature 5 & 6: App Lock and Recents Security
+    final securityNotifier = ref.read(securityProvider.notifier);
+    
+    // inactive = partially visible (like Recents list)
+    // paused = totally in background
+    if (state == AppLifecycleState.inactive || state == AppLifecycleState.paused) {
+      securityNotifier.lock();
+      securityNotifier.setVisibility(false);
+    } else if (state == AppLifecycleState.resumed) {
+      securityNotifier.setVisibility(true);
       _checkForUpdate();
     }
   }
@@ -100,6 +101,55 @@ class _TrustTrackerAppState extends ConsumerState<TrustTrackerApp>
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       locale: Locale(settings.languageCode),
+      // --- Feature 5 Wrapper: Protect sensitive UI in recents tray ---
+      builder: (context, child) {
+        return Consumer(
+          builder: (context, ref, _) {
+            final security = ref.watch(securityProvider);
+            if (!security.isAppVisible && security.isPinEnabled) {
+              return _SecureAppOverlay(theme: Theme.of(context));
+            }
+            return child ?? const SizedBox.shrink();
+          },
+        );
+      },
+    );
+  }
+}
+
+class _SecureAppOverlay extends StatelessWidget {
+  final ThemeData theme;
+  const _SecureAppOverlay({required this.theme});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: theme.scaffoldBackgroundColor,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withOpacity(0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.security_rounded, size: 40, color: theme.colorScheme.primary),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Trust Tracker is Secured',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+                decoration: TextDecoration.none,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -75,9 +75,9 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         shadowColor: Colors.transparent,
-        titleTextStyle: GoogleFonts.inter(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
+        titleTextStyle: GoogleFonts.manrope(
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
           color: AppColors.gray900,
         ),
         iconTheme: const IconThemeData(color: AppColors.gray900),
@@ -119,8 +119,8 @@ class AppTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.danger500),
         ),
-        hintStyle: GoogleFonts.inter(color: AppColors.gray400, fontSize: 14),
-        labelStyle: GoogleFonts.inter(color: AppColors.gray500, fontSize: 14),
+        hintStyle: GoogleFonts.inter(color: AppColors.gray400, fontSize: 14, fontWeight: FontWeight.w400),
+        labelStyle: GoogleFonts.inter(color: AppColors.gray500, fontSize: 14, fontWeight: FontWeight.w500),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -131,9 +131,9 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          textStyle: GoogleFonts.inter(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
+          textStyle: GoogleFonts.manrope(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
           ),
         ),
       ),
@@ -162,15 +162,15 @@ class AppTheme {
       ),
     );
     return base.copyWith(
-      textTheme: _buildTextTheme(base.textTheme, Colors.white, Colors.white.withOpacity(0.8)),
+      textTheme: _buildTextTheme(base.textTheme, Colors.white, Colors.white.withOpacity(0.85)),
       scaffoldBackgroundColor: AppColors.darkBackground,
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.darkSurface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        titleTextStyle: GoogleFonts.inter(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
+        titleTextStyle: GoogleFonts.manrope(
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
           color: Colors.white,
         ),
         iconTheme: const IconThemeData(color: Colors.white),
@@ -219,38 +219,65 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
+          textStyle: GoogleFonts.manrope(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+          ),
         ),
       ),
     );
   }
 
   static TextTheme _buildTextTheme(TextTheme base, Color displayColor, Color bodyColor) {
-    return GoogleFonts.interTextTheme(base).copyWith(
-      displayLarge: GoogleFonts.inter(
+    return TextTheme(
+      // --- Display (Manrope) ---
+      displayLarge: GoogleFonts.manrope(
+        fontSize: 48,
+        fontWeight: FontWeight.w800,
+        color: displayColor,
+        letterSpacing: -1.0,
+      ),
+      displayMedium: GoogleFonts.manrope(
         fontSize: 32,
         fontWeight: FontWeight.w700,
         color: displayColor,
       ),
-      displayMedium: GoogleFonts.inter(
+      displaySmall: GoogleFonts.manrope(
         fontSize: 24,
         fontWeight: FontWeight.w700,
         color: displayColor,
       ),
-      headlineMedium: GoogleFonts.inter(
+
+      // --- Headline (Manrope) ---
+      headlineMedium: GoogleFonts.manrope(
         fontSize: 20,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w700,
         color: displayColor,
       ),
-      headlineSmall: GoogleFonts.inter(
+      headlineSmall: GoogleFonts.manrope(
         fontSize: 18,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w700,
         color: displayColor,
       ),
+
+      // --- Title (Inter) ---
       titleLarge: GoogleFonts.inter(
+        fontSize: 16,
+        fontWeight: FontWeight.w700,
+        color: displayColor,
+      ),
+      titleMedium: GoogleFonts.inter(
         fontSize: 16,
         fontWeight: FontWeight.w600,
         color: displayColor,
       ),
+      titleSmall: GoogleFonts.inter(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: displayColor,
+      ),
+
+      // --- Body (Inter) ---
       bodyLarge: GoogleFonts.inter(
         fontSize: 16,
         fontWeight: FontWeight.w400,
@@ -258,19 +285,44 @@ class AppTheme {
       ),
       bodyMedium: GoogleFonts.inter(
         fontSize: 14,
-        fontWeight: FontWeight.w400,
+        fontWeight: FontWeight.w500,
         color: bodyColor,
       ),
       bodySmall: GoogleFonts.inter(
         fontSize: 12,
         fontWeight: FontWeight.w400,
-        color: AppColors.gray400,
+        color: AppColors.gray500,
       ),
+
+      // --- Label (Inter) ---
       labelLarge: GoogleFonts.inter(
         fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: displayColor,
+      ),
+      labelMedium: GoogleFonts.inter(
+        fontSize: 12,
         fontWeight: FontWeight.w500,
         color: displayColor,
       ),
+      labelSmall: GoogleFonts.inter(
+        fontSize: 11,
+        fontWeight: FontWeight.w500,
+        color: AppColors.gray500,
+        letterSpacing: 0.5,
+      ),
     );
   }
+}
+
+extension FintechTypography on TextTheme {
+  TextStyle get heroAmount => displayLarge!.copyWith(height: 1.1);
+  TextStyle get balanceAmount => displayMedium!.copyWith(letterSpacing: -0.5);
+  TextStyle get sectionLabel => labelSmall!.copyWith(
+    fontWeight: FontWeight.w800,
+    letterSpacing: 1.2,
+  );
+  
+  TextStyle get positiveAmount => titleSmall!.copyWith(color: AppColors.success500, fontWeight: FontWeight.w700);
+  TextStyle get negativeAmount => titleSmall!.copyWith(color: AppColors.danger500, fontWeight: FontWeight.w700);
 }

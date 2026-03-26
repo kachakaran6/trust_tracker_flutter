@@ -166,10 +166,9 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
                 ),
                 Text(
                   selectedMonth.toMonthYear(),
-                  style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: cs.onSurface),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 IconButton(
                   icon: Icon(Icons.chevron_right_rounded, size: 28),
@@ -305,8 +304,7 @@ class _SelectorChip extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               label,
-              style: GoogleFonts.inter(
-                fontSize: 13,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
                 color: selected ? cs.onPrimary : cs.onSurfaceVariant,
               ),
@@ -590,14 +588,12 @@ class _SummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(title,
-              style: GoogleFonts.inter(
-                  fontSize: 12,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: cs.onSurface.withOpacity(0.6))),
           const SizedBox(height: 4),
           Text(amount.toCurrency(currency),
-              style: GoogleFonts.inter(
-                  fontSize: 18,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w800,
                   color: cs.onSurface)),
         ],
@@ -645,14 +641,12 @@ class _SavingsRateCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(l10n.netSavings,
-                    style: GoogleFonts.inter(
-                        fontSize: 13,
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: cs.onSurfaceVariant)),
                 const SizedBox(height: 4),
                 Text(balance.toCurrency(currency),
-                    style: GoogleFonts.inter(
-                        fontSize: 24,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.w800,
                         color: cs.onSurface)),
               ],
@@ -662,8 +656,7 @@ class _SavingsRateCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(l10n.savingsRate,
-                  style: GoogleFonts.inter(
-                      fontSize: 12,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: cs.onSurfaceVariant)),
               const SizedBox(height: 4),
@@ -675,8 +668,7 @@ class _SavingsRateCard extends StatelessWidget {
                 ),
                 child: Text(
                   '${rate.toStringAsFixed(1)}%',
-                  style: GoogleFonts.inter(
-                      fontSize: 14,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: color),
                 ),
@@ -697,10 +689,8 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: GoogleFonts.inter(
-        fontSize: 18,
+      style: Theme.of(context).textTheme.titleLarge?.copyWith(
         fontWeight: FontWeight.w800,
-        color: Theme.of(context).colorScheme.onSurface,
       ),
     );
   }
@@ -742,7 +732,7 @@ class _MiniTrendChart extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 8.0),
                     child: Text(
                       val == 0 ? l10n.income : l10n.expense,
-                      style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.gray500),
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600, color: AppColors.gray500),
                     ),
                   );
                 },
@@ -827,7 +817,7 @@ class _DailyBarChart extends StatelessWidget {
               getTooltipItem: (group, groupIndex, rod, rodIndex) {
                 return BarTooltipItem(
                   '${group.x}\n${rod.toY.toCurrencyCompact(currency)}',
-                  GoogleFonts.inter(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                  Theme.of(context).textTheme.labelSmall!.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
                 );
               },
             ),
@@ -841,7 +831,7 @@ class _DailyBarChart extends StatelessWidget {
                   if (val % 5 != 0 && val != 1 && val != daysInMonth) return const SizedBox.shrink();
                   return Text(
                     val.toInt().toString(),
-                    style: GoogleFonts.inter(fontSize: 9, color: AppColors.gray500),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 9, color: AppColors.gray500),
                   );
                 },
               ),
@@ -908,7 +898,7 @@ class _WeekdayBarChart extends StatelessWidget {
                   if (idx < 0 || idx >= 7) return const SizedBox.shrink();
                   return Text(
                     weekdays[idx],
-                    style: GoogleFonts.inter(fontSize: 10, color: AppColors.gray500, fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.gray500, fontWeight: FontWeight.bold),
                   );
                 },
               ),
@@ -976,7 +966,7 @@ class _TimeOfDayChart extends StatelessWidget {
                   if (idx < 0 || idx >= 4) return const SizedBox.shrink();
                   return Text(
                     times[idx],
-                    style: GoogleFonts.inter(fontSize: 10, color: AppColors.gray500, fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.gray500, fontWeight: FontWeight.bold),
                   );
                 },
               ),
@@ -1059,10 +1049,9 @@ class _PieChartSection extends StatelessWidget {
                 value: e.value.value,
                 title: isTouched ? '$pct%' : '',
                 radius: isTouched ? 65 : 55,
-                titleStyle: GoogleFonts.inter(
+                titleStyle: Theme.of(context).textTheme.labelSmall!.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12),
+                    fontWeight: FontWeight.w700),
               );
             }).toList(),
           ),
@@ -1102,7 +1091,7 @@ class _PieChartSection extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               e.value.value.toCurrency(currency),
-              style: GoogleFonts.inter(color: AppColors.gray500, fontSize: 13, fontWeight: FontWeight.w700),
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(color: AppColors.gray500, fontWeight: FontWeight.w700),
             ),
           ]),
         );
@@ -1156,7 +1145,7 @@ class _TrendBarChart extends StatelessWidget {
                         : '${AppLocalizations.of(context)!.expense}: ${(d['expense'] as double).toCurrencyCompact(currency)}';
                     return BarTooltipItem(
                       label,
-                      GoogleFonts.inter(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                      Theme.of(context).textTheme.labelSmall!.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
                     );
                   },
                 ),
@@ -1168,7 +1157,7 @@ class _TrendBarChart extends StatelessWidget {
                     showTitles: true,
                     getTitlesWidget: (val, _) => Text(
                       data[val.toInt()]['label'] as String,
-                      style: GoogleFonts.inter(fontSize: 10, color: AppColors.gray500, fontWeight: FontWeight.w600),
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.gray500, fontWeight: FontWeight.w600),
                     ),
                   ),
                 ),
@@ -1241,7 +1230,7 @@ class _SavingsTrendLineChart extends StatelessWidget {
                   if (idx < 0 || idx >= data.length) return const SizedBox.shrink();
                   return Text(
                     data[idx]['label'],
-                    style: GoogleFonts.inter(fontSize: 10, color: AppColors.gray500, fontWeight: FontWeight.w600),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.gray500, fontWeight: FontWeight.w600),
                   );
                 },
               ),
@@ -1293,13 +1282,13 @@ class _IntensityPlaceholder extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             AppLocalizations.of(context)!.spendingIntensity,
-            style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: cs.onSurface),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
             'Coming Soon: Track your financial velocity and intensity across the month.',
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(fontSize: 12, color: cs.onSurfaceVariant),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],
       ),
@@ -1316,7 +1305,7 @@ class _LegendDot extends StatelessWidget {
     return Row(children: [
       Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
       const SizedBox(width: 6),
-      Text(label, style: GoogleFonts.inter(fontSize: 11, color: AppColors.gray500, fontWeight: FontWeight.w600)),
+      Text(label, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.gray500, fontWeight: FontWeight.w600)),
     ]);
   }
 }
@@ -1347,7 +1336,7 @@ class _EmptyNamedChart extends StatelessWidget {
         child: Column(children: [
           Icon(Icons.query_stats_rounded, size: 48, color: AppColors.gray300.withOpacity(0.5)),
           const SizedBox(height: 16),
-          Text(AppLocalizations.of(context)!.noDataFor(label), style: GoogleFonts.inter(color: AppColors.gray500, fontWeight: FontWeight.w500)),
+          Text(AppLocalizations.of(context)!.noDataFor(label), style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.gray500, fontWeight: FontWeight.w500)),
         ]),
       ),
     );
@@ -1367,7 +1356,7 @@ class _EmptyState extends StatelessWidget {
           children: [
             Icon(Icons.analytics_outlined, size: 80, color: cs.primary.withOpacity(0.1)),
             const SizedBox(height: 24),
-            Text(message, textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: cs.onSurfaceVariant)),
+            Text(message, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600, color: cs.onSurfaceVariant)),
           ],
         ),
       ),

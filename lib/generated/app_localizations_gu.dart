@@ -61,17 +61,17 @@ class AppLocalizationsGu extends AppLocalizations {
 
   @override
   String goodMorning(Object name) {
-    return 'શુભ સવાર, $name 👋';
+    return 'શુભ સવાર, $name';
   }
 
   @override
   String goodAfternoon(Object name) {
-    return 'શુભ બપોર, $name 👋';
+    return 'શુભ બપોર, $name';
   }
 
   @override
   String goodEvening(Object name) {
-    return 'શુભ સાંજ, $name 👋';
+    return 'શુભ સાંજ, $name';
   }
 
   @override

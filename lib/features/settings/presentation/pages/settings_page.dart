@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:trust_tracker_flutter/core/constants/app_constants.dart';
 import 'package:trust_tracker_flutter/core/security/security_provider.dart';
+import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:trust_tracker_flutter/core/services/update_service.dart';
@@ -37,66 +37,127 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
     super.dispose();
   }
 
-
+  bool _isEditing = false;
 
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
     final security = ref.watch(securityProvider);
-    final cs = Theme.of(context).colorScheme;
     final theme = Theme.of(context);
+    final tt = theme.textTheme;
+    final cs = theme.colorScheme;
     final isTapMode =
         settings.transactionActionMode == TransactionActionMode.tap;
 
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.settings)),
+      appBar: AppBar(title: Text(l10n.settings, style: tt.headlineSmall)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // ── Profile card ──────────────────────────────────────────
+          // ── Profile card (Edit on Demand) ──────────────────────────
           _SectionCard(
             children: [
               Row(children: [
                 CircleAvatar(
-                  radius: 28,
+                  radius: 30,
                   backgroundColor: cs.primaryContainer,
                   child: Text(
                     settings.userName.isNotEmpty
                         ? settings.userName[0].toUpperCase()
                         : '?',
-                    style: GoogleFonts.inter(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
-                        color: cs.onPrimaryContainer),
+                    style: tt.displaySmall?.copyWith(
+                        color: cs.onPrimaryContainer,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                            settings.userName.isEmpty
-                                ? l10n.setName
-                                : settings.userName,
-                            style: theme.textTheme.headlineSmall),
-                        Text(l10n.trustTrackerUser,
-                            style: theme.textTheme.bodySmall),
-                      ]),
+                  child: _isEditing
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TextField(
+                              controller: _nameController,
+                              autofocus: true,
+                              style: tt.bodyLarge,
+                              decoration: InputDecoration(
+                                hintText: l10n.yourName,
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 8),
+                                border: UnderlineInputBorder(
+                                    borderSide: BorderSide(color: cs.primary)),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                TextButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _isEditing = false;
+                                      _nameController.text = settings.userName; 
+                                    });
+                                  },
+                                  child: Text(l10n.cancel,
+                                      style: TextStyle(
+                                          color: cs.onSurface.withOpacity(0.5))),
+                                ),
+                                const SizedBox(width: 8),
+                                FilledButton(
+                                  onPressed: () {
+                                    if (_nameController.text.trim().isNotEmpty) {
+                                      ref.read(settingsProvider.notifier).setUserName(_nameController.text.trim());
+                                      setState(() => _isEditing = false);
+                                      HapticFeedback.lightImpact();
+                                    }
+                                  },
+                                  style: FilledButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                                    minimumSize: const Size(80, 40),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ),
+                                  child: Text(l10n.save),
+                                ),
+                              ],
+                            ),
+                          ],
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    settings.userName.isEmpty
+                                        ? l10n.setName
+                                        : settings.userName,
+                                    style: tt.headlineSmall?.copyWith(
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: -0.5),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.edit_outlined,
+                                      size: 20,
+                                      color: cs.primary.withOpacity(0.8)),
+                                  onPressed: () =>
+                                      setState(() => _isEditing = true),
+                                ),
+                              ],
+                            ),
+                            Text(l10n.trustTrackerUser,
+                                style: tt.bodySmall?.copyWith(
+                                    color: cs.onSurface.withOpacity(0.5))),
+                          ],
+                        ),
                 ),
               ]),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  hintText: l10n.yourName,
-                  prefixIcon: const Icon(Icons.person_outline),
-                ),
-                onChanged: (v) =>
-                    ref.read(settingsProvider.notifier).setUserName(v),
-              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -110,6 +171,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                 child: DropdownButtonFormField<String>(
                   value: settings.languageCode,
                   dropdownColor: cs.surface,
+                  style: tt.bodyMedium,
                   decoration: InputDecoration(
                     prefixIcon: Icon(Icons.language, color: cs.onSurface.withOpacity(0.6)),
                   ),
@@ -153,6 +215,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                 child: DropdownButtonFormField<String>(
                   value: settings.currency,
                   dropdownColor: cs.surface,
+                  style: tt.bodyMedium,
                   decoration: InputDecoration(
                     prefixIcon: Icon(Icons.attach_money,
                         color: cs.onSurface.withOpacity(0.6)),
@@ -162,8 +225,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                           value: c['code'],
                           child: Text(
                               '${c['code']} — ${c['name']} (${c['symbol']})',
-                              style: GoogleFonts.inter(
-                                  fontSize: 13, color: cs.onSurface))))
+                              style: tt.bodyMedium)))
                       .toList(),
                   onChanged: (code) {
                     if (code != null) {
@@ -176,12 +238,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
           ),
           const SizedBox(height: 16),
 
-          // ── Transaction Interaction ── Issue 8 ──────────────────
+          // ── Transaction Interaction ──────────────────
           _SettingsSection(
             title: l10n.transactions,
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -198,25 +260,19 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(l10n.transactionActionMode,
-                                style: theme.textTheme.bodyMedium),
+                                style: tt.titleSmall),
                             const SizedBox(height: 2),
                             Text(
                               isTapMode
                                   ? l10n.tapModeDetails
                                   : l10n.swipeModeDetails,
-                              style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  color: cs.onSurface.withOpacity(0.4)),
+                              style: tt.labelSmall,
                             ),
                           ],
                         ),
                       ),
                     ]),
-                    const SizedBox(height: 12),
-                    const SizedBox(height: 12),
-                    // Polished Segmented Control for Action Mode
-                    const SizedBox(height: 12),
-                    // Premium Sliding Segmented Control
+                    const SizedBox(height: 16),
                     _SlidingSegmentedControl(
                       isSelected: isTapMode,
                       l10n: l10n,
@@ -224,7 +280,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                           .read(settingsProvider.notifier)
                           .setTransactionActionMode(mode),
                     ),
-                    const SizedBox(height: 12),
                   ],
                 ),
               ),
@@ -247,10 +302,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                             color: cs.secondaryContainer,
                             borderRadius: BorderRadius.circular(8)),
                         child: Text('ON',
-                            style: GoogleFonts.inter(
-                                fontSize: 10,
-                                color: cs.onSecondaryContainer,
-                                fontWeight: FontWeight.w700)),
+                            style: tt.labelSmall?.copyWith(color: cs.onSecondaryContainer, fontWeight: FontWeight.bold)),
                       )
                     : null,
                 onTap: () => context.push('/set-pin',
@@ -265,14 +317,14 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                     final confirm = await showDialog<bool>(
                       context: context,
                       builder: (dialogCtx) => AlertDialog(
-                        title: Text(l10n.disablePinConfirm),
+                        title: Text(l10n.disablePinConfirm, style: tt.headlineSmall),
                         content: Text(
-                            l10n.disablePinDetails),
+                            l10n.disablePinDetails, style: tt.bodyMedium),
                         actions: [
                           TextButton(
                               onPressed: () =>
                                   Navigator.of(dialogCtx).pop(false),
-                              child: Text(l10n.cancel)),
+                              child: Text(l10n.cancel, style: tt.labelLarge)),
                           ElevatedButton(
                               onPressed: () =>
                                   Navigator.of(dialogCtx).pop(true),
@@ -289,19 +341,34 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                     }
                   },
                 ),
-              if (security.canUseBiometrics && security.isPinEnabled)
+              if (security.canUseBiometrics)
                 _SettingsToggle(
                   icon: Icons.fingerprint,
                   label: l10n.biometricUnlock,
                   value: security.isBiometricEnabled,
-                  onChanged: (v) =>
-                      ref.read(securityProvider.notifier).setBiometric(v),
+                  onChanged: (v) async {
+                    // Feature 1: Check if PIN is set first
+                    if (v && !security.isPinEnabled) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('Please set a PIN before enabling biometric security'),
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      );
+                      context.push('/set-pin');
+                      return;
+                    }
+
+                    // Feature 1 & 2: Mandatory PIN verification for BOTH Enable and Disable
+                    // We route to 'set-pin' with a special 'verifying' mode.
+                    context.push('/set-pin', extra: {'verifyingForBio': v});
+                  },
                 ),
             ],
           ),
           const SizedBox(height: 16),
 
-          // ── Support ────────────────────────────────────────────────
           _SettingsSection(
             title: l10n.support,
             children: [
@@ -358,7 +425,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
               ),
             ],
           ),
-
+          const SizedBox(height: 16),
           _SettingsSection(
             title: l10n.about,
             children: [
@@ -394,19 +461,32 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
 
           // App info
           Center(
-            child: FutureBuilder<String>(
-              future: ref.read(updateServiceProvider).getCurrentVersion(),
-              builder: (context, snapshot) {
-                final version = snapshot.data ?? '1.0.0';
-                return Text(
-                  'Trust Tracker v$version\n${l10n.offlineNote}',
+            child: Column(
+              children: [
+                FutureBuilder<String>(
+                  future: ref.read(updateServiceProvider).getCurrentVersion(),
+                  builder: (context, snapshot) {
+                    final version = snapshot.data ?? '1.0.0';
+                    final versionOnly = version.split('+')[0];
+                    return Text(
+                      versionOnly,
+                      textAlign: TextAlign.center,
+                      style: tt.labelSmall?.copyWith(fontWeight: FontWeight.bold),
+                    );
+                  },
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Built with ❤️ by Karan',
+                  style: tt.labelSmall?.copyWith(color: cs.onSurface.withOpacity(0.5)),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.offlineNote,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
-                      color: cs.onSurface.withOpacity(0.35),
-                      fontSize: 12,
-                      height: 1.8),
-                );
-              },
+                  style: tt.labelSmall?.copyWith(height: 1.4),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 80),
@@ -415,8 +495,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
     );
   }
 }
-
-// ── Sliding Segmented Control ──────────────────────────────────
 
 class _SlidingSegmentedControl extends StatelessWidget {
   final bool isSelected; // false = Swipe, true = Tap
@@ -449,7 +527,6 @@ class _SlidingSegmentedControl extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          // The Sliding Pill
           AnimatedAlign(
             duration: const Duration(milliseconds: 250),
             curve: Curves.easeInOutCubic,
@@ -472,7 +549,6 @@ class _SlidingSegmentedControl extends StatelessWidget {
               ),
             ),
           ),
-          // Interactive Labels
           Row(
             children: [
               _ModeLabel(
@@ -516,6 +592,8 @@ class _ModeLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tt = theme.textTheme;
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -529,20 +607,16 @@ class _ModeLabel extends StatelessWidget {
                 size: 18,
                 color: selected
                     ? Colors.white
-                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                    : theme.colorScheme.onSurface.withOpacity(0.4),
               ),
               const SizedBox(width: 8),
               Text(
                 label,
-                style: GoogleFonts.inter(
-                  fontSize: 13,
+                style: tt.labelMedium?.copyWith(
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                   color: selected
                       ? Colors.white
-                      : Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withOpacity(0.4),
+                      : theme.colorScheme.onSurface.withOpacity(0.4),
                 ),
               ),
             ],
@@ -552,8 +626,6 @@ class _ModeLabel extends StatelessWidget {
     );
   }
 }
-
-// ── Reusable UI components ────────────────────────────────────
 
 class _SectionCard extends StatelessWidget {
   final List<Widget> children;
@@ -582,22 +654,17 @@ class _SettingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Padding(
         padding: const EdgeInsets.only(left: 4, bottom: 8),
         child: Text(title.toUpperCase(),
-            style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: cs.onSurface.withOpacity(0.45),
-                letterSpacing: 0.8)),
+            style: Theme.of(context).textTheme.sectionLabel),
       ),
       Container(
         decoration: BoxDecoration(
-          color: Theme.of(context).cardTheme.color ?? cs.surface,
+          color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: cs.outlineVariant.withOpacity(0.5)),
+          border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5)),
         ),
         child: Column(children: children),
       ),
@@ -619,14 +686,16 @@ class _SettingsToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final tt = theme.textTheme;
+    final cs = theme.colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Row(children: [
         Icon(icon, size: 20, color: cs.onSurface.withOpacity(0.55)),
         const SizedBox(width: 12),
         Expanded(
-            child: Text(label, style: Theme.of(context).textTheme.bodyMedium)),
+            child: Text(label, style: tt.bodyMedium)),
         Switch.adaptive(
           value: value,
           onChanged: onChanged,
@@ -654,7 +723,9 @@ class _SettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final tt = theme.textTheme;
+    final cs = theme.colorScheme;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -666,7 +737,7 @@ class _SettingsTile extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
               child:
-                  Text(label, style: Theme.of(context).textTheme.bodyMedium)),
+                  Text(label, style: tt.bodyMedium)),
           if (trailing != null) ...[trailing!, const SizedBox(width: 4)],
           Icon(Icons.chevron_right,
               color: cs.onSurface.withOpacity(0.3), size: 18),

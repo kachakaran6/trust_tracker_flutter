@@ -121,6 +121,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return SetPinPage(
             isChangingPin: extra?['changing'] == true,
             isDisabling: extra?['disabling'] == true,
+            verifyingForBio: extra?['verifyingForBio'],
           );
         },
       ),
@@ -217,32 +218,45 @@ class _MainShellState extends State<MainShell> {
   }
 
   Future<void> _handleBackPressed() async {
+    // Priority 1: Check if the Root Navigator (full-screen sub-pages) can pop.
+    final rootNavigator = _rootNavigatorKey.currentState;
+    if (rootNavigator != null && rootNavigator.canPop()) {
+      debugPrint('[Navigation] Pop Request: Root Navigator Popped');
+      rootNavigator.pop();
+      return;
+    }
+
+    // Priority 2: Check if the current tab's branch has internal history.
     final activeNavigator = _activeBranchNavigator;
-    
-    // 1. If the current tab has its own internal nested navigation stack, pop it first.
     if (activeNavigator != null && activeNavigator.canPop()) {
+      debugPrint('[Navigation] Pop Request: Branch Navigator Popped');
       activeNavigator.pop();
       return;
     }
 
-    // 2. If the user is NOT on the Home tab (index 0), switch back to Home.
+    // Priority 3: If not on Home tab (index 0), switch back to Home.
     if (widget.navigationShell.currentIndex != 0) {
+      debugPrint('[Navigation] Pop Request: Switching Tab to Home');
       widget.navigationShell.goBranch(0);
       return;
     }
 
-    // 3. If the user is on the Home tab, show the exit confirmation dialog.
+    // Priority 4: From the Home tab root, show the exit confirmation dialog.
+    debugPrint('[Navigation] Pop Request: Showing Exit Dialog');
     final shouldExit = await showExitConfirmationDialog(context);
     if (!mounted || shouldExit != true) {
+      debugPrint('[Navigation] Pop Request: Exit Cancelled');
       return;
     }
 
-    // 4. If confirmed, close the application.
+    // Finally, close the application if confirmed.
+    debugPrint('[Navigation] Pop Request: System Navigator Pop (Exit App)');
     await SystemNavigator.pop();
   }
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('[Navigation] MainShell Build: Current Index = ${widget.navigationShell.currentIndex}');
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final selectedIndex = widget.navigationShell.currentIndex;
@@ -250,10 +264,9 @@ class _MainShellState extends State<MainShell> {
     return PopScope<void>(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) async {
-        if (didPop) {
-          return;
-        }
-        await _handleBackPressed();
+        if (didPop) return;
+        debugPrint('[Navigation] Pop Intercepted via PopScope');
+        _handleBackPressed();
       },
       child: Scaffold(
         body: widget.navigationShell,
@@ -471,7 +484,7 @@ class _BottomNavBar extends StatelessWidget {
               _NavItem(
                 icon: Icons.receipt_long_outlined,
                 activeIcon: Icons.receipt_long_rounded,
-                label: 'Transactions',
+                label: 'Activity',
                 selected: selectedIndex == 1,
                 onTap: () => onTap(1),
                 cs: cs,

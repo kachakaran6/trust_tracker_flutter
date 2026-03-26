@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/services/export_service.dart';
@@ -22,6 +21,7 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final tt = theme.textTheme;
     final cs = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
@@ -36,10 +36,10 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(cs),
+          _buildHeader(cs, tt),
           const SizedBox(height: 24),
           
-          Text('Select Format', style: _labelStyle(cs)),
+          Text('SELECT FORMAT', style: tt.sectionLabel),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -52,6 +52,7 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
                 onTap: () => setState(() => _selectedFormat = ExportFormat.pdf),
                 activeColor: Colors.red.shade400,
                 cs: cs,
+                tt: tt,
               ),
               const SizedBox(width: 12),
               _ExportFormatCard(
@@ -63,14 +64,15 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
                 onTap: () => setState(() => _selectedFormat = ExportFormat.excel),
                 activeColor: Colors.green.shade500,
                 cs: cs,
+                tt: tt,
               ),
             ],
           ),
           
           const SizedBox(height: 24),
-          Text('Date Range', style: _labelStyle(cs)),
+          Text('DATE RANGE', style: tt.sectionLabel),
           const SizedBox(height: 12),
-          _buildRangeSelector(cs),
+          _buildRangeSelector(cs, tt),
           
           if (_selectedRange == ExportTimeRange.custom) ...[
             const SizedBox(height: 12),
@@ -78,13 +80,14 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
               range: _customRange != null ? DateTimeRange(start: _customRange!.start, end: _customRange!.end) : null,
               onTap: _pickCustomRange,
               cs: cs,
+              tt: tt,
             ),
           ],
           
           const SizedBox(height: 32),
           SizedBox(
             width: double.infinity,
-            height: 54,
+            height: 56,
             child: ElevatedButton(
               onPressed: _isExporting ? null : _handleExport,
               style: ElevatedButton.styleFrom(
@@ -94,13 +97,13 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
                 elevation: 0,
               ),
               child: _isExporting
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                   : Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.file_download_outlined, size: 20),
-                        const SizedBox(width: 8),
-                        Text('Generate Export', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 16)),
+                        const Icon(Icons.file_download_outlined, size: 22),
+                        const SizedBox(width: 10),
+                        Text('Generate Export', style: tt.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
                       ],
                     ),
             ),
@@ -110,35 +113,33 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
     );
   }
 
-  Widget _buildHeader(ColorScheme cs) {
+  Widget _buildHeader(ColorScheme cs, TextTheme tt) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Export Transactions',
-                style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w700, color: cs.onSurface)),
+            Text('Export Transactions', style: tt.headlineSmall),
             const SizedBox(height: 4),
-            Text('Save or share your financial data',
-                style: GoogleFonts.inter(fontSize: 13, color: cs.onSurface.withOpacity(0.5))),
+            Text('Save or share your financial data', style: tt.bodySmall),
           ],
         ),
         IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: Icon(Icons.close, color: cs.onSurface.withOpacity(0.3)),
+          icon: Icon(Icons.close, color: cs.onSurface.withOpacity(0.4)),
           style: IconButton.styleFrom(backgroundColor: cs.onSurface.withOpacity(0.05)),
         ),
       ],
     );
   }
 
-  Widget _buildRangeSelector(ColorScheme cs) {
+  Widget _buildRangeSelector(ColorScheme cs, TextTheme tt) {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: cs.onSurface.withOpacity(0.04),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         children: [
@@ -149,12 +150,14 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
                 selected: _selectedRange == ExportTimeRange.thisMonth,
                 onTap: () => setState(() => _selectedRange = ExportTimeRange.thisMonth),
                 cs: cs,
+                tt: tt,
               ),
               _RangeButton(
                 label: 'Last Month',
                 selected: _selectedRange == ExportTimeRange.lastMonth,
                 onTap: () => setState(() => _selectedRange = ExportTimeRange.lastMonth),
                 cs: cs,
+                tt: tt,
               ),
             ],
           ),
@@ -165,12 +168,14 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
                 selected: _selectedRange == ExportTimeRange.last3Months,
                 onTap: () => setState(() => _selectedRange = ExportTimeRange.last3Months),
                 cs: cs,
+                tt: tt,
               ),
               _RangeButton(
                 label: 'All History',
                 selected: _selectedRange == ExportTimeRange.all,
                 onTap: () => setState(() => _selectedRange = ExportTimeRange.all),
                 cs: cs,
+                tt: tt,
               ),
               _RangeButton(
                 label: 'Custom',
@@ -180,6 +185,7 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
                    if (_customRange == null) _pickCustomRange();
                 },
                 cs: cs,
+                tt: tt,
               ),
             ],
           ),
@@ -201,9 +207,6 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
       setState(() => _customRange = ExportDateRange(start: picked.start, end: picked.end));
     }
   }
-
-  _labelStyle(ColorScheme cs) => GoogleFonts.inter(
-      fontSize: 12, fontWeight: FontWeight.w700, color: cs.onSurface.withOpacity(0.4), letterSpacing: 0.5);
 
   Future<void> _handleExport() async {
     if (_selectedRange == ExportTimeRange.custom && _customRange == null) {
@@ -237,6 +240,7 @@ class _ExportFormatCard extends StatelessWidget {
   final VoidCallback onTap;
   final Color activeColor;
   final ColorScheme cs;
+  final TextTheme tt;
 
   const _ExportFormatCard({
     required this.format,
@@ -247,6 +251,7 @@ class _ExportFormatCard extends StatelessWidget {
     required this.onTap,
     required this.activeColor,
     required this.cs,
+    required this.tt,
   });
 
   @override
@@ -258,21 +263,21 @@ class _ExportFormatCard extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: isSelected ? activeColor.withOpacity(0.08) : cs.onSurface.withOpacity(0.03),
+            color: isSelected ? activeColor.withOpacity(0.08) : cs.onSurface.withOpacity(0.04),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: isSelected ? activeColor : Colors.transparent,
-              width: 1.5,
+              width: 2,
             ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, color: isSelected ? activeColor : cs.onSurface.withOpacity(0.3), size: 28),
-              const SizedBox(height: 12),
-              Text(title, style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 13, color: cs.onSurface)),
+              Icon(icon, color: isSelected ? activeColor : cs.onSurface.withOpacity(0.3), size: 30),
+              const SizedBox(height: 16),
+              Text(title, style: tt.titleSmall),
               const SizedBox(height: 4),
-              Text(description, style: GoogleFonts.inter(fontSize: 10, color: cs.onSurface.withOpacity(0.4))),
+              Text(description, style: tt.labelSmall),
             ],
           ),
         ),
@@ -286,8 +291,9 @@ class _RangeButton extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
   final ColorScheme cs;
+  final TextTheme tt;
 
-  const _RangeButton({required this.label, required this.selected, required this.onTap, required this.cs});
+  const _RangeButton({required this.label, required this.selected, required this.onTap, required this.cs, required this.tt});
 
   @override
   Widget build(BuildContext context) {
@@ -295,17 +301,18 @@ class _RangeButton extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          height: 38,
+          height: 42,
           margin: const EdgeInsets.all(4),
           decoration: BoxDecoration(
             color: selected ? cs.surface : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: selected ? [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))] : null,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: selected ? [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 6, offset: const Offset(0, 3))] : null,
           ),
           child: Center(
             child: Text(label,
-                style: GoogleFonts.inter(
-                    fontSize: 12, fontWeight: selected ? FontWeight.w600 : FontWeight.w500, color: selected ? cs.primary : cs.onSurface.withOpacity(0.5))),
+                style: tt.labelLarge?.copyWith(
+                    fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
+                    color: selected ? cs.primary : cs.onSurface.withOpacity(0.5))),
           ),
         ),
       ),
@@ -317,8 +324,9 @@ class _CustomRangePicker extends StatelessWidget {
   final DateTimeRange? range;
   final VoidCallback onTap;
   final ColorScheme cs;
+  final TextTheme tt;
 
-  const _CustomRangePicker({double? val, this.range, required this.onTap, required this.cs});
+  const _CustomRangePicker({this.range, required this.onTap, required this.cs, required this.tt});
 
   @override
   Widget build(BuildContext context) {
@@ -328,21 +336,21 @@ class _CustomRangePicker extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: cs.onSurface.withOpacity(0.04),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: cs.outlineVariant.withOpacity(0.5)),
         ),
         child: Row(
           children: [
-            Icon(Icons.date_range_outlined, size: 18, color: cs.primary),
+            Icon(Icons.date_range_outlined, size: 20, color: cs.primary),
             const SizedBox(width: 12),
             Text(
               range == null 
                 ? 'Select date range' 
                 : '${range!.start.day}/${range!.start.month}/${range!.start.year} - ${range!.end.day}/${range!.end.month}/${range!.end.year}',
-              style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface),
+              style: tt.titleSmall,
             ),
             const Spacer(),
-            Icon(Icons.chevron_right_rounded, size: 18, color: cs.onSurface.withOpacity(0.3)),
+            Icon(Icons.chevron_right_rounded, size: 20, color: cs.onSurface.withOpacity(0.3)),
           ],
         ),
       ),

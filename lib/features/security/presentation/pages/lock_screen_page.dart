@@ -1,16 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:trust_tracker_flutter/core/security/security_provider.dart';
 import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-/// Premium fintech lock screen.
-///
-/// On [initState], if biometric is enabled → immediately triggers biometric
-/// prompt (NO PIN shown first). If biometric fails or is not enabled, the PIN
-/// keypad is shown.
 class LockScreenPage extends ConsumerStatefulWidget {
   const LockScreenPage({super.key});
 
@@ -19,13 +12,14 @@ class LockScreenPage extends ConsumerStatefulWidget {
 }
 
 class _LockScreenPageState extends ConsumerState<LockScreenPage>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   final List<String> _pin = [];
   bool _hasError = false;
   static const int _pinLength = 4;
 
   late final AnimationController _shakeController;
   late final Animation<double> _shakeAnim;
+  late final List<AnimationController> _digitControllers;
 
   @override
   void initState() {
@@ -38,12 +32,21 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
         .chain(CurveTween(curve: Curves.elasticOut))
         .animate(_shakeController);
 
+    _digitControllers = List.generate(_pinLength, (i) => AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+    ));
+
+    // Feature 6: Auto-authentication attempt on screen load
     WidgetsBinding.instance.addPostFrameCallback((_) => _tryBiometric());
   }
 
   @override
   void dispose() {
     _shakeController.dispose();
+    for (var c in _digitControllers) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -51,9 +54,14 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
     final security = ref.read(securityProvider);
     if (!security.isBiometricEnabled) return;
     
-    // Slight delay to ensure the UI is ready for the native prompt
-    await Future.delayed(const Duration(milliseconds: 300));
-    await ref.read(securityProvider.notifier).authenticateBiometric();
+    // Feature 7: Handle biometric gracefully
+    await Future.delayed(const Duration(milliseconds: 400));
+    final success = await ref.read(securityProvider.notifier).authenticateBiometric();
+    
+    if (!success && mounted) {
+      // Haptic feedback for failure
+      HapticFeedback.lightImpact();
+    }
   }
 
   void _onKeyTap(String digit) {
@@ -63,6 +71,8 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
       _pin.add(digit);
       _hasError = false;
     });
+    _digitControllers[_pin.length - 1].forward(from: 0);
+
     if (_pin.length == _pinLength) {
       _verifyPin();
     }
@@ -71,6 +81,7 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
   void _onBackspace() {
     if (_pin.isEmpty) return;
     HapticFeedback.lightImpact();
+    _digitControllers[_pin.length - 1].reverse();
     setState(() => _pin.removeLast());
   }
 
@@ -78,6 +89,7 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
     final success = await ref
         .read(securityProvider.notifier)
         .verifyPin(_pin.join());
+        
     if (!success) {
       HapticFeedback.vibrate();
       _shakeController.forward(from: 0);
@@ -91,156 +103,127 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
         if (mounted) setState(() => _hasError = false);
       }
     }
-    // Navigation is handled automatically by GoRouter via refreshListenable
   }
 
   @override
   Widget build(BuildContext context) {
     final security = ref.watch(securityProvider);
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final tt = theme.textTheme;
     final cs = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    // --- 8pt Spacing Scale ---
+    const double spTight = 8.0;
+    const double spStd = 16.0;
+    const double spSect = 24.0;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.gray50,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
             const Spacer(flex: 2),
-            // App icon
+            
+            // --- Iconic App Header ---
             Container(
-              width: 80,
-              height: 80,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppColors.primary600, AppColors.primary400],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(28),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary500.withOpacity(0.4),
-                    blurRadius: 24,
-                    offset: const Offset(0, 8),
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 32,
+                    offset: const Offset(0, 10),
                   ),
                 ],
               ),
-              child: const Icon(
-                Icons.account_balance_wallet_rounded,
-                size: 40,
-                color: Colors.white,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(28),
+                child: Image.asset(
+                  'assets/images/2.png',
+                  width: 92,
+                  height: 92,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: spSect),
+            
+            Text('Trust Tracker', style: tt.displaySmall?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -1.0)),
+            const SizedBox(height: spTight),
+            
             Text(
-              'Trust Tracker',
-              style: GoogleFonts.inter(
-                fontSize: 26,
-                fontWeight: FontWeight.w700,
-                color: cs.onSurface,
+              _hasError ? 'Incorrect PIN. Try again.' : 'Enter your security PIN',
+              style: tt.bodyMedium?.copyWith(
+                color: _hasError ? AppColors.danger500 : cs.onSurface.withOpacity(0.4),
+                fontWeight: _hasError ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              _hasError
-                  ? 'Incorrect PIN. Try again.'
-                  : 'Enter your PIN',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: _hasError ? AppColors.danger500 : AppColors.gray500,
-                fontWeight: _hasError ? FontWeight.w600 : FontWeight.w400,
-              ),
-            ),
-            const SizedBox(height: 40),
-            // PIN dots
+            const SizedBox(height: 48),
+
+            // --- Dots Visualization (Micro-animations) ---
             AnimatedBuilder(
               animation: _shakeAnim,
               builder: (context, child) {
-                final offset = _shakeAnim.value * 10 *
-                    ((_shakeAnim.value * 4).round() % 2 == 0 ? 1 : -1);
-                return Transform.translate(
-                  offset: Offset(offset, 0),
-                  child: child,
-                );
+                final offset = _shakeAnim.value * 12 * ((_shakeAnim.value * 4).round() % 2 == 0 ? 1 : -1);
+                return Transform.translate(offset: Offset(offset, 0), child: child);
               },
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(_pinLength, (i) {
                   final filled = i < _pin.length;
-                  return AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    margin: const EdgeInsets.symmetric(horizontal: 10),
-                    width: filled ? 18 : 16,
-                    height: filled ? 18 : 16,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _hasError
-                          ? AppColors.danger500
-                          : filled
-                              ? cs.primary
-                              : (isDark
-                                  ? const Color(0xFF2D3748)
-                                  : AppColors.gray300),
-                      boxShadow: filled && !_hasError
-                          ? [
-                              BoxShadow(
-                                color: cs.primary.withOpacity(0.4),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              )
-                            ]
-                          : null,
+                  final scaleAnim = _digitControllers[i];
+
+                  return ScaleTransition(
+                    scale: Tween<double>(begin: 1.0, end: 1.2).animate(CurvedAnimation(parent: scaleAnim, curve: Curves.easeOutBack)),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      margin: const EdgeInsets.symmetric(horizontal: 14),
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _hasError ? AppColors.danger500 : filled ? cs.primary : cs.surfaceContainerHighest,
+                        boxShadow: filled && !_hasError
+                            ? [BoxShadow(color: cs.primary.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))]
+                            : null,
+                        border: !filled ? Border.all(color: cs.outlineVariant.withOpacity(0.3), width: 1.5) : null,
+                      ),
                     ),
                   );
                 }),
               ),
             ),
+            
             const Spacer(flex: 1),
-            // Numpad
+
+            // --- Secure Keypad ---
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 48),
+              padding: const EdgeInsets.symmetric(horizontal: 40),
               child: Column(
                 children: [
-                  for (final row in [
-                    ['1', '2', '3'],
-                    ['4', '5', '6'],
-                    ['7', '8', '9'],
-                    ['bio', '0', '⌫'],
-                  ])
+                  for (final row in [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9'], ['bio', '0', '⌫']])
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.only(bottom: spStd),
                       child: Row(
                         children: row.map((key) {
                           if (key == '⌫') {
                             return _KeypadButton(
-                              child: Icon(Icons.backspace_outlined,
-                                  size: 22, color: cs.onSurface),
+                              child: Icon(Icons.backspace_rounded, size: 24, color: cs.onSurface),
                               onTap: _onBackspace,
-                              isDark: isDark,
                             );
                           }
                           if (key == 'bio') {
                             return security.isBiometricEnabled
                                 ? _KeypadButton(
-                                    child: Icon(Icons.fingerprint,
-                                        size: 28, color: cs.primary),
+                                    child: Icon(Icons.fingerprint_rounded, size: 32, color: cs.primary),
                                     onTap: _tryBiometric,
-                                    isDark: isDark,
                                   )
                                 : const Expanded(child: SizedBox());
                           }
                           return _KeypadButton(
-                            child: Text(
-                              key,
-                              style: GoogleFonts.inter(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w600,
-                                color: cs.onSurface,
-                              ),
-                            ),
+                            child: Text(key, style: tt.displaySmall?.copyWith(fontSize: 32, fontWeight: FontWeight.w700, color: cs.onSurface)),
                             onTap: () => _onKeyTap(key),
-                            isDark: isDark,
                           );
                         }).toList(),
                       ),
@@ -259,16 +242,14 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
 class _KeypadButton extends StatelessWidget {
   final Widget child;
   final VoidCallback onTap;
-  final bool isDark;
 
-  const _KeypadButton({
-    required this.child,
-    required this.onTap,
-    required this.isDark,
-  });
+  const _KeypadButton({required this.child, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -276,19 +257,17 @@ class _KeypadButton extends StatelessWidget {
           color: Colors.transparent,
           child: InkWell(
             onTap: onTap,
-            borderRadius: BorderRadius.circular(50),
+            borderRadius: BorderRadius.circular(100),
             child: Container(
-              height: 64,
+              height: 76,
               decoration: BoxDecoration(
-                color: isDark
-                    ? const Color(0xFF1F2937)
-                    : Colors.white,
+                color: isDark ? const Color(0xFF1E293B) : Colors.white,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.3 : 0.06),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+                    color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),

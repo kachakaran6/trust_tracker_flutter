@@ -8,21 +8,17 @@ import 'package:trust_tracker_flutter/features/transactions/data/models/transact
 import 'package:trust_tracker_flutter/features/transactions/presentation/providers/transaction_provider.dart';
 import 'package:trust_tracker_flutter/features/transactions/presentation/widgets/category_dropdown_field.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
 import 'package:intl/intl.dart';
 
-// FIX Issue 9: Use autoDispose (no family caching) so categories always reload
-// Also watch transactionListProvider indirectly via invalidation when needed.
-// Using StreamProvider or autoDispose FutureProvider ensures fresh data each open.
 final _categoriesByTypeProvider = FutureProvider.autoDispose
     .family<List<CategoryModel>, CategoryType>((ref, type) {
-  // No caching — always fetches fresh list from DB each time the form opens.
   return ref.watch(categoryRepositoryProvider).getByType(type);
 });
 
 class AddTransactionPage extends ConsumerStatefulWidget {
   final String? initialType;
-  final TransactionModel? editTransaction; // null = create mode
+  final TransactionModel? editTransaction;
   final TransactionModel? duplicateTransaction;
 
   const AddTransactionPage({
@@ -67,16 +63,14 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
         TabController(length: 2, vsync: this, initialIndex: isExpense ? 1 : 0);
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
-        return;
-      }
-
-      final nextCategoryType = _currentCategoryType;
-      if (_selectedCategory?.type != nextCategoryType) {
-        setState(() => _selectedCategory = null);
+        final nextCategoryType = _currentCategoryType;
+        if (_selectedCategory?.type != nextCategoryType) {
+          setState(() => _selectedCategory = null);
+        }
+        setState(() {}); // Rebuild for toggle accent updates
       }
     });
 
-    // Pre-fill if editing OR duplicating
     if (source != null) {
       _amountController.text = source.amount.toStringAsFixed(
           source.amount == source.amount.roundToDouble() ? 0 : 2);
@@ -87,7 +81,6 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
         _selectedDate = edit.date;
         _selectedTime = TimeOfDay.fromDateTime(edit.createdAt);
       } else {
-        // For duplicates, use current date/time
         _selectedDate = DateTime.now();
         _selectedTime = TimeOfDay.now();
       }
@@ -99,6 +92,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
 
   @override
   void dispose() {
+    _tabController.removeListener(() {});
     _tabController.dispose();
     _amountController.dispose();
     _descController.dispose();
@@ -133,7 +127,6 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
     if (picked != null) setState(() => _selectedTime = picked);
   }
 
-  /// Combine date + time into a single DateTime
   DateTime get _fullDateTime => DateTime(
         _selectedDate.year,
         _selectedDate.month,
@@ -143,18 +136,6 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
       );
 
   void _handleCategorySelected(CategoryModel category) {
-    final targetIndex = category.type == CategoryType.income ? 0 : 1;
-    if (_tabController.index != targetIndex) {
-      _tabController.animateTo(targetIndex);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) {
-          return;
-        }
-        setState(() => _selectedCategory = category);
-      });
-      return;
-    }
-
     setState(() => _selectedCategory = category);
   }
 
@@ -178,7 +159,6 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
 
     try {
       if (_isEditMode) {
-        // Mutate existing model
         final edit = widget.editTransaction!;
         edit.amount = amount;
         edit.description = _descController.text.trim();
@@ -202,139 +182,183 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
               ? null
               : _noteController.text.trim(),
         );
-        // Optimistic add — returns instantly while DB write is in background
         await notifier.addTransaction(t);
+      }
+      if (mounted) context.pop();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
-    }
-
-    if (mounted) {
-      if (_isDuplicateMode) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Transaction duplicated successfully'),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: const Color(0xFF10B981),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        );
-      }
-      context.pop();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
-    final cs = Theme.of(context).colorScheme;
     final theme = Theme.of(context);
+    final tt = theme.textTheme;
+    final cs = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+    
+    // --- 8pt Spacing Scale ---
+    const double spMicro = 4.0;
+    const double spTight = 8.0;
+    const double spSmall = 12.0;
+    const double spStd = 16.0;
+    const double spSect = 24.0;
+    
+    const expenseColor = AppColors.danger500;
+    const incomeColor = AppColors.success500;
+    
     final isExpense = _currentType == TransactionType.expense;
-    final accentColor =
-        isExpense ? const Color(0xFFEF4444) : const Color(0xFF10B981);
-    final accentLight =
-        isExpense ? const Color(0xFFFEF2F2) : const Color(0xFFECFDF5);
+    final activeAccent = isExpense ? expenseColor : incomeColor;
+    final activeBg = activeAccent.withOpacity(0.12);
+
+    final labelColor = isDark ? AppColors.gray400 : AppColors.gray500;
+    final inputBorderColor = isDark ? AppColors.gray800 : AppColors.gray200;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: theme.scaffoldBackgroundColor,
-        surfaceTintColor: Colors.transparent,
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: _buildCloseButton(context, cs),
-        title: Text(
-          _isEditMode
-              ? 'Edit Transaction'
-              : _isDuplicateMode
-                  ? 'Duplicate Transaction'
-                  : 'New Transaction',
-          style: GoogleFonts.inter(
-              fontSize: 17, fontWeight: FontWeight.w600, color: cs.onSurface),
-        ),
         centerTitle: true,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: TextButton(
-              onPressed: _isLoading ? null : _save,
-              style: TextButton.styleFrom(
-                backgroundColor: accentColor.withOpacity(0.1),
-                foregroundColor: accentColor,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20)),
-              ),
-              child: Text(_isDuplicateMode ? 'Copy' : 'Save',
-                  style: GoogleFonts.inter(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                      color: accentColor)),
-            ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: cs.onSurface, size: 20),
+          onPressed: () => context.pop(),
+        ),
+        title: Text(
+          _isEditMode ? 'Edit Transaction' : 'Add Transaction',
+          style: tt.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w800,
+            fontSize: 18,
+            letterSpacing: -0.5,
           ),
-        ],
+        ),
+        actions: const [], // Removed profile icon as requested
       ),
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
+          padding: const EdgeInsets.symmetric(horizontal: spStd),
           children: [
-            // ── Type Toggle (Income / Expense) ───────────────────────
-            _buildTypeToggle(cs, accentColor, isDark),
-            const SizedBox(height: 28),
-
-            // ── Amount Hero Field ────────────────────────────────────
-            _buildAmountCard(settings, cs, accentColor, accentLight, isDark),
-            const SizedBox(height: 20),
-
-            // ── Description ──────────────────────────────────────────
-            _buildSectionLabel('Description', cs),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _descController,
-              decoration: InputDecoration(
-                hintText: 'What was this for?',
-                prefixIcon: Icon(Icons.edit_note_rounded,
-                    color: cs.onSurface.withOpacity(0.4), size: 20),
+            const SizedBox(height: spStd),
+            
+            // --- Amount Section ---
+            Center(
+              child: Column(
+                children: [
+                  Text(
+                    'AMOUNT',
+                    style: tt.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.5,
+                      color: labelColor.withOpacity(0.5),
+                    ),
+                  ),
+                  const SizedBox(height: spMicro),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        settings.currency,
+                        style: tt.headlineMedium?.copyWith(
+                          color: labelColor.withOpacity(0.3),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: spTight),
+                      IntrinsicWidth(
+                        child: TextFormField(
+                          controller: _amountController,
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          style: tt.displayLarge?.copyWith(
+                            fontSize: 64, // Slightly reduced for tightness
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -1,
+                            color: cs.onSurface,
+                            height: 1.0,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: '0.00',
+                            hintStyle: tt.displayLarge?.copyWith(
+                              fontSize: 64,
+                              fontWeight: FontWeight.w900,
+                              color: isDark ? AppColors.gray800 : AppColors.gray100,
+                            ),
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            fillColor: Colors.transparent,
+                            filled: false,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              validator: (v) =>
-                  v == null || v.trim().isEmpty ? 'Enter a description' : null,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: spSect),
 
-            // ── Date & Time ──────────────────────────────────────────
-            _buildSectionLabel('Date & Time', cs),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: _buildDateTimePill(
-                    icon: Icons.calendar_today_outlined,
-                    label: DateFormat('MMM dd, yyyy').format(_selectedDate),
-                    onTap: _pickDate,
-                    cs: cs,
-                  ),
+            // --- Type Toggle (Segmented Control) ---
+            Container(
+              padding: const EdgeInsets.all(spMicro),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E293B) : AppColors.gray100.withOpacity(0.8),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: TabBar(
+                controller: _tabController,
+                dividerColor: Colors.transparent,
+                indicator: BoxDecoration(
+                  color: isDark ? activeAccent.withOpacity(0.2) : Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: !isDark && isExpense || !isDark && !isExpense 
+                      ? [BoxShadow(color: activeAccent.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))]
+                      : null,
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  flex: 2,
-                  child: _buildDateTimePill(
-                    icon: Icons.access_time_rounded,
-                    label: _selectedTime.format(context),
-                    onTap: _pickTime,
-                    cs: cs,
+                indicatorSize: TabBarIndicatorSize.tab,
+                labelColor: activeAccent,
+                unselectedLabelColor: labelColor.withOpacity(0.5),
+                labelStyle: tt.labelLarge?.copyWith(fontWeight: FontWeight.w800),
+                unselectedLabelStyle: tt.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+                tabs: [
+                  Tab(
+                    child: AnimatedDefaultTextStyle(
+                      duration: const Duration(milliseconds: 200),
+                      style: tt.labelLarge!.copyWith(
+                        color: !isExpense ? incomeColor : labelColor.withOpacity(0.5),
+                        fontWeight: FontWeight.w800,
+                      ),
+                      child: const Text('Income'),
+                    ),
                   ),
-                ),
-              ],
+                  Tab(
+                    child: AnimatedDefaultTextStyle(
+                      duration: const Duration(milliseconds: 200),
+                      style: tt.labelLarge!.copyWith(
+                        color: isExpense ? expenseColor : labelColor.withOpacity(0.5),
+                        fontWeight: FontWeight.w800,
+                      ),
+                      child: const Text('Expense'),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: spSect),
 
-            // ── Category ─────────────────────────────────────────────
-            _buildSectionLabel('Category', cs),
-            const SizedBox(height: 10),
+            // --- Category Dropdown ---
+            _buildSectionLabel('CATEGORY', labelColor),
+            const SizedBox(height: spTight),
             TransactionCategoryDropdown(
               type: _currentCategoryType,
               selected: _selectedCategory,
@@ -345,369 +369,187 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
                       : null,
               onSelect: _handleCategorySelected,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: spSect),
 
-            // ── Note ─────────────────────────────────────────────────
-            _buildSectionLabel('Note (optional)', cs),
-            const SizedBox(height: 8),
+            // --- Description ---
+            _buildSectionLabel('DESCRIPTION', labelColor),
+            const SizedBox(height: spMicro),
+            TextFormField(
+              controller: _descController,
+              style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+              decoration: InputDecoration(
+                hintText: 'What was this for?',
+                prefixIcon: Icon(Icons.edit_note_rounded, color: labelColor.withOpacity(0.6), size: 22),
+                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: inputBorderColor)),
+                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: activeAccent, width: 2)),
+                fillColor: Colors.transparent,
+                filled: false,
+                contentPadding: const EdgeInsets.symmetric(vertical: spStd),
+              ),
+              validator: (v) => v == null || v.trim().isEmpty ? 'Enter a description' : null,
+            ),
+            const SizedBox(height: spSect),
+
+            // --- Date and Time ---
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionLabel('DATE', labelColor),
+                      const SizedBox(height: spMicro),
+                      InkWell(
+                        onTap: _pickDate,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: spStd),
+                          decoration: BoxDecoration(
+                            border: Border(bottom: BorderSide(color: inputBorderColor)),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.calendar_today_rounded, color: labelColor.withOpacity(0.6), size: 18),
+                              const SizedBox(width: spSmall),
+                              Text(
+                                DateFormat('MMM dd, yyyy').format(_selectedDate),
+                                style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: spSect),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionLabel('TIME', labelColor),
+                      const SizedBox(height: spMicro),
+                   InkWell(
+                        onTap: _pickTime,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: spStd),
+                          decoration: BoxDecoration(
+                            border: Border(bottom: BorderSide(color: inputBorderColor)),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.access_time_filled_rounded, color: labelColor.withOpacity(0.6), size: 18),
+                              const SizedBox(width: spSmall),
+                              Text(
+                                _selectedTime.format(context),
+                                style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: spSect),
+
+            // --- Notes ---
+            _buildSectionLabel('NOTES (OPTIONAL)', labelColor),
+            const SizedBox(height: spMicro),
             TextFormField(
               controller: _noteController,
-              maxLines: 3,
+              style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
               decoration: InputDecoration(
-                hintText: 'Add any extra details...',
-                alignLabelWithHint: true,
-                prefixIcon: Padding(
-                  padding: const EdgeInsets.only(bottom: 40),
-                  child: Icon(Icons.sticky_note_2_outlined,
-                      color: cs.onSurface.withOpacity(0.4), size: 20),
-                ),
+                hintText: 'Add a quick note...',
+                prefixIcon: Icon(Icons.subject_rounded, color: labelColor.withOpacity(0.6), size: 20),
+                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: inputBorderColor)),
+                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: activeAccent, width: 2)),
+                fillColor: Colors.transparent,
+                filled: false,
+                contentPadding: const EdgeInsets.symmetric(vertical: spStd),
               ),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: spStd),
 
-            // ── Save Button ──────────────────────────────────────────
+            // --- Attach Receipt ---
+            // Container(
+            //   width: double.infinity,
+            //   height: 48, // Reduced height for tightness
+            //   margin: const EdgeInsets.only(top: spSmall),
+            //   decoration: BoxDecoration(
+            //     borderRadius: BorderRadius.circular(12),
+            //     border: Border.all(
+            //       color: isDark ? AppColors.gray800 : AppColors.gray100,
+            //       width: 1.5,
+            //     ),
+            //   ),
+            //   child: InkWell(
+            //     onTap: () {}, 
+            //     borderRadius: BorderRadius.circular(12),
+            //     child: Row(
+            //       mainAxisAlignment: MainAxisAlignment.center,
+            //       children: [
+            //         Icon(Icons.add_a_photo_outlined, color: labelColor.withOpacity(0.7), size: 16),
+            //         const SizedBox(width: spTight),
+            //         Text(
+            //           'Attach Receipt',
+            //           style: tt.labelLarge?.copyWith(color: labelColor, fontWeight: FontWeight.w700, fontSize: 13),
+            //         ),
+            //       ],
+            //     ),
+            //   ),
+            // ),
+            const SizedBox(height: 32),
+
+            // --- Save Button ---
             SizedBox(
               width: double.infinity,
+              height: 56,
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _save,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: accentColor,
+                  backgroundColor: activeAccent,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
+                  elevation: 4,
+                  shadowColor: activeAccent.withOpacity(0.3),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
                 child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2))
+                    ? const CircularProgressIndicator(color: Colors.white)
                     : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                              _isEditMode
-                                  ? Icons.check_circle_outline
-                                  : _isDuplicateMode
-                                      ? Icons.content_copy_rounded
-                                      : Icons.add_circle_outline,
-                              size: 18),
-                          const SizedBox(width: 8),
+                          const Icon(Icons.done_rounded, size: 20),
+                          const SizedBox(width: spSmall),
                           Text(
-                            _isEditMode
-                                ? 'Update Transaction'
-                                : _isDuplicateMode
-                                    ? 'Duplicate Transaction'
-                                    : 'Save Transaction',
-                            style: GoogleFonts.inter(
-                                fontSize: 15, fontWeight: FontWeight.w700),
+                            _isEditMode ? 'Update Transaction' : 'Save Transaction',
+                            style: tt.titleMedium?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 16,
+                            ),
                           ),
                         ],
                       ),
               ),
             ),
+            const SizedBox(height: 40),
           ],
         ),
       ),
     );
   }
 
-  /// ── Sub-builders ────────────────────────────────────────────────────────
-
-  Widget _buildCloseButton(BuildContext context, ColorScheme cs) {
-    return Padding(
-      padding: const EdgeInsets.all(8),
-      child: InkWell(
-        onTap: () => context.pop(),
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: cs.onSurface.withOpacity(0.06),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(Icons.close, size: 18, color: cs.onSurface),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTypeToggle(ColorScheme cs, Color accent, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: isDark
-            ? const Color(0xFF1F2937)
-            : cs.surfaceContainerHighest.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: TabBar(
-        controller: _tabController,
-        indicator: BoxDecoration(
-          color: accent,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: accent.withOpacity(0.3),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            )
-          ],
-        ),
-        indicatorSize: TabBarIndicatorSize.tab,
-        labelColor: Colors.white,
-        unselectedLabelColor: cs.onSurface.withOpacity(0.5),
-        labelStyle:
-            GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
-        unselectedLabelStyle:
-            GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 14),
-        dividerColor: Colors.transparent,
-        tabs: const [
-          Tab(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('💰', style: TextStyle(fontSize: 16)),
-                SizedBox(width: 6),
-                Text('Income'),
-              ],
-            ),
-          ),
-          Tab(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('💸', style: TextStyle(fontSize: 16)),
-                SizedBox(width: 6),
-                Text('Expense'),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAmountCard(SettingsState settings, ColorScheme cs, Color accent,
-      Color accentLight, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A2535) : accentLight,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: accent.withOpacity(0.2)),
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(
-          'Amount',
-          style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: accent.withOpacity(0.8),
-              letterSpacing: 0.5),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(
-              settings.currency,
-              style: GoogleFonts.inter(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w600,
-                  color: cs.onSurface.withOpacity(0.4)),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: TextFormField(
-                controller: _amountController,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                style: GoogleFonts.inter(
-                    fontSize: 38,
-                    fontWeight: FontWeight.w800,
-                    color: cs.onSurface),
-                decoration: InputDecoration(
-                  hintText: '0.00',
-                  hintStyle: GoogleFonts.inter(
-                      fontSize: 38,
-                      fontWeight: FontWeight.w800,
-                      color: cs.onSurface.withOpacity(0.2)),
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  filled: false,
-                  contentPadding: EdgeInsets.zero,
-                ),
-                validator: (v) {
-                  if (v == null || v.isEmpty) return 'Enter an amount';
-                  if (double.tryParse(v) == null || double.parse(v) <= 0) {
-                    return 'Enter a valid amount';
-                  }
-                  return null;
-                },
-              ),
-            ),
-          ],
-        ),
-      ]),
-    );
-  }
-
-  Widget _buildSectionLabel(String label, ColorScheme cs) {
+  Widget _buildSectionLabel(String label, Color color) {
     return Text(
       label,
-      style: GoogleFonts.inter(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          color: cs.onSurface.withOpacity(0.5),
-          letterSpacing: 0.5),
-    );
-  }
-
-  Widget _buildDateTimePill({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    required ColorScheme cs,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          decoration: BoxDecoration(
-            color: cs.surfaceContainerHighest.withOpacity(0.4),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: cs.outline.withOpacity(0.3)),
+      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.2,
+            color: color.withOpacity(0.5),
+            fontSize: 10,
           ),
-          child: Row(children: [
-            Icon(icon, size: 16, color: cs.onSurface.withOpacity(0.5)),
-            const SizedBox(width: 7),
-            Flexible(
-              child: Text(label,
-                  style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: cs.onSurface),
-                  overflow: TextOverflow.ellipsis),
-            ),
-          ]),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Category Picker ───────────────────────────────────────────────────────────
-
-class _CategoryPicker extends ConsumerStatefulWidget {
-  final CategoryType type;
-  final CategoryModel? selected;
-  final void Function(CategoryModel) onSelect;
-
-  const _CategoryPicker({
-    required this.type,
-    required this.selected,
-    required this.onSelect,
-  });
-
-  @override
-  ConsumerState<_CategoryPicker> createState() => _CategoryPickerState();
-}
-
-class _CategoryPickerState extends ConsumerState<_CategoryPicker> {
-  CategoryModel? _autoSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final categoriesAsync = ref.watch(_categoriesByTypeProvider(widget.type));
-    final cs = Theme.of(context).colorScheme;
-
-    return categoriesAsync.when(
-      data: (cats) {
-        if (cats.isEmpty) {
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              color: cs.surfaceContainerHighest.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: cs.outline.withOpacity(0.2)),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.category_outlined,
-                    color: cs.onSurface.withOpacity(0.35), size: 18),
-                const SizedBox(width: 8),
-                Text('No categories yet — create one in Settings',
-                    style: GoogleFonts.inter(
-                        color: cs.onSurface.withOpacity(0.45), fontSize: 13)),
-              ],
-            ),
-          );
-        }
-
-        final effective = widget.selected ?? _autoSelected;
-
-        return Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: cats.map((cat) {
-            final color = Color(cat.colorHex.toColorInt());
-            final isSelected = effective?.id == cat.id;
-            return GestureDetector(
-              onTap: () => widget.onSelect(cat),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-                decoration: BoxDecoration(
-                  color: isSelected ? color : color.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: isSelected ? color : color.withOpacity(0.3),
-                    width: isSelected ? 2 : 1,
-                  ),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: color.withOpacity(0.25),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          )
-                        ]
-                      : null,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (isSelected) ...[
-                      const Icon(Icons.check, color: Colors.white, size: 13),
-                      const SizedBox(width: 4),
-                    ],
-                    Text(cat.name,
-                        style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight:
-                                isSelected ? FontWeight.w700 : FontWeight.w500,
-                            color: isSelected
-                                ? Colors.white
-                                : color.withOpacity(0.9))),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
-        );
-      },
-      loading: () => const SizedBox(
-          height: 40, child: Center(child: LinearProgressIndicator())),
-      error: (_, __) => const Text('Failed to load categories'),
     );
   }
 }
