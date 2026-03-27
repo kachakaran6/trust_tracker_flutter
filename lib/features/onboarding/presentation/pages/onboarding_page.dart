@@ -51,9 +51,11 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final tt = theme.textTheme;
+    final cs = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: AppColors.primary600,
+      backgroundColor: cs.primary,
       body: SafeArea(
         child: Column(
           children: [
@@ -95,7 +97,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                   onPressed: _next,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
-                    foregroundColor: AppColors.primary600,
+                    foregroundColor: cs.primary,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -103,7 +105,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                   ),
                   child: Text(
                     _currentPage == 2 ? 'Get Started 🚀' : 'Continue',
-                    style: tt.titleMedium?.copyWith(color: AppColors.primary600, fontWeight: FontWeight.w800),
+                    style: tt.titleMedium?.copyWith(color: cs.primary, fontWeight: FontWeight.w800),
                   ),
                 ),
               ),
@@ -169,6 +171,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   }
 
   Widget _buildNamePage(TextTheme tt) {
+    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.all(32),
       child: Column(
@@ -185,7 +188,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           const SizedBox(height: 40),
           TextField(
             controller: _nameController,
-            style: tt.bodyLarge?.copyWith(color: AppColors.gray900, fontWeight: FontWeight.w700),
+            style: tt.bodyLarge?.copyWith(color: cs.onSurface, fontWeight: FontWeight.w700),
             decoration: InputDecoration(
               hintText: 'e.g., Alex',
               filled: true,
@@ -204,6 +207,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   }
 
   Widget _buildCurrencyPage(TextTheme tt) {
+    final cs = Theme.of(context).colorScheme;
     final detectedCode = CurrencyDetector.detectSupported();
     return Padding(
       padding: const EdgeInsets.all(32),
@@ -249,7 +253,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                       Text(c['symbol']!,
                           style: tt.titleLarge?.copyWith(
                               fontSize: 20,
-                              color: isSelected ? AppColors.primary600 : Colors.white)),
+                              color: isSelected ? cs.primary : Colors.white)),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Column(
@@ -258,7 +262,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                             Row(children: [
                               Text(c['code']!,
                                   style: tt.titleMedium?.copyWith(
-                                      color: isSelected ? AppColors.primary700 : Colors.white,
+                                      color: isSelected ? cs.primary : Colors.white,
                                       fontWeight: FontWeight.w800)),
                               if (isDetected && !isSelected) ...[
                                 const SizedBox(width: 8),
@@ -275,12 +279,12 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                             ]),
                             Text(c['name']!,
                                 style: tt.labelLarge?.copyWith(
-                                    color: isSelected ? AppColors.gray500 : Colors.white.withOpacity(0.7))),
+                                    color: isSelected ? cs.onSurfaceVariant : Colors.white.withOpacity(0.7))),
                           ],
                         ),
                       ),
                       if (isSelected)
-                        const Icon(Icons.check_circle_rounded, color: AppColors.primary600, size: 24),
+                        Icon(Icons.check_circle_rounded, color: cs.primary, size: 24),
                     ]),
                   ),
                 );

@@ -211,7 +211,7 @@ class _SetPinPageState extends ConsumerState<SetPinPage>
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: AppColors.success500,
+        backgroundColor: AppColors.success,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -249,7 +249,7 @@ class _SetPinPageState extends ConsumerState<SetPinPage>
     const double spStd = 16.0;
     const double spSect = 24.0;
 
-    final labelColor = isDark ? AppColors.gray400 : AppColors.gray500;
+    final labelColor = cs.onSurfaceVariant;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -297,7 +297,7 @@ class _SetPinPageState extends ConsumerState<SetPinPage>
                         : _subtitle,
                     textAlign: TextAlign.center,
                     style: tt.bodyMedium?.copyWith(
-                      color: _hasError ? AppColors.danger500 : labelColor.withOpacity(0.6),
+                      color: _hasError ? cs.error : labelColor.withOpacity(0.6),
                       fontWeight: _hasError ? FontWeight.w700 : FontWeight.w500,
                     ),
                   ),
@@ -329,12 +329,12 @@ class _SetPinPageState extends ConsumerState<SetPinPage>
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: _hasError
-                            ? AppColors.danger500
-                            : filled ? cs.primary : cs.surfaceContainerHighest.withOpacity(0.5),
+                            ? cs.error
+                            : filled ? cs.primary : cs.surfaceVariant.withOpacity(0.5),
                         boxShadow: filled && !_hasError
                             ? [BoxShadow(color: cs.primary.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))]
                             : null,
-                        border: !filled ? Border.all(color: cs.outlineVariant.withOpacity(0.3), width: 1.5) : null,
+                        border: !filled ? Border.all(color: cs.outline.withOpacity(0.1), width: 1.5) : null,
                       ),
                     ),
                   );
@@ -397,7 +397,7 @@ class _StepIndicator extends StatelessWidget {
             margin: const EdgeInsets.symmetric(horizontal: spMicro),
             height: 6,
             decoration: BoxDecoration(
-              color: active ? cs.primary : cs.outlineVariant.withOpacity(0.2),
+              color: active ? cs.primary : cs.outline.withOpacity(0.1),
               borderRadius: BorderRadius.circular(4),
             ),
           ),
@@ -416,6 +416,7 @@ class _KeypadButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
     return Expanded(
@@ -429,11 +430,11 @@ class _KeypadButton extends StatelessWidget {
             child: Container(
               height: 76,
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                color: cs.surface,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+                    color: cs.shadow.withOpacity(0.05),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),

@@ -244,10 +244,9 @@ class _BudgetSheetState extends ConsumerState<_BudgetSheet> {
           if (widget.existing != null)
             TextButton.icon(
               onPressed: _isSaving ? null : _delete,
-              icon: const Icon(Icons.delete_outline,
-                  color: Color(0xFFEF4444), size: 18),
+              icon: Icon(Icons.delete_outline, color: cs.error, size: 18),
               label: Text('Remove budget',
-                  style: tt.labelLarge?.copyWith(color: const Color(0xFFEF4444))),
+                  style: tt.labelLarge?.copyWith(color: cs.error)),
             ),
           const SizedBox(height: 12),
           SizedBox(
@@ -282,13 +281,14 @@ class _BudgetSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final tt = theme.textTheme;
+    final cs = theme.colorScheme;
 
     if (totalBudgeted == 0) {
       return Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-              colors: [AppColors.primary600, AppColors.primary500]),
+          gradient: LinearGradient(
+              colors: [cs.primary, cs.primary.withOpacity(0.8)]),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(children: [
@@ -313,15 +313,17 @@ class _BudgetSummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isOver
-              ? [AppColors.danger600, AppColors.danger500]
-              : [AppColors.primary600, AppColors.primary500],
+              ? [cs.error, cs.error.withOpacity(0.8)]
+              : [cs.primary, cs.primary.withOpacity(0.8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: (isOver ? AppColors.danger600 : AppColors.primary600).withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+            color: (isOver ? cs.error : cs.primary).withOpacity(0.2),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -345,7 +347,7 @@ class _BudgetSummaryCard extends StatelessWidget {
             builder: (_, val, __) => LinearProgressIndicator(
               value: val,
               backgroundColor: Colors.white.withOpacity(0.2),
-              color: isOver ? Colors.orange : Colors.white,
+              color: isOver ? AppColors.warning : Colors.white,
               minHeight: 10,
             ),
           ),
@@ -388,20 +390,18 @@ class _BudgetCategoryCard extends StatelessWidget {
     final isOver = pct >= 1.0;
     final isWarning = pct > 0.75;
     final progressColor = isOver
-        ? AppColors.danger500
+        ? cs.error
         : isWarning
-            ? AppColors.warning500
-            : AppColors.success500;
+            ? AppColors.warning
+            : AppColors.success;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.cardTheme.color ?? cs.surface,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-            color: isOver
-                ? const Color(0xFFEF4444).withOpacity(0.4)
-                : cs.outlineVariant.withOpacity(0.5)),
+            color: isOver ? cs.error.withOpacity(0.3) : cs.outline.withOpacity(0.1)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
@@ -474,14 +474,14 @@ class _BudgetCategoryCard extends StatelessWidget {
               padding: const EdgeInsets.only(top: 8),
               child: Text(
                   '🚨 Over by ${(spent - budgetAmt).toCurrency(currency)}',
-                  style: tt.labelSmall?.copyWith(color: AppColors.danger500, fontWeight: FontWeight.w700)),
+                  style: tt.labelSmall?.copyWith(color: cs.error, fontWeight: FontWeight.w700)),
             )
           else if (isWarning)
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Text(
                   '⚠️ ${((1 - pct) * 100).toStringAsFixed(0)}% remaining',
-                  style: tt.labelSmall?.copyWith(color: AppColors.warning600, fontWeight: FontWeight.w700)),
+                  style: tt.labelSmall?.copyWith(color: AppColors.warning, fontWeight: FontWeight.w700)),
             ),
         ] else ...[
           const SizedBox(height: 8),

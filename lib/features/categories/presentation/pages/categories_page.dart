@@ -30,13 +30,15 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
   }
 
   Future<void> _showCategoryDialog({CategoryModel? editing}) async {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final tt = theme.textTheme;
     final nameCtrl = TextEditingController(text: editing?.name ?? '');
-    String selectedColor = editing?.colorHex ?? '#3B82F6';
+    String selectedColor = editing?.colorHex ??
+        '#${cs.primary.value.toRadixString(16).padLeft(8, '0').substring(2).toUpperCase()}';
     String selectedIcon = editing?.iconName ?? '📦';
     CategoryType selectedType = editing?.type ?? CategoryType.expense;
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    final tt = theme.textTheme;
 
     await showModalBottomSheet(
       context: context,
@@ -74,16 +76,16 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? (t == CategoryType.income ? AppColors.success500 : AppColors.danger500)
-                            : theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                            ? (t == CategoryType.income ? AppColors.success : cs.error)
+                            : cs.surfaceVariant.withOpacity(0.5),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
                         t == CategoryType.income ? '💰 ${l10n.income}' : '💸 ${l10n.expense}',
                         textAlign: TextAlign.center,
                         style: isSelected 
-                          ? tt.labelLarge?.copyWith(color: Colors.white)
-                          : tt.labelLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                          ? tt.labelLarge?.copyWith(color: t == CategoryType.income ? Colors.white : cs.onError)
+                          : tt.labelLarge?.copyWith(color: cs.onSurfaceVariant),
                       ),
                     ),
                   ),
@@ -106,10 +108,10 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
                       height: 44,
                       margin: const EdgeInsets.only(right: 8),
                       decoration: BoxDecoration(
-                        color: isSelected ? theme.colorScheme.primary : theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                        color: isSelected ? cs.primary : cs.surfaceVariant.withOpacity(0.5),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: isSelected ? Colors.white : Colors.transparent,
+                          color: isSelected ? cs.onPrimary.withOpacity(0.5) : Colors.transparent,
                           width: 2,
                         ),
                       ),
@@ -138,14 +140,14 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
                       color: color,
                       shape: BoxShape.circle,
                       border: Border.all(
-                          color: isSelected ? Colors.white : Colors.transparent,
+                          color: isSelected ? cs.onSurface : Colors.transparent,
                           width: 3),
                       boxShadow: isSelected
-                          ? [BoxShadow(color: color.withOpacity(0.5), blurRadius: 8)]
+                          ? [BoxShadow(color: color.withOpacity(0.3), blurRadius: 10)]
                           : null,
                     ),
                     child: isSelected
-                        ? const Icon(Icons.check, color: Colors.white, size: 16)
+                        ? Icon(Icons.check, color: color.computeLuminance() > 0.5 ? Colors.black : Colors.white, size: 16)
                         : null,
                   ),
                 );
@@ -281,9 +283,9 @@ class _CategoryTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: theme.cardTheme.color,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
+        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.1)),
       ),
       child: Row(children: [
         Container(
@@ -308,9 +310,9 @@ class _CategoryTile extends StatelessWidget {
             child: Text(AppLocalizations.of(context)!.defaultLabel,
                 style: tt.labelSmall?.copyWith(fontSize: 9, fontWeight: FontWeight.bold)),
           ),
-        IconButton(icon: Icon(Icons.edit_outlined, size: 18, color: theme.colorScheme.onSurface.withOpacity(0.6)), onPressed: onEdit),
+        IconButton(icon: Icon(Icons.edit_outlined, size: 18, color: theme.colorScheme.onSurfaceVariant), onPressed: onEdit),
         IconButton(
-            icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.danger500),
+            icon: Icon(Icons.delete_outline, size: 18, color: theme.colorScheme.error),
             onPressed: onDelete),
       ]),
     );

@@ -155,7 +155,7 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
             Text(
               _hasError ? 'Incorrect PIN. Try again.' : 'Enter your security PIN',
               style: tt.bodyMedium?.copyWith(
-                color: _hasError ? AppColors.danger500 : cs.onSurface.withOpacity(0.4),
+                color: _hasError ? cs.error : cs.onSurface.withOpacity(0.4),
                 fontWeight: _hasError ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
@@ -183,11 +183,11 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
                       height: 20,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: _hasError ? AppColors.danger500 : filled ? cs.primary : cs.surfaceContainerHighest,
+                        color: _hasError ? cs.error : filled ? cs.primary : cs.surfaceVariant,
                         boxShadow: filled && !_hasError
                             ? [BoxShadow(color: cs.primary.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))]
                             : null,
-                        border: !filled ? Border.all(color: cs.outlineVariant.withOpacity(0.3), width: 1.5) : null,
+                        border: !filled ? Border.all(color: cs.outline.withOpacity(0.1), width: 1.5) : null,
                       ),
                     ),
                   );
@@ -247,8 +247,7 @@ class _KeypadButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
 
     return Expanded(
       child: Padding(
@@ -261,11 +260,11 @@ class _KeypadButton extends StatelessWidget {
             child: Container(
               height: 76,
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                color: cs.surfaceVariant,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+                    color: Colors.black.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.3 : 0.05),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),

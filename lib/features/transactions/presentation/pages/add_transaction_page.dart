@@ -211,15 +211,15 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
     const double spStd = 16.0;
     const double spSect = 24.0;
     
-    const expenseColor = AppColors.danger500;
-    const incomeColor = AppColors.success500;
+    final expenseColor = cs.error;
+    final incomeColor = AppColors.success;
     
     final isExpense = _currentType == TransactionType.expense;
     final activeAccent = isExpense ? expenseColor : incomeColor;
     final activeBg = activeAccent.withOpacity(0.12);
 
-    final labelColor = isDark ? AppColors.gray400 : AppColors.gray500;
-    final inputBorderColor = isDark ? AppColors.gray800 : AppColors.gray200;
+    final labelColor = cs.onSurfaceVariant;
+    final inputBorderColor = cs.outline.withOpacity(0.1);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -290,7 +290,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
                             hintStyle: tt.displayLarge?.copyWith(
                               fontSize: 64,
                               fontWeight: FontWeight.w900,
-                              color: isDark ? AppColors.gray800 : AppColors.gray100,
+                              color: cs.outline.withOpacity(0.2),
                             ),
                             border: InputBorder.none,
                             enabledBorder: InputBorder.none,
@@ -312,18 +312,21 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
             Container(
               padding: const EdgeInsets.all(spMicro),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B) : AppColors.gray100.withOpacity(0.8),
+                color: cs.surfaceVariant.withOpacity(0.5),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: TabBar(
                 controller: _tabController,
                 dividerColor: Colors.transparent,
                 indicator: BoxDecoration(
-                  color: isDark ? activeAccent.withOpacity(0.2) : Colors.white,
+                  color: isDark ? activeAccent.withOpacity(0.1) : Colors.white,
                   borderRadius: BorderRadius.circular(10),
-                  boxShadow: !isDark && isExpense || !isDark && !isExpense 
-                      ? [BoxShadow(color: activeAccent.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))]
-                      : null,
+                  boxShadow: [
+                    BoxShadow(
+                        color: activeAccent.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4))
+                  ],
                 ),
                 indicatorSize: TabBarIndicatorSize.tab,
                 labelColor: activeAccent,
@@ -516,7 +519,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
                 child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
+                    ? SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: isExpense ? cs.onError : Colors.white, strokeWidth: 2))
                     : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -525,7 +528,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
                           Text(
                             _isEditMode ? 'Update Transaction' : 'Save Transaction',
                             style: tt.titleMedium?.copyWith(
-                              color: Colors.white,
+                              color: isExpense ? cs.onError : Colors.white,
                               fontWeight: FontWeight.w800,
                               fontSize: 16,
                             ),

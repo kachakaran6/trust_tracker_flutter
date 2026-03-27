@@ -112,4 +112,5 @@ class AppConstants {
   static const String prefLanguage = 'pref_language';
   static const String prefUserName = 'pref_user_name';
   static const String prefIsFirstRun = 'pref_is_first_run';
+  static const String prefAccentColor = 'pref_accent_color';
 }

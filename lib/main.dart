@@ -91,11 +91,13 @@ class _TrustTrackerAppState extends ConsumerState<TrustTrackerApp>
     final settings = ref.watch(settingsProvider);
     final router = ref.watch(appRouterProvider);
 
+    final accentColor = AppAccentColors.fromHex(settings.accentColorHex).color;
+
     return MaterialApp.router(
       title: 'Trust Tracker',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
+      theme: AppTheme.getTheme(accentColor, Brightness.light),
+      darkTheme: AppTheme.getTheme(accentColor, Brightness.dark),
       themeMode: settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
       routerConfig: router,
       localizationsDelegates: AppLocalizations.localizationsDelegates,

@@ -205,6 +205,66 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
           ),
           const SizedBox(height: 16),
 
+          _SettingsSection(
+            title: 'App Theme',
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Select Accent Color',
+                      style: tt.titleSmall?.copyWith(color: cs.onSurface.withOpacity(0.7)),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: AppAccentColors.all.map((accent) {
+                        final accentHex = '#${accent.color.value.toRadixString(16).substring(2).toUpperCase()}';
+                        final isSelected = settings.accentColorHex.toUpperCase() == accentHex;
+                        
+                        return GestureDetector(
+                          onTap: () {
+                            if (!isSelected) {
+                              ref.read(settingsProvider.notifier).setAccentColor(accentHex);
+                              HapticFeedback.mediumImpact();
+                            }
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: accent.color,
+                              shape: BoxShape.circle,
+                              border: isSelected 
+                                  ? Border.all(color: cs.onSurface, width: 3) 
+                                  : Border.all(color: Colors.transparent, width: 0),
+                              boxShadow: isSelected ? [
+                                BoxShadow(
+                                  color: accent.color.withOpacity(0.4),
+                                  blurRadius: 12,
+                                  spreadRadius: 2,
+                                  offset: const Offset(0, 4),
+                                )
+                              ] : [],
+                            ),
+                            child: isSelected 
+                                ? const Icon(Icons.check, color: Colors.white, size: 24) 
+                                : null,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
           // ── Currency ──────────────────────────────────────────────
           _SettingsSection(
             title: l10n.currency,
@@ -375,7 +435,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
               _SettingsTile(
                 icon: Icons.star_outline_rounded,
                 label: l10n.rateApp,
-                iconColor: const Color(0xFFF59E0B),
+                iconColor: AppColors.warning,
                 onTap: () async {
                   const url =
                       'https://play.google.com/store/apps/details?id=com.trusttracker.trust_tracker_flutter';
@@ -388,7 +448,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
               _SettingsTile(
                 icon: Icons.share_outlined,
                 label: l10n.shareApp,
-                iconColor: const Color(0xFF6366F1),
+                iconColor: cs.primary,
                 onTap: () {
                 Share.share(
   'Take control of your personal finances with Trust Tracker.\n\n'
@@ -517,13 +577,9 @@ class _SlidingSegmentedControl extends StatelessWidget {
       height: 48,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: isDark
-            ? const Color(0xFF1F2937).withOpacity(0.5)
-            : cs.surfaceContainerHighest.withOpacity(0.4),
+        color: cs.surfaceVariant.withOpacity(0.5),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: cs.outlineVariant.withOpacity(isDark ? 0.1 : 0.3),
-        ),
+        border: Border.all(color: cs.outline.withOpacity(0.1)),
       ),
       child: Stack(
         children: [
@@ -639,7 +695,7 @@ class _SectionCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).cardTheme.color ?? cs.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cs.outlineVariant.withOpacity(0.5)),
+        border: Border.all(color: cs.outline.withOpacity(0.1)),
       ),
       child: Column(
           crossAxisAlignment: CrossAxisAlignment.start, children: children),
@@ -664,7 +720,7 @@ class _SettingsSection extends StatelessWidget {
         decoration: BoxDecoration(
           color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5)),
+          border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.1)),
         ),
         child: Column(children: children),
       ),

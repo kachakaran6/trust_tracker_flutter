@@ -109,6 +109,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   }
 
   void _confirmAndDeleteTransaction(TransactionModel transaction) async {
+    final cs = Theme.of(context).colorScheme;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -121,7 +122,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: const Color(0xFFEF4444)),
+            style: TextButton.styleFrom(foregroundColor: cs.error),
             child: Text(AppLocalizations.of(context)!.delete),
           ),
         ],
@@ -232,7 +233,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                             '${g.dayTotal >= 0 ? '+' : ''}${g.dayTotal.toCurrency(currency)}',
                             style: (g.dayTotal >= 0 ? tt.positiveAmount : tt.negativeAmount).copyWith(
                               fontSize: 10,
-                              color: (g.dayTotal >= 0 ? AppColors.success500 : AppColors.danger500).withOpacity(0.6),
+                              color: (g.dayTotal >= 0 ? AppColors.success : cs.error).withOpacity(0.6),
                             ),
                           ),
                         ],
@@ -279,17 +280,17 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor,
-        border: Border(bottom: BorderSide(color: cs.outlineVariant.withOpacity(0.3), width: 1)),
+        border: Border(bottom: BorderSide(color: cs.outline.withOpacity(0.1), width: 1)),
       ),
       child: Column(
         children: [
           Container(
             height: 48,
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              color: cs.surface,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: cs.outlineVariant.withOpacity(isDark ? 0.2 : 0.8)),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
+              border: Border.all(color: cs.outline.withOpacity(0.1)),
+              boxShadow: [BoxShadow(color: cs.shadow.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
             ),
             child: TextField(
               controller: _searchController,
@@ -320,7 +321,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
             height: 44,
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF0F172A) : AppColors.gray100,
+              color: cs.surfaceVariant.withOpacity(0.5),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -337,17 +338,17 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       decoration: BoxDecoration(
-                        color: isSelected ? (isDark ? cs.primary : Colors.white) : Colors.transparent,
+                        color: isSelected ? cs.primary : Colors.transparent,
                         borderRadius: BorderRadius.circular(10),
-                        boxShadow: isSelected && !isDark
-                            ? [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))]
+                        boxShadow: isSelected
+                            ? [BoxShadow(color: cs.primary.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))]
                             : null,
                       ),
                       child: Center(
                         child: Text(
                           label,
                           style: tt.labelLarge?.copyWith(
-                            color: isSelected ? (isDark ? Colors.white : cs.primary) : cs.onSurface.withOpacity(0.5),
+                            color: isSelected ? cs.onPrimary : cs.onSurfaceVariant,
                             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
                           ),
                         ),
@@ -417,9 +418,9 @@ class _SwipeableTransactionTile extends StatelessWidget {
               behavior: HitTestBehavior.opaque,
               child: Container(
                 padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(color: const Color(0xFFEF4444).withOpacity(0.08), shape: BoxShape.circle),
-                child: const Icon(Icons.close, size: 14, color: Color(0xFFEF4444)),
-              ),
+              decoration: BoxDecoration(color: cs.error.withOpacity(0.08), shape: BoxShape.circle),
+              child: Icon(Icons.close, size: 14, color: cs.error),
+            ),
             ),
           ],
         ],
@@ -431,7 +432,7 @@ class _SwipeableTransactionTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: theme.cardTheme.color ?? cs.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: cs.outlineVariant.withOpacity(0.5)),
+          border: Border.all(color: cs.outline.withOpacity(0.1)),
         ),
         child: InkWell(onTap: onTap, borderRadius: BorderRadius.circular(16), child: innerContent),
       );
@@ -445,10 +446,9 @@ class _SwipeableTransactionTile extends StatelessWidget {
         children: [
           SlidableAction(
             onPressed: (_) => onDelete(),
-            backgroundColor: const Color(0xFFEF4444),
-            foregroundColor: Colors.white,
-            icon: Icons.delete_outline,
-            label: AppLocalizations.of(context)!.delete,
+            backgroundColor: cs.error,
+            foregroundColor: cs.onError,
+            icon: Icons.delete_outline_rounded,
             borderRadius: BorderRadius.circular(14),
           ),
         ],
@@ -461,8 +461,7 @@ class _SwipeableTransactionTile extends StatelessWidget {
             onPressed: (_) => onEdit(),
             backgroundColor: cs.primary,
             foregroundColor: cs.onPrimary,
-            icon: Icons.edit_outlined,
-            label: AppLocalizations.of(context)!.edit,
+            icon: Icons.edit_rounded,
             borderRadius: BorderRadius.circular(14),
           ),
         ],
@@ -471,7 +470,7 @@ class _SwipeableTransactionTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: theme.cardTheme.color ?? cs.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: cs.outlineVariant.withOpacity(0.5)),
+          border: Border.all(color: cs.outline.withOpacity(0.1)),
         ),
         child: innerContent,
       ),

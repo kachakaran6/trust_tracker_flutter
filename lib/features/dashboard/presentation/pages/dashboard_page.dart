@@ -146,6 +146,7 @@ class DashboardPage extends ConsumerWidget {
 
   Future<void> _confirmDelete(
       BuildContext context, WidgetRef ref, TransactionModel t) async {
+    final theme = Theme.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -163,8 +164,8 @@ class DashboardPage extends ConsumerWidget {
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFEF4444),
-              foregroundColor: Colors.white,
+              backgroundColor: theme.colorScheme.error,
+              foregroundColor: theme.colorScheme.onError,
             ),
             child: Text(AppLocalizations.of(context)!.delete),
           ),
@@ -272,13 +273,14 @@ class _DashboardTransactionTile extends StatelessWidget {
     final isIncome = transaction.type == TransactionType.income;
     final theme = Theme.of(context);
     final tt = theme.textTheme;
-    final color = isIncome ? AppColors.success500 : AppColors.danger500;
+    final cs = theme.colorScheme;
+    final color = isIncome ? AppColors.success : cs.error;
     final bgColor = category != null
         ? Color(category!.colorHex.toColorInt()).withOpacity(0.12)
-        : AppColors.gray100;
+        : cs.surfaceVariant;
     final iconColor = category != null
         ? Color(category!.colorHex.toColorInt())
-        : AppColors.gray400;
+        : cs.onSurfaceVariant;
 
     final cs3 = theme.colorScheme;
 
@@ -312,11 +314,11 @@ class _DashboardTransactionTile extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEF4444).withOpacity(0.08),
+                  color: theme.colorScheme.error.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child:
-                    const Icon(Icons.close, size: 18, color: Color(0xFFEF4444)),
+                child: Icon(Icons.close,
+                    size: 18, color: theme.colorScheme.error),
               ),
             ),
           ],
@@ -328,9 +330,9 @@ class _DashboardTransactionTile extends StatelessWidget {
       return Container(
         margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
-          color: theme.cardTheme.color ?? cs3.surface,
+          color: cs3.surface,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: cs3.outlineVariant.withOpacity(0.5)),
+          border: Border.all(color: cs3.outline.withOpacity(0.1)),
         ),
         child: InkWell(
           onTap: onEdit,
@@ -352,8 +354,7 @@ class _DashboardTransactionTile extends StatelessWidget {
               onPressed: (_) => onEdit(),
               backgroundColor: cs3.primary,
               foregroundColor: cs3.onPrimary,
-              icon: Icons.edit_outlined,
-              label: AppLocalizations.of(context)!.edit,
+              icon: Icons.edit_rounded,
               borderRadius: BorderRadius.circular(14),
             ),
           ],
@@ -364,19 +365,18 @@ class _DashboardTransactionTile extends StatelessWidget {
           children: [
             SlidableAction(
               onPressed: (_) => onDelete(),
-              backgroundColor: const Color(0xFFEF4444),
-              foregroundColor: Colors.white,
-              icon: Icons.delete_outline,
-              label: AppLocalizations.of(context)!.delete,
+              backgroundColor: theme.colorScheme.error,
+              foregroundColor: theme.colorScheme.onError,
+              icon: Icons.delete_outline_rounded,
               borderRadius: BorderRadius.circular(14),
             ),
           ],
         ),
         child: Container(
           decoration: BoxDecoration(
-            color: theme.cardTheme.color ?? cs3.surface,
+            color: cs3.surface,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: cs3.outlineVariant.withOpacity(0.5)),
+            border: Border.all(color: cs3.outline.withOpacity(0.1)),
           ),
           child: innerContent,
         ),
@@ -435,21 +435,24 @@ class _SummarySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final tt = theme.textTheme;
+
     return Column(children: [
       Container(
         width: double.infinity,
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AppColors.primary600, AppColors.primary500],
+          gradient: LinearGradient(
+            colors: [cs.primary, cs.primary.withOpacity(0.8)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary500.withOpacity(0.35),
+              color: cs.primary.withOpacity(0.35),
               blurRadius: 20,
               offset: const Offset(0, 8),
             )
@@ -473,7 +476,7 @@ class _SummarySection extends StatelessWidget {
                 label: AppLocalizations.of(context)!.income,
                 amount: income,
                 currency: currency,
-                color: AppColors.success500,
+                color: AppColors.success,
                 icon: Icons.arrow_upward_rounded)),
         const SizedBox(width: 12),
         Expanded(
@@ -481,7 +484,7 @@ class _SummarySection extends StatelessWidget {
                 label: AppLocalizations.of(context)!.expenses,
                 amount: expense,
                 currency: currency,
-                color: AppColors.danger500,
+                color: cs.error,
                 icon: Icons.arrow_downward_rounded)),
       ]),
     ]);
@@ -508,9 +511,9 @@ class _MiniCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.cardTheme.color ?? cs2.surface,
+        color: cs2.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cs2.outlineVariant.withOpacity(0.5)),
+        border: Border.all(color: cs2.outline.withOpacity(0.1)),
       ),
       child: Row(children: [
         Container(

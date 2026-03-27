@@ -29,7 +29,7 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
       padding: EdgeInsets.only(
           left: 20, right: 20, top: 24, bottom: MediaQuery.of(context).viewInsets.bottom + 32),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF111827) : cs.surface,
+        color: theme.scaffoldBackgroundColor,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: Column(
@@ -50,7 +50,7 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
                 icon: Icons.picture_as_pdf_outlined,
                 isSelected: _selectedFormat == ExportFormat.pdf,
                 onTap: () => setState(() => _selectedFormat = ExportFormat.pdf),
-                activeColor: Colors.red.shade400,
+                activeColor: cs.error,
                 cs: cs,
                 tt: tt,
               ),
@@ -62,7 +62,7 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
                 icon: Icons.table_chart_outlined,
                 isSelected: _selectedFormat == ExportFormat.excel,
                 onTap: () => setState(() => _selectedFormat = ExportFormat.excel),
-                activeColor: Colors.green.shade500,
+                activeColor: AppColors.success,
                 cs: cs,
                 tt: tt,
               ),
@@ -91,19 +91,23 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
             child: ElevatedButton(
               onPressed: _isExporting ? null : _handleExport,
               style: ElevatedButton.styleFrom(
-                backgroundColor: cs.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 elevation: 0,
               ),
               child: _isExporting
-                  ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  ? SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(
+                          color: cs.onPrimary, strokeWidth: 2))
                   : Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Icon(Icons.file_download_outlined, size: 22),
                         const SizedBox(width: 10),
-                        Text('Generate Export', style: tt.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
+                        Text('Generate Export',
+                            style: tt.titleMedium?.copyWith(
+                                color: cs.onPrimary,
+                                fontWeight: FontWeight.w800)),
                       ],
                     ),
             ),
@@ -127,8 +131,8 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
         ),
         IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: Icon(Icons.close, color: cs.onSurface.withOpacity(0.4)),
-          style: IconButton.styleFrom(backgroundColor: cs.onSurface.withOpacity(0.05)),
+          icon: Icon(Icons.close, color: cs.onSurfaceVariant),
+          style: IconButton.styleFrom(backgroundColor: cs.surfaceVariant),
         ),
       ],
     );
@@ -138,7 +142,7 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: cs.onSurface.withOpacity(0.04),
+        color: cs.surfaceVariant.withOpacity(0.5),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -263,7 +267,7 @@ class _ExportFormatCard extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: isSelected ? activeColor.withOpacity(0.08) : cs.onSurface.withOpacity(0.04),
+            color: isSelected ? activeColor.withOpacity(0.1) : cs.surfaceVariant,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: isSelected ? activeColor : Colors.transparent,
@@ -273,7 +277,7 @@ class _ExportFormatCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, color: isSelected ? activeColor : cs.onSurface.withOpacity(0.3), size: 30),
+              Icon(icon, color: isSelected ? activeColor : cs.onSurfaceVariant, size: 30),
               const SizedBox(height: 16),
               Text(title, style: tt.titleSmall),
               const SizedBox(height: 4),
@@ -304,15 +308,15 @@ class _RangeButton extends StatelessWidget {
           height: 42,
           margin: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: selected ? cs.surface : Colors.transparent,
+            color: selected ? cs.surface : cs.surfaceVariant.withOpacity(0.3),
             borderRadius: BorderRadius.circular(12),
-            boxShadow: selected ? [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 6, offset: const Offset(0, 3))] : null,
+            boxShadow: selected ? [BoxShadow(color: cs.shadow.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))] : null,
           ),
           child: Center(
             child: Text(label,
                 style: tt.labelLarge?.copyWith(
                     fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
-                    color: selected ? cs.primary : cs.onSurface.withOpacity(0.5))),
+                    color: selected ? cs.primary : cs.onSurfaceVariant)),
           ),
         ),
       ),
@@ -335,9 +339,9 @@ class _CustomRangePicker extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: cs.onSurface.withOpacity(0.04),
+          color: cs.surfaceVariant,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: cs.outlineVariant.withOpacity(0.5)),
+          border: Border.all(color: cs.outline),
         ),
         child: Row(
           children: [
@@ -350,7 +354,7 @@ class _CustomRangePicker extends StatelessWidget {
               style: tt.titleSmall,
             ),
             const Spacer(),
-            Icon(Icons.chevron_right_rounded, size: 20, color: cs.onSurface.withOpacity(0.3)),
+            Icon(Icons.chevron_right_rounded, size: 20, color: cs.onSurfaceVariant),
           ],
         ),
       ),
