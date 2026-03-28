@@ -32,29 +32,25 @@ class ExportService {
 
   Future<void> exportData({
     required ExportFormat format,
-    required ExportTimeRange range,
-    required List<TransactionModel> allTransactions,
-    ExportDateRange? customRange,
+    required List<TransactionModel> filteredTransactions,
+    required String filterSummary,
   }) async {
-    // 1. Filter data based on range
-    final filtered = _filterTransactions(allTransactions, range, customRange);
-
-    // 2. Resolve categories
+    // 1. Resolve categories
     final categories = await _ref.read(categoryRepositoryProvider).getAll();
     final categoryMap = {for (var c in categories) c.id: c};
-    final rows = _buildExportRows(filtered, categoryMap);
+    final rows = _buildExportRows(filteredTransactions, categoryMap);
 
-    // 3. Get currency
+    // 2. Get currency
     final settings = _ref.read(settingsProvider);
     final currency = settings.currency;
 
-    // 4. Generate file
+    // 3. Generate file
     File file;
     if (format == ExportFormat.pdf) {
       file = await PdfGenerator.generate(
         rows: rows,
         currency: currency,
-        dateRange: _getTimeRangeString(range, customRange),
+        dateRange: filterSummary,
       );
     } else {
       file = await ExcelGenerator.generate(
@@ -63,7 +59,7 @@ class ExportService {
       );
     }
 
-    // 5. Share file
+    // 4. Share file
     final xFile = XFile(file.path);
     await Share.shareXFiles([xFile], text: 'Trust Tracker Transaction Report');
   }
@@ -121,8 +117,7 @@ class ExportService {
         amount: transaction.amount,
         isIncome: isIncome,
       );
-    }).toList()
-      ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    }).toList();
   }
 
   String _getTimeRangeString(ExportTimeRange range, ExportDateRange? custom) {

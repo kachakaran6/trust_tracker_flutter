@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:trust_tracker_flutter/core/utils/extensions.dart';
 import 'package:trust_tracker_flutter/features/categories/data/models/category_model.dart';
 import 'package:trust_tracker_flutter/features/categories/data/repositories/category_repository.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
@@ -11,10 +10,7 @@ import 'package:trust_tracker_flutter/features/settings/presentation/providers/s
 import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
 import 'package:intl/intl.dart';
 
-final _categoriesByTypeProvider = FutureProvider.autoDispose
-    .family<List<CategoryModel>, CategoryType>((ref, type) {
-  return ref.watch(categoryRepositoryProvider).getByType(type);
-});
+// Removed unused provider
 
 class AddTransactionPage extends ConsumerStatefulWidget {
   final String? initialType;
@@ -79,7 +75,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
 
       if (edit != null) {
         _selectedDate = edit.date;
-        _selectedTime = TimeOfDay.fromDateTime(edit.createdAt);
+        _selectedTime = TimeOfDay.fromDateTime(edit.date);
       } else {
         _selectedDate = DateTime.now();
         _selectedTime = TimeOfDay.now();
@@ -216,7 +212,6 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
     
     final isExpense = _currentType == TransactionType.expense;
     final activeAccent = isExpense ? expenseColor : incomeColor;
-    final activeBg = activeAccent.withOpacity(0.12);
 
     final labelColor = cs.onSurfaceVariant;
     final inputBorderColor = cs.outline.withOpacity(0.1);

@@ -9,7 +9,9 @@ import 'package:trust_tracker_flutter/features/settings/presentation/providers/s
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:trust_tracker_flutter/core/services/update_service.dart';
+import 'package:trust_tracker_flutter/core/services/backup_service.dart';
 import 'package:trust_tracker_flutter/generated/app_localizations.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -407,7 +409,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                   label: l10n.biometricUnlock,
                   value: security.isBiometricEnabled,
                   onChanged: (v) async {
-                    // Feature 1: Check if PIN is set first
                     if (v && !security.isPinEnabled) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -419,12 +420,27 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                       context.push('/set-pin');
                       return;
                     }
-
-                    // Feature 1 & 2: Mandatory PIN verification for BOTH Enable and Disable
-                    // We route to 'set-pin' with a special 'verifying' mode.
                     context.push('/set-pin', extra: {'verifyingForBio': v});
                   },
                 ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // ── Data Management ──────────────────────────────────────
+          _SettingsSection(
+            title: 'Data Management',
+            children: [
+              _SettingsTile(
+                icon: Icons.upload_file,
+                label: 'Export Data (JSON)',
+                onTap: () => _handleExport(context, ref),
+              ),
+              _SettingsTile(
+                icon: Icons.download,
+                label: 'Import Data (JSON)',
+                onTap: () => _handleImport(context, ref),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -553,6 +569,157 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
         ],
       ),
     );
+  }
+
+  bool _isProcessing = false;
+
+  Future<void> _handleExport(BuildContext context, WidgetRef ref) async {
+    if (_isProcessing) return;
+    print("Settings: Export clicked");
+
+    final backupService = ref.read(backupServiceProvider);
+    
+    setState(() => _isProcessing = true);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(AppLocalizations.of(context)!.offlineNote.contains('offline') 
+              ? 'Exporting Data...' 
+              : 'Preparing Backup...'),
+          ],
+        ),
+      ),
+    );
+
+    try {
+      final result = await backupService.exportData();
+      print("Settings: Export result path: $result");
+      
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop(); // Safe close
+
+      if (result != null) {
+        print("Settings: Triggering auto-share...");
+        await Share.shareXFiles(
+          [XFile(result)], 
+          subject: 'Trust Tracker Backup File',
+        );
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Export complete! Save the file to your device.'),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Export failed or cancelled. Check permissions.'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } catch (e) {
+      print("Settings: EXPORT ERROR -> $e");
+      if (mounted) Navigator.of(context, rootNavigator: true).pop();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+      print("Settings: Export handler finished");
+    }
+  }
+
+  Future<void> _handleImport(BuildContext context, WidgetRef ref) async {
+    if (_isProcessing) return;
+    
+    final l10n = AppLocalizations.of(context)!;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Import Data'),
+        content: const Text('This will overwrite your current data with the backup file. This action cannot be undone. Continue?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            child: const Text('Import'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      setState(() => _isProcessing = true);
+      final backupService = ref.read(backupServiceProvider);
+      
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Restoring Data...'),
+            ],
+          ),
+        ),
+      );
+
+      try {
+        final success = await backupService.importData();
+        
+        if (!mounted) return;
+        Navigator.of(context, rootNavigator: true).pop();
+
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Data restored successfully'),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Import failed or invalid file'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) Navigator.of(context, rootNavigator: true).pop();
+      } finally {
+        if (mounted) setState(() => _isProcessing = false);
+      }
+    }
   }
 }
 

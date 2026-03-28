@@ -10,19 +10,18 @@ import 'package:trust_tracker_flutter/features/transactions/presentation/provide
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
 import 'package:trust_tracker_flutter/features/transactions/presentation/widgets/export_bottom_sheet.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:trust_tracker_flutter/generated/app_localizations.dart';
+
+import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_filter.dart';
+import 'package:trust_tracker_flutter/features/transactions/data/models/filter_utils.dart';
+import 'package:trust_tracker_flutter/features/transactions/presentation/widgets/filter_bottom_sheet.dart';
+import 'package:trust_tracker_flutter/features/categories/presentation/providers/category_provider.dart';
 
 // --- Providers & State ---
 
-class _FilterState {
-  final String search;
-  final String filter; // 'all', 'income', 'expense'
-  _FilterState({this.search = '', this.filter = 'all'});
-  _FilterState copyWith({String? search, String? filter}) =>
-      _FilterState(search: search ?? this.search, filter: filter ?? this.filter);
-}
-
-final _txnFilterProvider = StateProvider.autoDispose<_FilterState>((ref) => _FilterState());
+final _txnFilterProvider = StateProvider.autoDispose<TransactionFilter>((ref) => const TransactionFilter());
 
 class _GroupedResult {
   final List<_DayGroup> groups;
@@ -37,36 +36,42 @@ class _DayGroup {
   _DayGroup(this.date, this.txns, this.dayTotal);
 }
 
+final _pagedLimitProvider = StateProvider.autoDispose<int>((ref) => 20);
+
 final _groupedFutureProvider = FutureProvider.autoDispose<_GroupedResult>((ref) async {
   final filter = ref.watch(_txnFilterProvider);
   final txnsAsync = ref.watch(transactionListProvider);
+  final limit = ref.watch(_pagedLimitProvider);
   
   if (txnsAsync.isLoading) return _GroupedResult([], {});
   final txns = txnsAsync.valueOrNull ?? [];
 
-  final filtered = txns.where((t) {
-    bool matchesSearch = true;
-    if (filter.search.isNotEmpty) {
-      matchesSearch = t.description.toLowerCase().contains(filter.search);
-    }
-    bool matchesType = true;
-    if (filter.filter == 'income') {
-      matchesType = t.type == TransactionType.income;
-    } else if (filter.filter == 'expense') {
-      matchesType = t.type == TransactionType.expense;
-    }
-    return matchesSearch && matchesType;
-  }).toList();
+  final filtered = FilterUtils.applyFilter(txns, filter);
+  
+  // Apply pagination limit to the filtered list
+  final pagedTxns = filtered.take(limit).toList();
 
   final groupsMap = <String, List<TransactionModel>>{};
-  for (final t in filtered) {
+  for (final t in pagedTxns) {
     final key = t.date.toIso8601String().split('T')[0];
     groupsMap.putIfAbsent(key, () => []).add(t);
   }
-  final sortedKeys = groupsMap.keys.toList()..sort((a, b) => b.compareTo(a));
+  
+  // Respect the filter's sort order for date groups
+  final sortedKeys = groupsMap.keys.toList();
+  if (filter.sortBy == TransactionSortBy.date) {
+    sortedKeys.sort((a, b) => filter.isAscending ? a.compareTo(b) : b.compareTo(a));
+  } else {
+    // Default to descending for other modes if not otherwise specified
+    sortedKeys.sort((a, b) => b.compareTo(a));
+  }
+
   final groups = sortedKeys.map((key) {
     final groupTxns = groupsMap[key]!;
-    groupTxns.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    // If sorting by date, also sort within the group
+    if (filter.sortBy == TransactionSortBy.date) {
+       groupTxns.sort((a, b) => filter.isAscending ? a.date.compareTo(b.date) : b.date.compareTo(a.date));
+    }
     double total = 0;
     for (final t in groupTxns) {
       total += (t.type == TransactionType.income ? t.amount : -t.amount);
@@ -93,11 +98,36 @@ class TransactionsPage extends ConsumerStatefulWidget {
 
 class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  final FocusNode _searchFocusNode = FocusNode();
+  bool _isSearching = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+    _searchFocusNode.addListener(() {
+      setState(() => _isSearching = _searchFocusNode.hasFocus);
+    });
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+      final currentLimit = ref.read(_pagedLimitProvider);
+      final totalFetched = ref.read(transactionListProvider).valueOrNull?.length ?? 0;
+      if (currentLimit < totalFetched) {
+        ref.read(_pagedLimitProvider.notifier).state = currentLimit + 20;
+      }
+    }
   }
 
   void _editTransaction(TransactionModel transaction) {
@@ -139,19 +169,36 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     }
   }
 
-  void _openExportBottomSheet() {
-    final txns = ref.read(transactionListProvider).valueOrNull ?? [];
-    if (txns.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.noTransactionsExport)),
-      );
-      return;
-    }
+  void _openFilterBottomSheet() {
+    final currentFilter = ref.read(_txnFilterProvider);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => ExportBottomSheet(transactions: txns),
+      builder: (context) => FilterBottomSheet(
+        initialFilter: currentFilter,
+        onApply: (newFilter) {
+          ref.read(_txnFilterProvider.notifier).state = newFilter;
+          if (newFilter.searchQuery != _searchController.text) {
+             _searchController.text = newFilter.searchQuery;
+          }
+        },
+      ),
+    );
+  }
+
+  void _openExportBottomSheet() {
+    final txns = ref.read(transactionListProvider).valueOrNull ?? [];
+    final filter = ref.read(_txnFilterProvider);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => ExportBottomSheet(
+        transactions: txns,
+        activeFilter: filter,
+      ),
     );
   }
 
@@ -167,198 +214,339 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     final currency = settings.currency;
     final isTapMode = settings.transactionActionMode == TransactionActionMode.tap;
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.transactions, style: tt.headlineMedium),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.file_download_outlined, color: cs.onSurface.withOpacity(0.65), size: 24),
-            onPressed: _openExportBottomSheet,
-            tooltip: 'Export',
-          ),
-          IconButton(
-            icon: Icon(Icons.add_circle_outline_rounded, color: cs.primary, size: 26),
-            onPressed: () => context.push('/add-transaction'),
-            tooltip: 'Add',
-          ),
-        ],
-      ),
-      body: groupedAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => const SizedBox.shrink(),
-        data: (result) {
-          final groups = result.groups;
-          final catMap = result.catMap;
+    final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
 
-          if (groups.isEmpty && filter.search.isEmpty && filter.filter == 'all') {
-            return Column(
-              children: [
-                _buildHeader(context, filter, cs, tt, theme, isDark),
-                Expanded(child: _EmptyState(onAdd: () => context.push('/add-transaction'))),
-              ],
-            );
-          }
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        resizeToAvoidBottomInset: true,
+        appBar: AppBar(
+          title: Text(AppLocalizations.of(context)!.transactions, style: tt.headlineMedium),
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          centerTitle: false,
+          actions: [
+            IconButton(
+              icon: Icon(Icons.file_download_outlined, color: cs.onSurface.withOpacity(0.6), size: 24),
+              onPressed: _openExportBottomSheet,
+              tooltip: 'Export',
+            ),
+            const SizedBox(width: 8),
+          ],
+        ),
+        // floatingActionButton: isKeyboardOpen? null : FloatingActionButton.extended(
+        //   onPressed: () => context.push('/add-transaction'),
+        //   icon: const Icon(Icons.add_rounded),
+        //   label: const Text('Add Transaction', style: TextStyle(fontWeight: FontWeight.bold)),
+        //   backgroundColor: cs.primary,
+        //   foregroundColor: cs.onPrimary,
+        // ),
+        body: Column(
+          children: [
+            _buildHeader(context, filter, cs, tt, theme, isDark),
+            Expanded(
+              child: groupedAsync.when(
+                skipLoadingOnReload: true,
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (err, stack) => Center(child: Text("Error: $err")),
+                data: (result) {
+                  final groups = result.groups;
+                  final catMap = result.catMap;
 
-          return CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            cacheExtent: 1000,
-            slivers: [
-              SliverToBoxAdapter(child: _buildHeader(context, filter, cs, tt, theme, isDark)),
-              if (groups.isEmpty)
-                 SliverFillRemaining(
-                   child: Center(
-                     child: Text(AppLocalizations.of(context)!.noTransactionsYet, style: tt.bodyMedium),
-                   ),
-                 ),
-              ...groups.map((g) => SliverMainAxisGroup(
-                slivers: [
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
-                    sliver: SliverToBoxAdapter(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  if (groups.isEmpty && filter.isDefault) {
+                    return _EmptyState(onAdd: () => context.push('/add-transaction'));
+                  }
+
+                  if (groups.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
+                          Icon(Icons.search_off_rounded, size: 48, color: cs.onSurface.withOpacity(0.2)),
+                          const SizedBox(height: 16),
                           Text(
-                            g.date.isSameDay(DateTime.now())
-                                ? AppLocalizations.of(context)!.today
-                                : g.date.toDisplayShort(),
-                            style: tt.labelSmall!.copyWith(
-                              color: cs.onSurface.withOpacity(0.4),
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 1.1,
-                            ),
-                          ),
-                          Text(
-                            '${g.dayTotal >= 0 ? '+' : ''}${g.dayTotal.toCurrency(currency)}',
-                            style: (g.dayTotal >= 0 ? tt.positiveAmount : tt.negativeAmount).copyWith(
-                              fontSize: 10,
-                              color: (g.dayTotal >= 0 ? AppColors.success : cs.error).withOpacity(0.6),
-                            ),
+                            "No results found",
+                            style: tt.bodyMedium?.copyWith(color: cs.onSurface.withOpacity(0.4)),
                           ),
                         ],
                       ),
-                    ),
-                  ),
-                  SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final t = g.txns[index];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: _SwipeableTransactionTile(
-                              key: ValueKey(t.id),
-                              transaction: t,
-                              category: catMap[t.categoryId],
-                              currency: currency,
-                              onEdit: () => _editTransaction(t),
-                              onDuplicate: () => _duplicateTransaction(t),
-                              onDelete: () => _confirmAndDeleteTransaction(t),
-                              isTapMode: isTapMode,
-                              onTap: () => _editTransaction(t),
+                    );
+                  }
+
+                  return CustomScrollView(
+                    controller: _scrollController,
+                    physics: const BouncingScrollPhysics(),
+                    cacheExtent: 1000,
+                    slivers: [
+                      ...groups.map((g) => SliverMainAxisGroup(
+                            slivers: [
+                              SliverPadding(
+                                padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+                                sliver: SliverToBoxAdapter(
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        g.date.isSameDay(DateTime.now())
+                                            ? AppLocalizations.of(context)!.today
+                                            : g.date.toDisplayShort(),
+                                        style: tt.labelSmall!.copyWith(
+                                          color: cs.onSurface.withOpacity(0.4),
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: 1.1,
+                                        ),
+                                      ),
+                                      Text(
+                                        '${g.dayTotal >= 0 ? '+' : ''}${g.dayTotal.toCurrency(currency)}',
+                                        style: (g.dayTotal >= 0 ? tt.positiveAmount : tt.negativeAmount).copyWith(
+                                          fontSize: 10,
+                                          color: (g.dayTotal >= 0 ? AppColors.success : cs.error).withOpacity(0.6),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              SliverPadding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                sliver: SliverList(
+                                  delegate: SliverChildBuilderDelegate(
+                                    (context, index) {
+                                      final t = g.txns[index];
+                                      return Padding(
+                                        padding: const EdgeInsets.only(bottom: 10),
+                                        child: _SwipeableTransactionTile(
+                                          key: ValueKey(t.id),
+                                          transaction: t,
+                                          category: catMap[t.categoryId],
+                                          currency: currency,
+                                          onEdit: () => _editTransaction(t),
+                                          onDuplicate: () => _duplicateTransaction(t),
+                                          onDelete: () => _confirmAndDeleteTransaction(t),
+                                          isTapMode: isTapMode,
+                                          onTap: () => _editTransaction(t),
+                                        ),
+                                      );
+                                    },
+                                    childCount: g.txns.length,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )),
+                      const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                      if (ref.read(transactionListProvider).valueOrNull != null &&
+                          ref.read(_pagedLimitProvider) < (ref.read(transactionListProvider).valueOrNull?.length ?? 0))
+                        const SliverToBoxAdapter(
+                          child: Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(16.0),
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             ),
-                          );
-                        },
-                        childCount: g.txns.length,
-                      ),
-                    ),
-                  ),
-                ],
-              )),
-              const SliverToBoxAdapter(child: SizedBox(height: 120)),
-            ],
-          );
-        },
+                          ),
+                        ),
+                      const SliverToBoxAdapter(child: SizedBox(height: 120)),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context, _FilterState filter, ColorScheme cs, TextTheme tt, ThemeData theme, bool isDark) {
+  Widget _buildHeader(BuildContext context, TransactionFilter filter, ColorScheme cs, TextTheme tt, ThemeData theme, bool isDark) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor,
-        border: Border(bottom: BorderSide(color: cs.outline.withOpacity(0.1), width: 1)),
       ),
       child: Column(
         children: [
-          Container(
-            height: 48,
-            decoration: BoxDecoration(
-              color: cs.surface,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: cs.outline.withOpacity(0.1)),
-              boxShadow: [BoxShadow(color: cs.shadow.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
-            ),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (v) => ref.read(_txnFilterProvider.notifier).update((s) => s.copyWith(search: v.toLowerCase())),
-              style: tt.bodyMedium,
-              decoration: InputDecoration(
-                hintText: AppLocalizations.of(context)!.searchTransactions,
-                hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurface.withOpacity(0.4)),
-                prefixIcon: Icon(Icons.search_rounded, color: cs.primary, size: 20),
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 13),
-                suffixIcon: filter.search.isNotEmpty
-                    ? IconButton(
-                        icon: Icon(Icons.close, size: 18, color: cs.onSurface.withOpacity(0.5)),
-                        onPressed: () {
-                          _searchController.clear();
-                          ref.read(_txnFilterProvider.notifier).update((s) => s.copyWith(search: ''));
-                        },
-                      )
-                    : null,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            height: 44,
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: cs.surfaceVariant.withOpacity(0.5),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: ['all', 'income', 'expense'].map((f) {
-                final isSelected = filter.filter == f;
-                String label;
-                if (f == 'all') label = AppLocalizations.of(context)!.all;
-                else if (f == 'income') label = AppLocalizations.of(context)!.income;
-                else label = AppLocalizations.of(context)!.expense;
-
-                return Expanded(
-                  child: GestureDetector(
-                    onTap: () => ref.read(_txnFilterProvider.notifier).update((s) => s.copyWith(filter: f)),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      decoration: BoxDecoration(
-                        color: isSelected ? cs.primary : Colors.transparent,
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: isSelected
-                            ? [BoxShadow(color: cs.primary.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))]
-                            : null,
+          Row(
+            children: [
+              Expanded(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: _isSearching ? cs.surface : cs.surfaceVariant.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(2),
+                    border: Border.all(
+                      color: _isSearching ? cs.primary.withOpacity(0.5) : Colors.transparent,
+                      width: 1.5,
+                    ),
+                    boxShadow: _isSearching 
+                        ? [BoxShadow(color: cs.primary.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))]
+                        : null,
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    focusNode: _searchFocusNode,
+                    onChanged: (v) {
+                       // Simple debounce logic could go here, but for now direct update
+                       ref.read(_txnFilterProvider.notifier).update((s) => s.copyWith(searchQuery: v.toLowerCase()));
+                    },
+                    style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                    textAlignVertical: TextAlignVertical.center,
+                    decoration: InputDecoration(
+                      hintText: AppLocalizations.of(context)!.searchTransactions,
+                      hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurface.withOpacity(0.4)),
+                      prefixIcon: Icon(
+                        Icons.search_rounded, 
+                        color: _isSearching ? cs.primary : cs.onSurface.withOpacity(0.4), 
+                        size: 20
                       ),
-                      child: Center(
-                        child: Text(
-                          label,
-                          style: tt.labelLarge?.copyWith(
-                            color: isSelected ? cs.onPrimary : cs.onSurfaceVariant,
-                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                          ),
-                        ),
-                      ),
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                      suffixIcon: filter.searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: Icon(Icons.cancel_rounded, size: 18, color: cs.onSurface.withOpacity(0.4)),
+                              onPressed: () {
+                                _searchController.clear();
+                                ref.read(_txnFilterProvider.notifier).update((s) => s.copyWith(searchQuery: ''));
+                              },
+                            )
+                          : null,
                     ),
                   ),
-                );
-              }).toList(),
-            ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              GestureDetector(
+                onTap: _openFilterBottomSheet,
+                child: Container(
+                  height: 48,
+                  width: 48,
+                  decoration: BoxDecoration(
+                    color: !filter.isDefault ? cs.primary : cs.surfaceVariant.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(
+                    Icons.tune_rounded,
+                    color: !filter.isDefault ? cs.onPrimary : cs.onSurface.withOpacity(0.6),
+                    size: 20,
+                  ),
+                ),
+              ),
+            ],
           ),
+          const SizedBox(height: 16),
+          // Container(
+          //   height: 44,
+          //   padding: const EdgeInsets.all(4),
+          //   decoration: BoxDecoration(
+          //     color: cs.surfaceVariant.withOpacity(0.5),
+          //     borderRadius: BorderRadius.circular(12),
+          //   ),
+          //   child: Row(
+          //     children: ['all', 'income', 'expense'].map((f) {
+          //       final isSelected = filter.type == f;
+          //       String label;
+          //       if (f == 'all') label = AppLocalizations.of(context)!.all;
+          //       else if (f == 'income') label = AppLocalizations.of(context)!.income;
+          //       else label = AppLocalizations.of(context)!.expense;
+
+          //       return Expanded(
+          //         child: GestureDetector(
+          //           onTap: () => ref.read(_txnFilterProvider.notifier).update((s) => s.copyWith(type: f)),
+          //           child: AnimatedContainer(
+          //             duration: const Duration(milliseconds: 200),
+          //             decoration: BoxDecoration(
+          //               color: isSelected ? cs.primary : Colors.transparent,
+          //               borderRadius: BorderRadius.circular(10),
+          //               boxShadow: isSelected
+          //                   ? [BoxShadow(color: cs.primary.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))]
+          //                   : null,
+          //             ),
+          //             child: Center(
+          //               child: Text(
+          //                 label,
+          //                 style: tt.labelLarge?.copyWith(
+          //                   color: isSelected ? cs.onPrimary : cs.onSurfaceVariant,
+          //                   fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+          //                 ),
+          //               ),
+          //             ),
+          //           ),
+          //         ),
+          //       );
+          //     }).toList(),
+          //   ),
+          // ),
+          if (!filter.isDefault) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 38,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                child: Row(
+                  children: [
+                    // --- Type Chip ---
+                    if (filter.type != 'all')
+                      _FilterChip(
+                        label: filter.type.toUpperCase(),
+                        icon: filter.type == 'income' ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+                        onRemove: () => ref.read(_txnFilterProvider.notifier).update((s) => s.copyWith(type: 'all')),
+                      ).animate().scale(duration: 200.ms).fadeIn(),
+
+                    // --- Date Chip ---
+                    if (filter.dateRange != null)
+                      _FilterChip(
+                        label: '${DateFormat('MMM d').format(filter.dateRange!.start)} - ${DateFormat('MMM d').format(filter.dateRange!.end)}',
+                        icon: Icons.calendar_today_rounded,
+                        onRemove: () => ref.read(_txnFilterProvider.notifier).update((s) => s.copyWith(clearDateRange: true)),
+                      ).animate().scale(duration: 200.ms).fadeIn(),
+
+                    // --- Category Chips ---
+                    if (filter.categoryIds.isNotEmpty)
+                      ...ref.watch(allCategoriesProvider).when(
+                        data: (cats) {
+                          return filter.categoryIds.map((id) {
+                            final cat = cats.firstWhere((c) => c.id == id, orElse: () => CategoryModel()..name = 'Unknown'..colorHex = '#808080');
+                            return _FilterChip(
+                              key: ValueKey('cat_$id'),
+                              label: cat.name,
+                              onRemove: () {
+                                final newIds = List<int>.from(filter.categoryIds)..remove(id);
+                                ref.read(_txnFilterProvider.notifier).update((s) => s.copyWith(categoryIds: newIds));
+                              },
+                            ).animate().scale(duration: 200.ms).fadeIn();
+                          });
+                        },
+                        loading: () => [],
+                        error: (_, __) => [],
+                      ),
+
+                    // --- Sort Chip ---
+                    if (filter.sortBy != TransactionSortBy.date || filter.isAscending)
+                      _FilterChip(
+                        label: '${filter.sortBy.name.toUpperCase()} ${filter.isAscending ? "↑" : "↓"}',
+                        icon: Icons.sort_rounded,
+                        onRemove: () => ref.read(_txnFilterProvider.notifier).update((s) => s.copyWith(sortBy: TransactionSortBy.date, isAscending: false)),
+                      ).animate().scale(duration: 200.ms).fadeIn(),
+
+                    // --- Clear All Chip ---
+                    _FilterChip(
+                      label: 'Clear All',
+                      icon: Icons.refresh_rounded,
+                      onRemove: () {
+                        _searchController.clear();
+                        ref.read(_txnFilterProvider.notifier).state = const TransactionFilter();
+                      },
+                    ).animate().scale(duration: 200.ms).fadeIn(),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -508,7 +696,7 @@ class _SwipeableTransactionTile extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                '${category?.name ?? AppLocalizations.of(context)!.uncategorized} · ${transaction.createdAt.toTimeOnly()}',
+                '${category?.name ?? AppLocalizations.of(context)!.uncategorized} · ${transaction.date.toTimeOnly()}',
                 style: tt.labelSmall?.copyWith(color: cs.onSurface.withOpacity(0.4)),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -563,6 +751,58 @@ class _EmptyState extends StatelessWidget {
             label: Text(AppLocalizations.of(context)!.addTransaction),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final VoidCallback onRemove;
+  final IconData? icon;
+
+  const _FilterChip({super.key, required this.label, required this.onRemove, this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onRemove,
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: cs.primary.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: cs.primary.withOpacity(0.15)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, size: 14, color: cs.primary),
+                  const SizedBox(width: 6),
+                ],
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: cs.primary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Icon(Icons.close_rounded, size: 14, color: cs.primary.withOpacity(0.4)),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

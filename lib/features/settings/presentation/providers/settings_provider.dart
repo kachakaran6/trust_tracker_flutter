@@ -48,6 +48,28 @@ class SettingsState {
       accentColorHex: accentColorHex ?? this.accentColorHex,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'currency': currency,
+        'userName': userName,
+        'isDarkMode': isDarkMode,
+        'isFirstRun': isFirstRun,
+        'transactionActionMode': transactionActionMode.name,
+        'languageCode': languageCode,
+        'accentColorHex': accentColorHex,
+      };
+
+  factory SettingsState.fromJson(Map<String, dynamic> json) => SettingsState(
+        currency: json['currency'] ?? 'USD',
+        userName: json['userName'] ?? '',
+        isDarkMode: json['isDarkMode'] ?? false,
+        isFirstRun: json['isFirstRun'] ?? true,
+        transactionActionMode: json['transactionActionMode'] == 'tap'
+            ? TransactionActionMode.tap
+            : TransactionActionMode.swipe,
+        languageCode: json['languageCode'] ?? 'en',
+        accentColorHex: json['accentColorHex'] ?? '#3B82F6',
+      );
 }
 
 const _kTxnActionMode = 'txn_action_mode';
@@ -100,7 +122,6 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     state = state.copyWith(accentColorHex: hex);
   }
 
-
   Future<void> completeOnboarding(String name, String currency) async {
     await _prefs.setString(AppConstants.prefUserName, name);
     await _prefs.setString(AppConstants.prefCurrency, currency);
@@ -110,6 +131,18 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       currency: currency,
       isFirstRun: false,
     );
+  }
+
+  Future<void> restoreSettings(SettingsState other) async {
+    await _prefs.setString(AppConstants.prefCurrency, other.currency);
+    await _prefs.setString(AppConstants.prefUserName, other.userName);
+    await _prefs.setBool(AppConstants.prefTheme, other.isDarkMode);
+    await _prefs.setBool(AppConstants.prefIsFirstRun, other.isFirstRun);
+    await _prefs.setString(_kTxnActionMode,
+        other.transactionActionMode == TransactionActionMode.tap ? 'tap' : 'swipe');
+    await _prefs.setString(AppConstants.prefLanguage, other.languageCode);
+    await _prefs.setString(AppConstants.prefAccentColor, other.accentColorHex);
+    state = other;
   }
 }
 

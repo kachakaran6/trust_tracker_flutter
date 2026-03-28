@@ -23,4 +23,22 @@ class BudgetModel {
   }) {
     createdAt = DateTime.now();
   }
+
+  Map<String, dynamic> toJson() => {
+        'id': id == Isar.autoIncrement ? null : id,
+        'categoryId': categoryId,
+        'amount': amount,
+        'monthKey': monthKey,
+        'createdAt': createdAt.toIso8601String(),
+      };
+
+  factory BudgetModel.fromJson(Map<String, dynamic> json) {
+    final b = BudgetModel();
+    if (json['id'] != null) b.id = json['id'];
+    b.categoryId = json['categoryId'];
+    b.amount = (json['amount'] as num).toDouble();
+    b.monthKey = json['monthKey'];
+    b.createdAt = DateTime.parse(json['createdAt']);
+    return b;
+  }
 }

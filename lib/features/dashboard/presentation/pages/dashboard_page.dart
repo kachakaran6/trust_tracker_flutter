@@ -440,34 +440,43 @@ class _SummarySection extends StatelessWidget {
     final tt = theme.textTheme;
 
     return Column(children: [
-      Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [cs.primary, cs.primary.withOpacity(0.8)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+      _BalanceCardAnimationWrapper(
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [cs.primary, cs.primary.withOpacity(0.8)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: cs.primary.withOpacity(0.35),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              )
+            ],
           ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: cs.primary.withOpacity(0.35),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            )
-          ],
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(AppLocalizations.of(context)!.netBalance,
+                style: tt.bodySmall?.copyWith(
+                    color: Colors.white.withOpacity(0.8),
+                    fontWeight: FontWeight.w600)),
+            const SizedBox(height: 4),
+            _AnimatedBalanceText(
+              value: balance,
+              currency: currency,
+              style: tt.balanceAmount.copyWith(color: Colors.white),
+            ),
+            const SizedBox(height: 4),
+            Text(AppLocalizations.of(context)!.thisMonth,
+                style: tt.labelSmall
+                    ?.copyWith(color: Colors.white.withOpacity(0.6))),
+          ]),
         ),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(AppLocalizations.of(context)!.netBalance,
-              style: tt.bodySmall?.copyWith(color: Colors.white.withOpacity(0.8), fontWeight: FontWeight.w600)),
-          const SizedBox(height: 4),
-          Text(balance.toCurrency(currency),
-              style: tt.balanceAmount.copyWith(color: Colors.white)),
-          const SizedBox(height: 4),
-          Text(AppLocalizations.of(context)!.thisMonth,
-              style: tt.labelSmall?.copyWith(color: Colors.white.withOpacity(0.6))),
-        ]),
       ),
       const SizedBox(height: 12),
       Row(children: [
@@ -599,5 +608,156 @@ class _EmptyTransactions extends StatelessWidget {
         ]),
       ),
     );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PREMIUM MICRO-INTERACTIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _AnimatedBalanceText extends StatelessWidget {
+  final double value;
+  final String currency;
+  final TextStyle style;
+
+  const _AnimatedBalanceText({
+    required this.value,
+    required this.currency,
+    required this.style,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: value),
+      duration: const Duration(milliseconds: 1200),
+      curve: Curves.easeOutExpo,
+      builder: (context, val, child) {
+        return Text(
+          val.toCurrency(currency),
+          style: style,
+        );
+      },
+    );
+  }
+}
+
+class _BalanceCardAnimationWrapper extends StatefulWidget {
+  final Widget child;
+  const _BalanceCardAnimationWrapper({required this.child});
+
+  @override
+  State<_BalanceCardAnimationWrapper> createState() =>
+      _BalanceCardAnimationWrapperState();
+}
+
+class _BalanceCardAnimationWrapperState
+    extends State<_BalanceCardAnimationWrapper>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _slideAnimation;
+  late Animation<double> _shimmerAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 5000),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(
+          parent: _controller,
+          curve: const Interval(0.0, 0.3, curve: Curves.easeOutCubic)),
+    );
+
+    _slideAnimation = Tween<double>(begin: 24, end: 0).animate(
+      CurvedAnimation(
+          parent: _controller,
+          curve: const Interval(0.0, 0.3, curve: Curves.easeOutCubic)),
+    );
+
+    _shimmerAnimation = Tween<double>(begin: -1.2, end: 1.2).animate(
+      CurvedAnimation(
+          parent: _controller,
+          curve: const Interval(0.4, 0.9, curve: Curves.easeInOutExpo)),
+    );
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Opacity(
+              opacity: _fadeAnimation.value,
+              child: Transform.translate(
+                offset: Offset(0, _slideAnimation.value),
+                child: ShaderMask(
+                  shaderCallback: (bounds) {
+                    return LinearGradient(
+                      colors: [
+                        Colors.white.withOpacity(0),
+                        Colors.white.withOpacity(0.18),
+                        Colors.white.withOpacity(0),
+                      ],
+                      stops: const [0.3, 0.5, 0.7],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      transform: _GradientRotation(_shimmerAnimation.value),
+                    ).createShader(bounds);
+                  },
+                  blendMode: BlendMode.srcOver,
+                  child: widget.child,
+                ),
+              ),
+            ),
+            // Floating particles
+            ..._buildParticles(),
+          ],
+        );
+      },
+    );
+  }
+
+  List<Widget> _buildParticles() {
+    return List.generate(3, (i) {
+      final delay = i * 0.15;
+      final progress = (_controller.value - delay).clamp(0.0, 0.4) * 2.5;
+      if (progress <= 0 || progress >= 1) return const SizedBox.shrink();
+
+      return Positioned(
+        left: 60.0 + (i * 90),
+        bottom: 20 + (progress * 50),
+        child: Opacity(
+          opacity: (1 - progress) * 0.5,
+          child: Icon(Icons.circle,
+              size: 6 + (i * 2).toDouble(), color: Colors.white),
+        ),
+      );
+    });
+  }
+}
+
+class _GradientRotation extends GradientTransform {
+  final double progress;
+  const _GradientRotation(this.progress);
+
+  @override
+  Matrix4? transform(Rect bounds, {TextDirection? textDirection}) {
+    return Matrix4.translationValues(bounds.width * progress * 2, 0, 0);
   }
 }

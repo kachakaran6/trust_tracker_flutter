@@ -8,11 +8,19 @@ import 'package:trust_tracker_flutter/features/transactions/data/repositories/tr
 import 'package:trust_tracker_flutter/features/categories/data/repositories/category_repository.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
 import 'package:trust_tracker_flutter/features/transactions/presentation/providers/transaction_provider.dart';
-import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
-import 'package:trust_tracker_flutter/core/utils/category_utils.dart';
+import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_filter.dart';
+import 'package:trust_tracker_flutter/features/transactions/data/models/filter_utils.dart';
+import 'package:trust_tracker_flutter/features/transactions/presentation/widgets/filter_bottom_sheet.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:ui' as ui;
+import 'dart:typed_data';
+import 'package:flutter/rendering.dart';
+import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
+import 'package:trust_tracker_flutter/core/utils/category_utils.dart';
+import 'package:trust_tracker_flutter/core/services/report_service.dart';
 import 'package:trust_tracker_flutter/generated/app_localizations.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // ── Providers ─────────────────────────────────────────────────────────────────
 enum AnalyticsMode { overview, spending, categories, trends }
@@ -106,6 +114,7 @@ class AnalyticsPage extends ConsumerStatefulWidget {
 }
 
 class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
+  final GlobalKey _trendChartKey = GlobalKey();
   int _touchedExpenseIndex = -1;
   int _touchedIncomeIndex = -1;
 
@@ -140,6 +149,14 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
         title: Text(l10n.analytics),
         elevation: 0,
         scrolledUnderElevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf_outlined),
+            tooltip: 'Generate Report',
+            onPressed: () => _showReportOptions(context),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: Column(
         children: [
@@ -193,10 +210,187 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
     );
   }
 
+  Future<void> _showReportOptions(BuildContext context) async {
+    final now = DateTime.now();
+    final selectedMonth = ref.read(selectedMonthProvider);
+    
+    TransactionFilter currentFilter = TransactionFilter(
+      dateRange: DateTimeRange(
+        start: DateTime(selectedMonth.year, selectedMonth.month, 1),
+        end: DateTime(selectedMonth.year, selectedMonth.month, DateUtils.getDaysInMonth(selectedMonth.year, selectedMonth.month)),
+      ),
+    );
+
+    bool includeGraphs = true;
+    bool includeSummary = true;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Report Options', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+                  IconButton(onPressed: () => Navigator.pop(ctx), icon: const Icon(Icons.close)),
+                ],
+              ),
+              const SizedBox(height: 24),
+              
+              const Text('Filter Data', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              InkWell(
+                onTap: () async {
+                  await showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) => FilterBottomSheet(
+                      initialFilter: currentFilter,
+                      onApply: (newFilter) => setModalState(() => currentFilter = newFilter),
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.1)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.tune_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          FilterUtils.getFilterSummary(currentFilter, context),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      Icon(Icons.chevron_right_rounded, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
+                    ],
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 24),
+              const Text('Components', style: TextStyle(fontWeight: FontWeight.bold)),
+              SwitchListTile(
+                title: const Text('Financial Summary'),
+                subtitle: const Text('Include income/expense overview'),
+                value: includeSummary,
+                onChanged: (val) => setModalState(() => includeSummary = val),
+              ),
+              SwitchListTile(
+                title: const Text('Visual Charts'),
+                subtitle: const Text('Capture currently visible charts'),
+                value: includeGraphs,
+                onChanged: (val) => setModalState(() => includeGraphs = val),
+              ),
+              const SizedBox(height: 32),
+
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    Navigator.pop(ctx);
+                    _generateReport(
+                      filter: currentFilter,
+                      includeGraphs: includeGraphs,
+                      includeSummary: includeSummary,
+                    );
+                  },
+                  icon: const Icon(Icons.picture_as_pdf_outlined),
+                  label: const Text('Generate PDF Report', style: TextStyle(fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _generateReport({
+    required TransactionFilter filter,
+    required bool includeGraphs,
+    required bool includeSummary,
+  }) async {
+    final settings = ref.read(settingsProvider);
+    final reportService = ref.read(reportServiceProvider);
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      // 1. Fetch & Filter Data
+      final allTxns = await ref.read(transactionRepositoryProvider).getAll();
+      final categories = await ref.read(categoryRepositoryProvider).getAll();
+      
+      final filteredTxns = FilterUtils.applyFilter(allTxns, filter);
+
+      // Sort by date ascending (First to Last) for the report
+      filteredTxns.sort((a, b) => a.date.compareTo(b.date));
+
+      // 2. Capture Chart if requested
+      Uint8List? barChartImage;
+      if (includeGraphs) {
+        try {
+          final boundary = _trendChartKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+          if (boundary != null) {
+            final image = await boundary.toImage(pixelRatio: 3.0);
+            final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+            barChartImage = byteData?.buffer.asUint8List();
+          }
+        } catch (e) {
+          print("Analytics Report: Chart capture skipped: $e");
+        }
+      }
+
+      // 3. Generate PDF
+      await reportService.generateAndShareReport(
+        transactions: filteredTxns,
+        categories: categories,
+        currency: settings.currency,
+        dateRange: filter.dateRange ?? DateTimeRange(start: DateTime.now(), end: DateTime.now()),
+        reportType: filter.type == 'all' ? 'All' : (filter.type == 'income' ? 'Income' : 'Expense'),
+        includeGraphs: includeGraphs,
+        includeSummary: includeSummary,
+        barChartImage: barChartImage,
+      );
+
+      if (mounted) Navigator.of(context, rootNavigator: true).pop(); // Close loader
+    } catch (e) {
+      if (mounted) Navigator.of(context, rootNavigator: true).pop();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to generate report: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
   Widget _buildModeContent(AnalyticsMode mode) {
     switch (mode) {
       case AnalyticsMode.overview:
-        return const _OverviewModule(key: ValueKey('overview'));
+        return _OverviewModule(key: const ValueKey('overview'), trendChartKey: _trendChartKey);
       case AnalyticsMode.spending:
         return const _SpendingModule(key: ValueKey('spending'));
       case AnalyticsMode.categories:
@@ -318,7 +512,8 @@ class _SelectorChip extends StatelessWidget {
 }
 
 class _OverviewModule extends ConsumerWidget {
-  const _OverviewModule({super.key});
+  final GlobalKey? trendChartKey;
+  const _OverviewModule({super.key, this.trendChartKey});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -371,7 +566,10 @@ class _OverviewModule extends ConsumerWidget {
                 const SizedBox(height: 24),
                 _SectionTitle(title: l10n.incomeVsExpense),
                 const SizedBox(height: 16),
-                _MiniTrendChart(summary: summary, currency: settings.currency),
+                RepaintBoundary(
+                  key: trendChartKey,
+                  child: _MiniTrendChart(summary: summary, currency: settings.currency),
+                ),
               ],
             );
           },

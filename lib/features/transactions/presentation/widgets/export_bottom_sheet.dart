@@ -4,9 +4,13 @@ import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/services/export_service.dart';
 
+import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_filter.dart';
+import 'package:trust_tracker_flutter/features/transactions/data/models/filter_utils.dart';
+
 class ExportBottomSheet extends ConsumerStatefulWidget {
   final List<TransactionModel> transactions;
-  const ExportBottomSheet({super.key, required this.transactions});
+  final TransactionFilter activeFilter;
+  const ExportBottomSheet({super.key, required this.transactions, required this.activeFilter});
 
   @override
   ConsumerState<ExportBottomSheet> createState() => _ExportBottomSheetState();
@@ -212,6 +216,22 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
     }
   }
 
+  DateTimeRange? _getPresetRange(ExportTimeRange range) {
+    final now = DateTime.now();
+    switch (range) {
+      case ExportTimeRange.thisMonth:
+        return DateTimeRange(start: DateTime(now.year, now.month, 1), end: now);
+      case ExportTimeRange.lastMonth:
+        return DateTimeRange(start: DateTime(now.year, now.month - 1, 1), end: DateTime(now.year, now.month, 0));
+      case ExportTimeRange.last3Months:
+        return DateTimeRange(start: DateTime(now.year, now.month - 3, 1), end: now);
+      case ExportTimeRange.custom:
+        return _customRange != null ? DateTimeRange(start: _customRange!.start, end: _customRange!.end) : null;
+      case ExportTimeRange.all:
+        return null; // All history
+    }
+  }
+
   Future<void> _handleExport() async {
     if (_selectedRange == ExportTimeRange.custom && _customRange == null) {
        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select a date range')));
@@ -220,17 +240,37 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
 
     setState(() => _isExporting = true);
     try {
+      // 1. Convert preset range to DateTimeRange
+      final range = _getPresetRange(_selectedRange);
+
+      // 2. Combine with previous active UI filters (Type, Category, etc.)
+      // Note: Force chronological order (First to Last) for exports by default.
+      final exportFilter = widget.activeFilter.copyWith(
+        dateRange: range, 
+        isAscending: true,
+        sortBy: TransactionSortBy.date,
+      );
+
+      // 3. Apply the filter to the total transactions list
+      final filteredTxns = FilterUtils.applyFilter(widget.transactions, exportFilter);
+
+      print("Filtered count for export: ${filteredTxns.length}");
+
+      // 4. Validate Step 5: Check empty result
+      if (filteredTxns.isEmpty) {
+        throw 'No transactions found for the selected filter and range';
+      }
+
       await ref.read(exportServiceProvider).exportData(
         format: _selectedFormat,
-        range: _selectedRange,
-        allTransactions: widget.transactions,
-        customRange: _customRange,
+        filteredTransactions: filteredTxns,
+        filterSummary: FilterUtils.getFilterSummary(exportFilter, context),
       );
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
         setState(() => _isExporting = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Export failed: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
       }
     }
   }

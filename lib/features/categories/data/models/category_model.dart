@@ -26,4 +26,24 @@ class CategoryModel {
     required this.type,
     this.isDefault = false,
   });
+
+  Map<String, dynamic> toJson() => {
+        'id': id == Isar.autoIncrement ? null : id,
+        'name': name,
+        'colorHex': colorHex,
+        'iconName': iconName,
+        'type': type.index,
+        'isDefault': isDefault,
+      };
+
+  factory CategoryModel.fromJson(Map<String, dynamic> json) {
+    final c = CategoryModel();
+    if (json['id'] != null) c.id = json['id'];
+    c.name = json['name'];
+    c.colorHex = json['colorHex'];
+    c.iconName = json['iconName'];
+    c.type = CategoryType.values[json['type'] as int];
+    c.isDefault = json['isDefault'] ?? false;
+    return c;
+  }
 }

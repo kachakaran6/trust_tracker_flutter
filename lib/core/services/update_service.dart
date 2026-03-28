@@ -24,6 +24,10 @@ class UpdateService {
         }
       }
     } catch (e) {
+      if (e.toString().contains('ERROR_APP_NOT_OWNED')) {
+        debugPrint('In-app update skipped: app not from Play Store (expected in debug/APK)');
+        return;
+      }
       debugPrint('Update check failed: $e');
     }
   }
@@ -48,6 +52,10 @@ class UpdateService {
       }
       return false;
     } catch (e) {
+      if (e.toString().contains('ERROR_APP_NOT_OWNED')) {
+        debugPrint('In-app update skipped: app not from Play Store (expected in debug/APK)');
+        return false;
+      }
       debugPrint('Manual update check failed: $e');
       return false;
     }
