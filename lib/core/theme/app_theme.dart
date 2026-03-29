@@ -10,7 +10,7 @@ class AppAccentColor {
 
 class AppAccentColors {
   static const blue = AppAccentColor('Blue', Color(0xFF3B82F6));
-  static const green = AppAccentColor('Green', Color(0xFF10B981));
+  static const green = AppAccentColor('Green', Color(0xFF16A34A));
   static const pink = AppAccentColor('Pink', Color(0xFFEC4899));
   static const orange = AppAccentColor('Orange', Color(0xFFF97316));
   static const teal = AppAccentColor('Teal', Color(0xFF14B8A6));
@@ -45,22 +45,24 @@ class AppAccentColors {
 
 class AppColors {
   // Brand Neutrals - Light
-  static const Color lightBg = Color(0xFFF8F9FA);
+  static const Color lightBg = Color(0xFFF8F9FA); // Soft gray background
   static const Color lightSurface = Colors.white;
-  static const Color lightBorder = Color(0xFFE5E7EB);
-  static const Color lightTextPrimary = Color(0xFF111827);
-  static const Color lightTextSecondary = Color(0xFF4B5563);
+  static const Color lightBorder = Color(0xFFEDEDED); // Subtle border
+  static const Color lightTextPrimary = Color(0xDE000000); // 87% opacity
+  static const Color lightTextSecondary = Color(0x99000000); // 60% opacity
+  static const Color lightTextDisabled = Color(0x61000000); // 38% opacity
 
-  // Brand Neutrals - Dark (Premium Meta/Stripe Dark)
+  // Brand Neutrals - Dark (Premium Fintech Dark)
   static const Color darkBg = Color(0xFF121212); // Deep obsidian
-  static const Color darkSurface = Color(0xFF1E1E1E); // Slightly elevated
+  static const Color darkSurface = Color(0xFF1E1E1E); // Elevated surface
+  static const Color darkSurfaceVariant = Color(0xFF2A2A2A); // High elevation surface
   static const Color darkBorder = Color(0x1FFFFFFF); // 12% white
   static const Color darkTextPrimary = Color(0xDEFFFFFF); // 87% opacity
   static const Color darkTextSecondary = Color(0x99FFFFFF); // 60% opacity
   static const Color darkTextDisabled = Color(0x61FFFFFF); // 38% opacity
 
   // Functional Colors
-  static const Color success = Color(0xFF10B981);
+  static const Color success = Color(0xFF16A34A);
   static const Color error = Color(0xFFEF4444);
   static const Color warning = Color(0xFFF59E0B);
 }
@@ -76,7 +78,7 @@ class AppTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: isDark ? AppColors.darkBg : AppColors.lightBg,
       dividerTheme: DividerThemeData(
-        color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        color: colorScheme.outline.withOpacity(0.1),
         thickness: 1,
         space: 1,
       ),
@@ -89,7 +91,7 @@ class AppTheme {
         isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: isDark ? AppColors.darkBg : AppColors.lightSurface,
+        backgroundColor: (isDark ? AppColors.darkBg : AppColors.lightBg).withOpacity(0.8),
         foregroundColor: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
@@ -107,13 +109,13 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(
-            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+            color: colorScheme.outline.withOpacity(0.1),
             width: 1,
           ),
         ),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: isDark ? AppColors.darkBg : AppColors.lightSurface,
+        backgroundColor: (isDark ? AppColors.darkBg : AppColors.lightSurface).withOpacity(0.95),
         selectedItemColor: colorScheme.primary,
         unselectedItemColor: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
         elevation: 0,
@@ -127,22 +129,22 @@ class AppTheme {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+          borderSide: BorderSide(color: colorScheme.outline.withOpacity(0.1)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+          borderSide: BorderSide(color: colorScheme.outline.withOpacity(0.1)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: colorScheme.primary, width: 2),
+          borderSide: BorderSide(color: colorScheme.primary.withOpacity(0.5), width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: AppColors.error),
         ),
         hintStyle: GoogleFonts.inter(
-          color: isDark ? AppColors.darkTextDisabled : AppColors.lightTextSecondary.withOpacity(0.5),
+          color: isDark ? AppColors.darkTextDisabled : AppColors.lightTextDisabled,
           fontSize: 14,
         ),
       ),
@@ -153,13 +155,13 @@ class AppTheme {
           elevation: 0,
           minimumSize: const Size(double.infinity, 54),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          textStyle: GoogleFonts.manrope(fontSize: 16, fontWeight: FontWeight.w800),
+          textStyle: GoogleFonts.manrope(fontSize: 16, fontWeight: FontWeight.bold),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: colorScheme.primary,
-          side: BorderSide(color: colorScheme.primary, width: 1.5),
+          side: BorderSide(color: colorScheme.outline.withOpacity(0.2), width: 1.5),
           minimumSize: const Size(double.infinity, 54),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           textStyle: GoogleFonts.manrope(fontSize: 16, fontWeight: FontWeight.w700),
@@ -178,41 +180,46 @@ class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: isDark ? colorScheme.primaryContainer : AppColors.lightTextPrimary,
-        contentTextStyle: GoogleFonts.inter(color: isDark ? colorScheme.onPrimaryContainer : Colors.white),
+        backgroundColor: isDark ? AppColors.darkSurfaceVariant : Color(0xFF111827),
+        contentTextStyle: GoogleFonts.inter(color: Colors.white),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
 
   static ColorScheme _buildColorScheme(Color seed, Brightness brightness) {
+    // Generate a balanced scheme from the seed color
+    final baseScheme = ColorScheme.fromSeed(
+      seedColor: seed,
+      brightness: brightness,
+    );
+
     if (brightness == Brightness.light) {
-      return ColorScheme.fromSeed(
-        seedColor: seed,
-        brightness: Brightness.light,
+      return baseScheme.copyWith(
         primary: seed,
         onPrimary: Colors.white,
-        primaryContainer: seed.withOpacity(0.12),
+        primaryContainer: seed.withOpacity(0.08),
         onPrimaryContainer: seed,
         surface: AppColors.lightSurface,
         onSurface: AppColors.lightTextPrimary,
-        surfaceVariant: Color.lerp(seed, Colors.white, 0.95),
+        secondary: seed,
+        onSecondary: Colors.white,
         outline: AppColors.lightBorder,
         error: AppColors.error,
+        surfaceVariant: AppColors.lightBg,
       );
     } else {
-      // Dark mode needs more vibrant accents for visibility
-      final primaryColor = Color.lerp(seed, Colors.white, 0.15)!;
-      return ColorScheme.fromSeed(
-        seedColor: seed,
-        brightness: Brightness.dark,
-        primary: primaryColor,
+      // Dark Mode Refactor (No Glow, Obsidian tones)
+      return baseScheme.copyWith(
+        primary: seed,
         onPrimary: AppColors.darkBg,
-        primaryContainer: primaryColor.withOpacity(0.15),
-        onPrimaryContainer: primaryColor,
+        primaryContainer: seed.withOpacity(0.12),
+        onPrimaryContainer: seed,
         surface: AppColors.darkSurface,
         onSurface: AppColors.darkTextPrimary,
-        surfaceVariant: Color(0xFF1C2128),
+        secondary: seed,
+        onSecondary: AppColors.darkBg,
+        surfaceVariant: AppColors.darkSurfaceVariant,
         outline: AppColors.darkBorder,
         error: AppColors.error,
       );

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/services/export_service.dart';
+import 'package:trust_tracker_flutter/generated/app_localizations.dart';
 
 import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_filter.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/models/filter_utils.dart';
@@ -28,6 +29,7 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
     final tt = theme.textTheme;
     final cs = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       padding: EdgeInsets.only(
@@ -40,17 +42,17 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(cs, tt),
+          _buildHeader(cs, tt, l10n),
           const SizedBox(height: 24),
           
-          Text('SELECT FORMAT', style: tt.sectionLabel),
+          Text(l10n.selectFormat, style: tt.sectionLabel),
           const SizedBox(height: 12),
           Row(
             children: [
               _ExportFormatCard(
                 format: ExportFormat.pdf,
-                title: 'PDF Report',
-                description: 'Formatted financial report',
+                title: l10n.pdfReport,
+                description: l10n.pdfReportDesc,
                 icon: Icons.picture_as_pdf_outlined,
                 isSelected: _selectedFormat == ExportFormat.pdf,
                 onTap: () => setState(() => _selectedFormat = ExportFormat.pdf),
@@ -61,8 +63,8 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
               const SizedBox(width: 12),
               _ExportFormatCard(
                 format: ExportFormat.excel,
-                title: 'Excel Export',
-                description: 'For spreadsheet analysis',
+                title: l10n.excelExport,
+                description: l10n.excelExportDesc,
                 icon: Icons.table_chart_outlined,
                 isSelected: _selectedFormat == ExportFormat.excel,
                 onTap: () => setState(() => _selectedFormat = ExportFormat.excel),
@@ -74,15 +76,16 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
           ),
           
           const SizedBox(height: 24),
-          Text('DATE RANGE', style: tt.sectionLabel),
+          Text(l10n.dateRangeCaps, style: tt.sectionLabel),
           const SizedBox(height: 12),
-          _buildRangeSelector(cs, tt),
+          _buildRangeSelector(cs, tt, l10n),
           
           if (_selectedRange == ExportTimeRange.custom) ...[
             const SizedBox(height: 12),
             _CustomRangePicker(
               range: _customRange != null ? DateTimeRange(start: _customRange!.start, end: _customRange!.end) : null,
               onTap: _pickCustomRange,
+              l10n: l10n,
               cs: cs,
               tt: tt,
             ),
@@ -108,7 +111,7 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
                       children: [
                         const Icon(Icons.file_download_outlined, size: 22),
                         const SizedBox(width: 10),
-                        Text('Generate Export',
+                        Text(l10n.generateExport,
                             style: tt.titleMedium?.copyWith(
                                 color: cs.onPrimary,
                                 fontWeight: FontWeight.w800)),
@@ -121,16 +124,16 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
     );
   }
 
-  Widget _buildHeader(ColorScheme cs, TextTheme tt) {
+  Widget _buildHeader(ColorScheme cs, TextTheme tt, AppLocalizations l10n) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Export Transactions', style: tt.headlineSmall),
+            Text(l10n.exportTransactions, style: tt.headlineSmall),
             const SizedBox(height: 4),
-            Text('Save or share your financial data', style: tt.bodySmall),
+            Text(l10n.exportDesc, style: tt.bodySmall),
           ],
         ),
         IconButton(
@@ -142,7 +145,7 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
     );
   }
 
-  Widget _buildRangeSelector(ColorScheme cs, TextTheme tt) {
+  Widget _buildRangeSelector(ColorScheme cs, TextTheme tt, AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -154,14 +157,14 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
           Row(
             children: [
               _RangeButton(
-                label: 'This Month',
+                label: l10n.thisMonth,
                 selected: _selectedRange == ExportTimeRange.thisMonth,
                 onTap: () => setState(() => _selectedRange = ExportTimeRange.thisMonth),
                 cs: cs,
                 tt: tt,
               ),
               _RangeButton(
-                label: 'Last Month',
+                label: l10n.lastMonth,
                 selected: _selectedRange == ExportTimeRange.lastMonth,
                 onTap: () => setState(() => _selectedRange = ExportTimeRange.lastMonth),
                 cs: cs,
@@ -172,21 +175,21 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
           Row(
             children: [
               _RangeButton(
-                label: '3 Months',
+                label: l10n.threeMonths,
                 selected: _selectedRange == ExportTimeRange.last3Months,
                 onTap: () => setState(() => _selectedRange = ExportTimeRange.last3Months),
                 cs: cs,
                 tt: tt,
               ),
               _RangeButton(
-                label: 'All History',
+                label: l10n.allHistory,
                 selected: _selectedRange == ExportTimeRange.all,
                 onTap: () => setState(() => _selectedRange = ExportTimeRange.all),
                 cs: cs,
                 tt: tt,
               ),
               _RangeButton(
-                label: 'Custom',
+                label: l10n.custom,
                 selected: _selectedRange == ExportTimeRange.custom,
                 onTap: () {
                    setState(() => _selectedRange = ExportTimeRange.custom);
@@ -234,7 +237,7 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
 
   Future<void> _handleExport() async {
     if (_selectedRange == ExportTimeRange.custom && _customRange == null) {
-       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select a date range')));
+       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.pleaseSelectDateRange)));
        return;
     }
 
@@ -367,10 +370,11 @@ class _RangeButton extends StatelessWidget {
 class _CustomRangePicker extends StatelessWidget {
   final DateTimeRange? range;
   final VoidCallback onTap;
+  final AppLocalizations l10n;
   final ColorScheme cs;
   final TextTheme tt;
 
-  const _CustomRangePicker({this.range, required this.onTap, required this.cs, required this.tt});
+  const _CustomRangePicker({this.range, required this.onTap, required this.l10n, required this.cs, required this.tt});
 
   @override
   Widget build(BuildContext context) {
@@ -389,7 +393,7 @@ class _CustomRangePicker extends StatelessWidget {
             const SizedBox(width: 12),
             Text(
               range == null 
-                ? 'Select date range' 
+                ? l10n.selectDateRange 
                 : '${range!.start.day}/${range!.start.month}/${range!.start.year} - ${range!.end.day}/${range!.end.month}/${range!.end.year}',
               style: tt.titleSmall,
             ),

@@ -17,6 +17,7 @@ class SettingsState {
   final TransactionActionMode transactionActionMode;
   final String languageCode;
   final String accentColorHex;
+  final String? userAvatar;
 
   const SettingsState({
     this.currency = 'USD',
@@ -26,6 +27,7 @@ class SettingsState {
     this.transactionActionMode = TransactionActionMode.swipe,
     this.languageCode = 'en',
     this.accentColorHex = '#3B82F6', // Default Blue
+    this.userAvatar,
   });
 
   SettingsState copyWith({
@@ -36,6 +38,7 @@ class SettingsState {
     TransactionActionMode? transactionActionMode,
     String? languageCode,
     String? accentColorHex,
+    String? userAvatar,
   }) {
     return SettingsState(
       currency: currency ?? this.currency,
@@ -46,6 +49,7 @@ class SettingsState {
           transactionActionMode ?? this.transactionActionMode,
       languageCode: languageCode ?? this.languageCode,
       accentColorHex: accentColorHex ?? this.accentColorHex,
+      userAvatar: userAvatar ?? this.userAvatar,
     );
   }
 
@@ -57,6 +61,7 @@ class SettingsState {
         'transactionActionMode': transactionActionMode.name,
         'languageCode': languageCode,
         'accentColorHex': accentColorHex,
+        'userAvatar': userAvatar,
       };
 
   factory SettingsState.fromJson(Map<String, dynamic> json) => SettingsState(
@@ -69,6 +74,7 @@ class SettingsState {
             : TransactionActionMode.swipe,
         languageCode: json['languageCode'] ?? 'en',
         accentColorHex: json['accentColorHex'] ?? '#3B82F6',
+        userAvatar: json['userAvatar'],
       );
 }
 
@@ -89,6 +95,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
               : TransactionActionMode.swipe,
           languageCode: _prefs.getString(AppConstants.prefLanguage) ?? 'en',
           accentColorHex: _prefs.getString(AppConstants.prefAccentColor) ?? '#3B82F6',
+          userAvatar: _prefs.getString(AppConstants.prefUserAvatar),
         ));
 
   Future<void> setCurrency(String code) async {
@@ -120,6 +127,15 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   Future<void> setAccentColor(String hex) async {
     await _prefs.setString(AppConstants.prefAccentColor, hex);
     state = state.copyWith(accentColorHex: hex);
+  }
+
+  Future<void> setUserAvatar(String? path) async {
+    if (path == null) {
+      await _prefs.remove(AppConstants.prefUserAvatar);
+    } else {
+      await _prefs.setString(AppConstants.prefUserAvatar, path);
+    }
+    state = state.copyWith(userAvatar: path);
   }
 
   Future<void> completeOnboarding(String name, String currency) async {

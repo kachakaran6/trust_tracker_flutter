@@ -10,6 +10,7 @@ import 'package:trust_tracker_flutter/features/categories/data/repositories/cate
 import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/repositories/transaction_repository.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
+import 'package:trust_tracker_flutter/generated/app_localizations.dart';
 
 final _expenseCategoriesProvider =
     FutureProvider.autoDispose<List<CategoryModel>>((ref) {
@@ -35,9 +36,10 @@ class BudgetPage extends ConsumerWidget {
     final spendAsync = ref.watch(_monthSpendingProvider);
     final now = DateTime.now();
     final tt = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: Text('Budget — ${now.toMonthYear()}', style: tt.headlineSmall)),
+      appBar: AppBar(title: Text('${l10n.budgetLabel} — ${now.toMonthYear()}', style: tt.headlineSmall)),
       body: catsAsync.when(
         data: (cats) => budgetState.budgets.when(
           data: (budgets) {
@@ -195,6 +197,7 @@ class _BudgetSheetState extends ConsumerState<_BudgetSheet> {
     final theme = Theme.of(context);
     final tt = theme.textTheme;
     final cs = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -222,7 +225,7 @@ class _BudgetSheetState extends ConsumerState<_BudgetSheet> {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Text('Budget for ${widget.cat.name}',
+              child: Text(l10n.budgetFor(widget.cat.name),
                   style: tt.headlineSmall),
             ),
           ]),
@@ -237,7 +240,7 @@ class _BudgetSheetState extends ConsumerState<_BudgetSheet> {
             decoration: InputDecoration(
               hintText: '0.00',
               prefixText: '${widget.currency} ',
-              labelText: 'Monthly limit',
+              labelText: AppLocalizations.of(context)!.monthlyLimit,
             ),
           ),
           const SizedBox(height: 24),
@@ -245,7 +248,7 @@ class _BudgetSheetState extends ConsumerState<_BudgetSheet> {
             TextButton.icon(
               onPressed: _isSaving ? null : _delete,
               icon: Icon(Icons.delete_outline, color: cs.error, size: 18),
-              label: Text('Remove budget',
+              label: Text(AppLocalizations.of(context)!.removeBudget,
                   style: tt.labelLarge?.copyWith(color: cs.error)),
             ),
           const SizedBox(height: 12),
@@ -260,7 +263,7 @@ class _BudgetSheetState extends ConsumerState<_BudgetSheet> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : Text(widget.existing == null ? 'Set Budget' : 'Update Budget'),
+                  : Text(widget.existing == null ? l10n.setBudget : l10n.updateBudget),
             ),
           ),
         ],
@@ -282,6 +285,7 @@ class _BudgetSummaryCard extends StatelessWidget {
     final theme = Theme.of(context);
     final tt = theme.textTheme;
     final cs = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     if (totalBudgeted == 0) {
       return Container(
@@ -296,7 +300,7 @@ class _BudgetSummaryCard extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Tap any category below to set a monthly budget limit.',
+              AppLocalizations.of(context)!.tapToSetBudget,
               style: tt.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w600),
             ),
           ),
@@ -328,13 +332,13 @@ class _BudgetSummaryCard extends StatelessWidget {
         ],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('MONTHLY BUDGET OVERVIEW',
+        Text(AppLocalizations.of(context)!.monthlyBudgetOverview,
             style: tt.sectionLabel.copyWith(color: Colors.white.withOpacity(0.7))),
         const SizedBox(height: 8),
         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
           Text(totalSpent.toCurrency(currency),
               style: tt.displaySmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
-          Text('of ${totalBudgeted.toCurrency(currency)}',
+          Text(AppLocalizations.of(context)!.ofAmount(totalBudgeted.toCurrency(currency)),
               style: tt.labelLarge?.copyWith(color: Colors.white.withOpacity(0.7))),
         ]),
         const SizedBox(height: 20),
@@ -355,8 +359,8 @@ class _BudgetSummaryCard extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           isOver
-              ? '🚨 Over budget by ${(totalSpent - totalBudgeted).toCurrency(currency)}'
-              : '✅ ${remaining.toCurrency(currency)} remaining',
+              ? l10n.overBudgetBy((totalSpent - totalBudgeted).toCurrency(currency))
+              : l10n.remainingAmount(remaining.toCurrency(currency)),
           style: tt.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w700),
         ),
       ]),
@@ -384,6 +388,7 @@ class _BudgetCategoryCard extends StatelessWidget {
     final theme = Theme.of(context);
     final tt = theme.textTheme;
     final cs = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final catColor = Color(category.colorHex.toColorInt());
     final budgetAmt = budget?.amount ?? 0;
     final pct = budgetAmt > 0 ? (spent / budgetAmt).clamp(0.0, 1.0) : 0.0;
@@ -431,7 +436,7 @@ class _BudgetCategoryCard extends StatelessWidget {
               decoration: BoxDecoration(
                   color: cs.errorContainer,
                   borderRadius: BorderRadius.circular(8)),
-              child: Text('OVER',
+              child: Text(AppLocalizations.of(context)!.over,
                   style: tt.labelSmall?.copyWith(fontSize: 9, color: cs.onErrorContainer, fontWeight: FontWeight.bold)),
             ),
           const SizedBox(width: 4),
@@ -442,16 +447,16 @@ class _BudgetCategoryCard extends StatelessWidget {
               padding:
                   const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
-            child: Text(budget == null ? 'SET' : 'EDIT',
+            child: Text(budget == null ? AppLocalizations.of(context)!.setBudget.split(' ')[0].toUpperCase() : AppLocalizations.of(context)!.updateBudget.split(' ')[0].toUpperCase(),
                 style: tt.labelLarge?.copyWith(color: cs.primary, fontWeight: FontWeight.w800)),
           ),
         ]),
         if (budget != null) ...[
           const SizedBox(height: 16),
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Text('${spent.toCurrency(currency)} spent',
+            Text(AppLocalizations.of(context)!.spentAmount(spent.toCurrency(currency)),
                 style: tt.labelSmall),
-            Text('of ${budgetAmt.toCurrency(currency)}',
+            Text(AppLocalizations.of(context)!.ofAmount(budgetAmt.toCurrency(currency)),
                 style: tt.labelSmall),
           ]),
           const SizedBox(height: 8),
@@ -473,19 +478,19 @@ class _BudgetCategoryCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Text(
-                  '🚨 Over by ${(spent - budgetAmt).toCurrency(currency)}',
+                  l10n.overBudgetBy((spent - budgetAmt).toCurrency(currency)),
                   style: tt.labelSmall?.copyWith(color: cs.error, fontWeight: FontWeight.w700)),
             )
           else if (isWarning)
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Text(
-                  '⚠️ ${((1 - pct) * 100).toStringAsFixed(0)}% remaining',
+                  l10n.remainingAmount((budgetAmt - spent).toCurrency(currency)),
                   style: tt.labelSmall?.copyWith(color: AppColors.warning, fontWeight: FontWeight.w700)),
             ),
         ] else ...[
           const SizedBox(height: 8),
-          Text('No budget set — tap "SET" to add a limit',
+          Text(AppLocalizations.of(context)!.noBudgetSet,
               style: tt.labelSmall?.copyWith(fontStyle: FontStyle.italic)),
         ],
       ]),

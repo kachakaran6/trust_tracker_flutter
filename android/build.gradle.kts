@@ -3,16 +3,6 @@ allprojects {
         google()
         mavenCentral()
     }
-    // Force transitive deps that url_launcher / share_plus pull in to stay
-    // within the version ceiling of AGP 8.6.0. Without this, androidx.browser
-    // 1.9.0 and core-ktx 1.17.0 are resolved, both of which require AGP ≥8.9.1.
-    configurations.all {
-        resolutionStrategy {
-            force("androidx.browser:browser:1.8.0")
-            force("androidx.core:core:1.15.0")
-            force("androidx.core:core-ktx:1.15.0")
-        }
-    }
 }
 
 val newBuildDir: Directory =

@@ -230,7 +230,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
             IconButton(
               icon: Icon(Icons.file_download_outlined, color: cs.onSurface.withOpacity(0.6), size: 24),
               onPressed: _openExportBottomSheet,
-              tooltip: 'Export',
+              tooltip: AppLocalizations.of(context)!.export,
             ),
             const SizedBox(width: 8),
           ],
@@ -249,7 +249,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
               child: groupedAsync.when(
                 skipLoadingOnReload: true,
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, stack) => Center(child: Text("Error: $err")),
+                error: (err, stack) => Center(child: Text("${AppLocalizations.of(context)!.error}: $err")),
                 data: (result) {
                   final groups = result.groups;
                   final catMap = result.catMap;
@@ -266,7 +266,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                           Icon(Icons.search_off_rounded, size: 48, color: cs.onSurface.withOpacity(0.2)),
                           const SizedBox(height: 16),
                           Text(
-                            "No results found",
+                            AppLocalizations.of(context)!.noResultsFound,
                             style: tt.bodyMedium?.copyWith(color: cs.onSurface.withOpacity(0.4)),
                           ),
                         ],

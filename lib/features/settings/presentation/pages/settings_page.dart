@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:trust_tracker_flutter/core/constants/app_constants.dart';
@@ -12,6 +13,13 @@ import 'package:trust_tracker_flutter/core/services/update_service.dart';
 import 'package:trust_tracker_flutter/core/services/backup_service.dart';
 import 'package:trust_tracker_flutter/generated/app_localizations.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:trust_tracker_flutter/core/constants/app_avatars.dart';
+import 'dart:math' as math;
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:trust_tracker_flutter/features/settings/presentation/widgets/avatar_selection_modal.dart';
+import 'package:path/path.dart' as p;
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -23,6 +31,9 @@ class SettingsPage extends ConsumerStatefulWidget {
 class _SettingsPageState extends ConsumerState<SettingsPage>
     with WidgetsBindingObserver {
   late TextEditingController _nameController;
+
+  // _pickCustomAvatar removed (now in shared showAvatarSelectionModal)
+  // _showAvatarPicker removed (now in shared showAvatarSelectionModal)
 
   @override
   void initState() {
@@ -62,16 +73,53 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
           _SectionCard(
             children: [
               Row(children: [
-                CircleAvatar(
-                  radius: 30,
-                  backgroundColor: cs.primaryContainer,
-                  child: Text(
-                    settings.userName.isNotEmpty
-                        ? settings.userName[0].toUpperCase()
-                        : '?',
-                    style: tt.displaySmall?.copyWith(
-                        color: cs.onPrimaryContainer,
-                        fontWeight: FontWeight.bold),
+                GestureDetector(
+                  onTap: () => showAvatarSelectionModal(context: context, ref: ref, settings: settings),
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: 70,
+                        height: 70,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: cs.primaryContainer,
+                          border: Border.all(color: cs.primary.withOpacity(0.2), width: 2),
+                          image: settings.userAvatar != null
+                              ? DecorationImage(
+                                  image: settings.userAvatar!.startsWith('assets/')
+                                      ? AssetImage(settings.userAvatar!)
+                                      : FileImage(File(settings.userAvatar!)) as ImageProvider,
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
+                        ),
+                        child: settings.userAvatar == null
+                            ? Center(
+                                child: Text(
+                                  settings.userName.isNotEmpty
+                                      ? settings.userName[0].toUpperCase()
+                                      : '?',
+                                  style: tt.displaySmall?.copyWith(
+                                      color: cs.onPrimaryContainer,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              )
+                            : null,
+                      ),
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: cs.primary,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: cs.surface, width: 2),
+                          ),
+                          child: const Icon(Icons.camera_alt, size: 12, color: Colors.white),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -169,24 +217,49 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
             title: l10n.language,
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: DropdownButtonFormField<String>(
-                  value: settings.languageCode,
-                  dropdownColor: cs.surface,
-                  style: tt.bodyMedium,
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.language, color: cs.onSurface.withOpacity(0.6)),
-                  ),
-                  items: [
-                    DropdownMenuItem(value: 'en', child: Text(l10n.english)),
-                    DropdownMenuItem(value: 'hi', child: Text(l10n.hindi)),
-                    DropdownMenuItem(value: 'gu', child: Text(l10n.gujarati)),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: Row(
+                  children: [
+                    Icon(Icons.language_rounded, color: cs.onSurface.withOpacity(0.55), size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        l10n.language,
+                        style: tt.bodyMedium,
+                      ),
+                    ),
+                    SizedBox(
+                      width: 160,
+                      child: PopupMenuButton<String>(
+                        initialValue: settings.languageCode,
+                        onSelected: (code) {
+                          ref.read(settingsProvider.notifier).setLanguage(code);
+                        },
+                        offset: const Offset(0, 40),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        itemBuilder: (context) => [
+                          PopupMenuItem(value: 'en', child: Text(l10n.english)),
+                          PopupMenuItem(value: 'hi', child: Text(l10n.hindi)),
+                          PopupMenuItem(value: 'gu', child: Text(l10n.gujarati)),
+                        ],
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Text(
+                                settings.languageCode == 'en' 
+                                    ? l10n.english 
+                                    : (settings.languageCode == 'hi' ? l10n.hindi : l10n.gujarati),
+                                style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: cs.primary),
+                              ),
+                              Icon(Icons.arrow_drop_down, color: cs.primary),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
-                  onChanged: (code) {
-                    if (code != null) {
-                      ref.read(settingsProvider.notifier).setLanguage(code);
-                    }
-                  },
                 ),
               ),
             ],
@@ -208,7 +281,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
           const SizedBox(height: 16),
 
           _SettingsSection(
-            title: 'App Theme',
+            title: l10n.appTheme,
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -216,7 +289,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Select Accent Color',
+                      l10n.selectAccentColor,
                       style: tt.titleSmall?.copyWith(color: cs.onSurface.withOpacity(0.7)),
                     ),
                     const SizedBox(height: 16),
@@ -241,20 +314,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                             decoration: BoxDecoration(
                               color: accent.color,
                               shape: BoxShape.circle,
-                              border: isSelected 
-                                  ? Border.all(color: cs.onSurface, width: 3) 
-                                  : Border.all(color: Colors.transparent, width: 0),
-                              boxShadow: isSelected ? [
-                                BoxShadow(
-                                  color: accent.color.withOpacity(0.4),
-                                  blurRadius: 12,
-                                  spreadRadius: 2,
-                                  offset: const Offset(0, 4),
-                                )
-                              ] : [],
+                              // Multi-layer border for premium look
+                              border: Border.all(
+                                color: isSelected 
+                                    ? (theme.brightness == Brightness.dark ? Colors.white : cs.primary)
+                                    : cs.outline.withOpacity(0.12), 
+                                width: isSelected ? 3 : 1.5,
+                              ),
                             ),
                             child: isSelected 
-                                ? const Icon(Icons.check, color: Colors.white, size: 24) 
+                                ? Icon(Icons.check, color: theme.brightness == Brightness.dark ? Colors.black : Colors.white, size: 24) 
                                 : null,
                           ),
                         );
@@ -272,28 +341,46 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
             title: l10n.currency,
             children: [
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: DropdownButtonFormField<String>(
-                  value: settings.currency,
-                  dropdownColor: cs.surface,
-                  style: tt.bodyMedium,
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.attach_money,
-                        color: cs.onSurface.withOpacity(0.6)),
-                  ),
-                  items: AppConstants.currencies
-                      .map((c) => DropdownMenuItem(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: Row(
+                  children: [
+                    Icon(Icons.payments_outlined, color: cs.onSurface.withOpacity(0.55), size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        l10n.currency,
+                        style: tt.bodyMedium,
+                      ),
+                    ),
+                    SizedBox(
+                      width: 160,
+                      child: PopupMenuButton<String>(
+                        initialValue: settings.currency,
+                        onSelected: (code) {
+                          ref.read(settingsProvider.notifier).setCurrency(code);
+                        },
+                        offset: const Offset(0, 40),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        itemBuilder: (context) => AppConstants.currencies.map((c) => PopupMenuItem(
                           value: c['code'],
-                          child: Text(
-                              '${c['code']} — ${c['name']} (${c['symbol']})',
-                              style: tt.bodyMedium)))
-                      .toList(),
-                  onChanged: (code) {
-                    if (code != null) {
-                      ref.read(settingsProvider.notifier).setCurrency(code);
-                    }
-                  },
+                          child: Text('${c['code']} — ${c['name']}', style: tt.bodyMedium),
+                        )).toList(),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Text(
+                                settings.currency,
+                                style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: cs.primary),
+                              ),
+                              Icon(Icons.arrow_drop_down, color: cs.primary),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -363,7 +450,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                         decoration: BoxDecoration(
                             color: cs.secondaryContainer,
                             borderRadius: BorderRadius.circular(8)),
-                        child: Text('ON',
+                        child: Text(l10n.on,
                             style: tt.labelSmall?.copyWith(color: cs.onSecondaryContainer, fontWeight: FontWeight.bold)),
                       )
                     : null,
@@ -379,22 +466,76 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                     final confirm = await showDialog<bool>(
                       context: context,
                       builder: (dialogCtx) => AlertDialog(
-                        title: Text(l10n.disablePinConfirm, style: tt.headlineSmall),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                        icon: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: cs.error.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.warning_amber_rounded, size: 32, color: cs.error),
+                        ),
+                        title: Text(l10n.disablePinConfirm, 
+                          textAlign: TextAlign.center,
+                          style: tt.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w800, 
+                            letterSpacing: -0.5,
+                            fontSize: 20, // Slightly more controlled size
+                          )),
                         content: Text(
-                            l10n.disablePinDetails, style: tt.bodyMedium),
+                          l10n.disablePinDetails,
+                          textAlign: TextAlign.center,
+                          style: tt.bodyMedium?.copyWith(
+                            color: cs.onSurface.withOpacity(0.6), 
+                            height: 1.3,
+                            fontSize: 14,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
                         actions: [
-                          TextButton(
-                              onPressed: () =>
-                                  Navigator.of(dialogCtx).pop(false),
-                              child: Text(l10n.cancel, style: tt.labelLarge)),
-                          ElevatedButton(
-                              onPressed: () =>
-                                  Navigator.of(dialogCtx).pop(true),
-                              style: ElevatedButton.styleFrom(
-                                  backgroundColor: cs.error,
-                                  foregroundColor: cs.onError),
-                              child: Text(l10n.disablePin)),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed: () => Navigator.of(dialogCtx).pop(false),
+                                  style: OutlinedButton.styleFrom(
+                                    minimumSize: const Size.fromHeight(48),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    side: BorderSide(color: cs.outline.withOpacity(0.2)),
+                                    foregroundColor: cs.onSurface,
+                                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                                  ),
+                                  child: Text(
+                                    l10n.cancel, 
+                                    maxLines: 1,
+                                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () => Navigator.of(dialogCtx).pop(true),
+                                  style: ElevatedButton.styleFrom(
+                                    minimumSize: const Size.fromHeight(48),
+                                    backgroundColor: cs.error,
+                                    foregroundColor: cs.onError,
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                                  ),
+                                  child: Text(
+                                    l10n.disablePin, 
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
+                        actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
                       ),
                     );
 
@@ -412,7 +553,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                     if (v && !security.isPinEnabled) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: const Text('Please set a PIN before enabling biometric security'),
+                          content: Text(l10n.setPinBeforeBiometric),
                           behavior: SnackBarBehavior.floating,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
@@ -429,16 +570,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
 
           // ── Data Management ──────────────────────────────────────
           _SettingsSection(
-            title: 'Data Management',
+            title: l10n.dataManagement,
             children: [
               _SettingsTile(
                 icon: Icons.upload_file,
-                label: 'Export Data (JSON)',
+                label: l10n.exportDataJson,
                 onTap: () => _handleExport(context, ref),
               ),
               _SettingsTile(
                 icon: Icons.download,
-                label: 'Import Data (JSON)',
+                label: l10n.importDataJson,
                 onTap: () => _handleImport(context, ref),
               ),
             ],
@@ -466,20 +607,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                 label: l10n.shareApp,
                 iconColor: cs.primary,
                 onTap: () {
-                Share.share(
-  'Take control of your personal finances with Trust Tracker.\n\n'
-  'Trust Tracker is a private, offline-first expense tracker designed to help you manage your income, expenses, and budgets with ease.\n\n'
-  'Key Features:\n'
-  '• Simple expense and income tracking\n'
-  '• Budget management and financial insights\n'
-  '• Secure PIN and biometric protection\n'
-  '• Completely offline and privacy focused\n'
-  '• Clean and easy-to-use interface\n\n'
-  'Download the app from the Google Play Store:\n'
-  'https://play.google.com/store/apps/details?id=com.trusttracker.trust_tracker_flutter\n\n'
-  'Your feedback and support would mean a lot.',
-  subject: 'Trust Tracker – Smart Expense Tracker',
-);
+                  Share.share(
+                    l10n.shareMessage,
+                    subject: l10n.shareSubject,
+                  );
                 },
               ),
             ],
@@ -533,6 +664,26 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
             ],
           ),
 
+/*
+          if (!kReleaseMode) ...[
+             const SizedBox(height: 16),
+             _SettingsSection(
+               title: "Developer Testing",
+               children: [
+                 _SettingsTile(
+                   icon: Icons.bug_report_outlined,
+                   label: "Test Update Popup",
+                   iconColor: cs.secondary,
+                   onTap: () {
+                     HapticFeedback.lightImpact();
+                     ref.read(updateServiceProvider).testUpdateUI(context);
+                   },
+                 ),
+               ],
+             ),
+           ],
+*/
+
           const SizedBox(height: 24),
 
           // App info
@@ -553,7 +704,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Built with ❤️ by Karan',
+                  l10n.builtWithLove('Karan'),
                   style: tt.labelSmall?.copyWith(color: cs.onSurface.withOpacity(0.5)),
                 ),
                 const SizedBox(height: 8),
@@ -923,6 +1074,12 @@ class _SettingsToggle extends StatelessWidget {
           value: value,
           onChanged: onChanged,
           activeColor: cs.primary,
+          trackOutlineColor: WidgetStateProperty.resolveWith<Color?>((states) {
+            if (states.contains(WidgetState.selected)) {
+              return cs.primary.withAlpha(120);
+            }
+            return cs.outline.withOpacity(0.2);
+          }),
         ),
       ]),
     );

@@ -35,6 +35,9 @@ Future<void> main() async {
         settingsProvider.overrideWith(
           (ref) => SettingsNotifier(prefs),
         ),
+        securityProvider.overrideWith(
+          (ref) => SecurityNotifier(ref.watch(localAuthProvider), prefs),
+        ),
       ],
       child: const TrustTrackerApp(),
     ),
@@ -54,14 +57,6 @@ class _TrustTrackerAppState extends ConsumerState<TrustTrackerApp>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _checkForUpdate();
-  }
-
-  Future<void> _checkForUpdate() async {
-    await Future.delayed(const Duration(seconds: 2));
-    if (mounted) {
-      await ref.read(updateServiceProvider).checkForUpdate();
-    }
   }
 
   @override
@@ -82,7 +77,6 @@ class _TrustTrackerAppState extends ConsumerState<TrustTrackerApp>
       securityNotifier.setVisibility(false);
     } else if (state == AppLifecycleState.resumed) {
       securityNotifier.setVisibility(true);
-      _checkForUpdate();
     }
   }
 

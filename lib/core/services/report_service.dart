@@ -12,6 +12,12 @@ import 'package:trust_tracker_flutter/features/categories/data/models/category_m
 import 'package:trust_tracker_flutter/core/utils/extensions.dart';
 import 'package:intl/intl.dart';
 
+final _pdfFormatter = NumberFormat.currency(
+  locale: 'en_IN',
+  symbol: '₹',
+  decimalDigits: 2,
+);
+
 class ReportService {
   Future<void> generateAndShareReport({
     required List<TransactionModel> transactions,
@@ -112,11 +118,11 @@ class ReportService {
   pw.Widget _buildSummary(double income, double expense, double balance, String currency) {
     return pw.Row(
       children: [
-        _summaryItem('Total Income', income.toCurrency(currency), PdfColors.green800, PdfColors.green50),
+        _summaryItem('Total Income', _pdfFormatter.format(income), PdfColors.green800, PdfColors.green50),
         pw.SizedBox(width: 12),
-        _summaryItem('Total Expense', expense.toCurrency(currency), PdfColors.red800, PdfColors.red50),
+        _summaryItem('Total Expense', _pdfFormatter.format(-expense), PdfColors.red800, PdfColors.red50),
         pw.SizedBox(width: 12),
-        _summaryItem('Net Balance', balance.toCurrency(currency), balance >= 0 ? PdfColors.blue800 : PdfColors.red800, balance >= 0 ? PdfColors.blue50 : PdfColors.red50),
+        _summaryItem('Net Balance', _pdfFormatter.format(balance), balance >= 0 ? PdfColors.blue800 : PdfColors.red800, balance >= 0 ? PdfColors.blue50 : PdfColors.red50),
       ],
     );
   }
@@ -193,7 +199,7 @@ class ReportService {
         t.description,
         category?.name ?? 'Uncategorized',
         pw.Text(
-          '${t.type == TransactionType.income ? '+' : '-'}${t.amount.toCurrency(currency)}',
+          _pdfFormatter.format(t.type == TransactionType.income ? t.amount : -t.amount),
           style: pw.TextStyle(
             fontWeight: pw.FontWeight.bold,
             color: t.type == TransactionType.income ? PdfColors.green800 : PdfColors.red800,

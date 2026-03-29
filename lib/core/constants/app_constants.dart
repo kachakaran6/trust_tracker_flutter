@@ -113,4 +113,7 @@ class AppConstants {
   static const String prefUserName = 'pref_user_name';
   static const String prefIsFirstRun = 'pref_is_first_run';
   static const String prefAccentColor = 'pref_accent_color';
+  static const String prefUserAvatar = 'pref_user_avatar';
+  static const String prefPinAttempts = 'pref_pin_attempts';
+  static const String prefPinLockUntil = 'pref_pin_lock_until';
 }

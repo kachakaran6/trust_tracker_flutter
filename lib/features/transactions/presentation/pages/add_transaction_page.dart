@@ -9,6 +9,7 @@ import 'package:trust_tracker_flutter/features/transactions/presentation/widgets
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
 import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
 import 'package:intl/intl.dart';
+import 'package:trust_tracker_flutter/generated/app_localizations.dart';
 
 // Removed unused provider
 
@@ -209,6 +210,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
     
     final expenseColor = cs.error;
     final incomeColor = AppColors.success;
+    final l10n = AppLocalizations.of(context)!;
     
     final isExpense = _currentType == TransactionType.expense;
     final activeAccent = isExpense ? expenseColor : incomeColor;
@@ -227,7 +229,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
           onPressed: () => context.pop(),
         ),
         title: Text(
-          _isEditMode ? 'Edit Transaction' : 'Add Transaction',
+          _isEditMode ? l10n.editTransaction : l10n.addTransaction,
           style: tt.headlineSmall?.copyWith(
             fontWeight: FontWeight.w800,
             fontSize: 18,
@@ -248,7 +250,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
               child: Column(
                 children: [
                   Text(
-                    'AMOUNT',
+                    l10n.amount.toUpperCase(),
                     style: tt.labelSmall?.copyWith(
                       fontWeight: FontWeight.w800,
                       letterSpacing: 1.5,
@@ -336,7 +338,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
                         color: !isExpense ? incomeColor : labelColor.withOpacity(0.5),
                         fontWeight: FontWeight.w800,
                       ),
-                      child: const Text('Income'),
+                      child: Text(l10n.income),
                     ),
                   ),
                   Tab(
@@ -346,7 +348,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
                         color: isExpense ? expenseColor : labelColor.withOpacity(0.5),
                         fontWeight: FontWeight.w800,
                       ),
-                      child: const Text('Expense'),
+                      child: Text(l10n.expense),
                     ),
                   ),
                 ],
@@ -355,7 +357,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
             const SizedBox(height: spSect),
 
             // --- Category Dropdown ---
-            _buildSectionLabel('CATEGORY', labelColor),
+            _buildSectionLabel(l10n.categoriesCaps, labelColor),
             const SizedBox(height: spTight),
             TransactionCategoryDropdown(
               type: _currentCategoryType,
@@ -370,13 +372,13 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
             const SizedBox(height: spSect),
 
             // --- Description ---
-            _buildSectionLabel('DESCRIPTION', labelColor),
+            _buildSectionLabel(l10n.description.toUpperCase(), labelColor),
             const SizedBox(height: spMicro),
             TextFormField(
               controller: _descController,
               style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
               decoration: InputDecoration(
-                hintText: 'What was this for?',
+                hintText: l10n.whatWasThisFor,
                 prefixIcon: Icon(Icons.edit_note_rounded, color: labelColor.withOpacity(0.6), size: 22),
                 enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: inputBorderColor)),
                 focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: activeAccent, width: 2)),
@@ -384,7 +386,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
                 filled: false,
                 contentPadding: const EdgeInsets.symmetric(vertical: spStd),
               ),
-              validator: (v) => v == null || v.trim().isEmpty ? 'Enter a description' : null,
+              validator: (v) => v == null || v.trim().isEmpty ? l10n.enterDescription : null,
             ),
             const SizedBox(height: spSect),
 
@@ -395,7 +397,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildSectionLabel('DATE', labelColor),
+                      _buildSectionLabel(l10n.date.toUpperCase(), labelColor),
                       const SizedBox(height: spMicro),
                       InkWell(
                         onTap: _pickDate,
