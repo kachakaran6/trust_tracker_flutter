@@ -16,9 +16,9 @@ class PdfGenerator {
     final pdf = pw.Document();
     final now = DateTime.now();
 
-    // Load fonts for Unicode support (Rupee symbols, etc)
-    final fontRegular = await PdfGoogleFonts.notoSansRegular();
-    final fontBold = await PdfGoogleFonts.notoSansBold();
+    // Load fonts for Unicode support
+    final fontRegular = await PdfGoogleFonts.hindRegular();
+    final fontBold = await PdfGoogleFonts.hindBold();
 
     // Summary data
     double totalIncome = 0;
@@ -117,19 +117,19 @@ class PdfGenerator {
             children: [
               _buildSummaryCard(
                   'Total Income',
-                  '$currency ${totalIncome.toStringAsFixed(2)}',
+                  totalIncome.toCurrency(currency),
                   PdfColors.green800,
                   PdfColors.green50),
               pw.SizedBox(width: 12),
               _buildSummaryCard(
                   'Total Expense',
-                  '$currency ${totalExpense.toStringAsFixed(2)}',
+                  totalExpense.toCurrency(currency),
                   PdfColors.red800,
                   PdfColors.red50),
               pw.SizedBox(width: 12),
               _buildSummaryCard(
                   'Net Balance',
-                  '$currency ${balance.toStringAsFixed(2)}',
+                  balance.toCurrency(currency),
                   balance >= 0 ? PdfColors.blue800 : PdfColors.red800,
                   balance >= 0 ? PdfColors.blue50 : PdfColors.red50),
             ],
@@ -190,7 +190,7 @@ class PdfGenerator {
               'Amount'
             ],
             data: rows.map((row) {
-              final amountStr = '${row.isIncome ? '+' : '-'}$currency ${row.amount.toStringAsFixed(2)}';
+              final amountStr = '${row.isIncome ? '+' : '-'}${row.amount.toCurrency(currency)}';
               return [
                 row.timestampLabel,
                 row.title,

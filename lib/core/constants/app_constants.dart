@@ -1,6 +1,6 @@
 class AppConstants {
   static const String appName = 'Trust Tracker';
-  static const String dbName = 'trust_tracker.isar';
+  static const String dbName = 'trust_tracker.db';
 
   // Currencies
   static const List<Map<String, String>> currencies = [

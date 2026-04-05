@@ -103,7 +103,7 @@ class ExportService {
 
   List<ExportTransactionRow> _buildExportRows(
     List<TransactionModel> transactions,
-    Map<int, CategoryModel> categoryMap,
+    Map<int?, CategoryModel> categoryMap,
   ) {
     return transactions.map((transaction) {
       final category = categoryMap[transaction.categoryId];

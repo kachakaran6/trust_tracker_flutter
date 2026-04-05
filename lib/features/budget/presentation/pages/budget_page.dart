@@ -157,7 +157,7 @@ class _BudgetSheetState extends ConsumerState<_BudgetSheet> {
     setState(() => _isSaving = true);
     try {
       final budget = BudgetModel.create(
-        categoryId: widget.cat.id,
+        categoryId: widget.cat.id!,
         amount: amount,
         monthKey: DateTime.now().toMonthKey(),
       );
@@ -179,7 +179,7 @@ class _BudgetSheetState extends ConsumerState<_BudgetSheet> {
     try {
       await ref
           .read(budgetNotifierProvider.notifier)
-          .deleteBudget(widget.existing!.id);
+          .deleteBudget(widget.existing!.id!);
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {

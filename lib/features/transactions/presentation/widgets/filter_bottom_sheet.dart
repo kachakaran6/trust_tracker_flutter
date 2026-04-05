@@ -230,7 +230,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                               spacing: 8,
                               runSpacing: 0,
                               children: categories.map((cat) {
-                                final isSelected = _currentFilter.categoryIds.contains(cat.id);
+                                final isSelected = _currentFilter.categoryIds.contains(cat.id!);
                                 final color = Color(int.parse(cat.colorHex.replaceFirst('#', '0xFF')));
                                 return FilterChip(
                                   label: Text(cat.name,
@@ -242,9 +242,9 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                                     setState(() {
                                       final newIds = List<int>.from(_currentFilter.categoryIds);
                                       if (selected) {
-                                        newIds.add(cat.id);
+                                        newIds.add(cat.id!);
                                       } else {
-                                        newIds.remove(cat.id);
+                                        newIds.remove(cat.id!);
                                       }
                                       _currentFilter = _currentFilter.copyWith(categoryIds: newIds);
                                     });

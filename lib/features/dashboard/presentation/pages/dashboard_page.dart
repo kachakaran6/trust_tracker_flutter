@@ -177,7 +177,7 @@ class DashboardPage extends ConsumerWidget {
       ),
     );
     if (confirm == true) {
-      await ref.read(transactionListProvider.notifier).deleteTransaction(t.id);
+      await ref.read(transactionListProvider.notifier).deleteTransaction(t.id!);
     }
   }
 
@@ -463,7 +463,7 @@ class _DashboardTransactionTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Slidable(
-        key: ValueKey(transaction.id),
+        key: ValueKey(transaction.id!),
         startActionPane: ActionPane(
           motion: const BehindMotion(),
           extentRatio: 0.25,

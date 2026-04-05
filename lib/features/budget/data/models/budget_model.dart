@@ -1,17 +1,8 @@
-import 'package:isar/isar.dart';
-
-part 'budget_model.g.dart';
-
-@collection
 class BudgetModel {
-  Id id = Isar.autoIncrement;
-
+  int? id;
   late int categoryId;
   late double amount;
-
-  @Index(composite: [CompositeIndex('categoryId')])
-  late String monthKey; // Format: "yyyy-MM"
-
+  late String monthKey;
   late DateTime createdAt;
 
   BudgetModel();
@@ -24,21 +15,25 @@ class BudgetModel {
     createdAt = DateTime.now();
   }
 
-  Map<String, dynamic> toJson() => {
-        'id': id == Isar.autoIncrement ? null : id,
+  Map<String, dynamic> toMap() => {
+        'id': id,
         'categoryId': categoryId,
         'amount': amount,
         'monthKey': monthKey,
         'createdAt': createdAt.toIso8601String(),
       };
 
-  factory BudgetModel.fromJson(Map<String, dynamic> json) {
+  factory BudgetModel.fromMap(Map<String, dynamic> map) {
     final b = BudgetModel();
-    if (json['id'] != null) b.id = json['id'];
-    b.categoryId = json['categoryId'];
-    b.amount = (json['amount'] as num).toDouble();
-    b.monthKey = json['monthKey'];
-    b.createdAt = DateTime.parse(json['createdAt']);
+    b.id = map['id'];
+    b.categoryId = map['categoryId'];
+    b.amount = (map['amount'] as num).toDouble();
+    b.monthKey = map['monthKey'];
+    b.createdAt = DateTime.parse(map['createdAt']);
     return b;
   }
+
+  // Keep compatibility if needed
+  Map<String, dynamic> toJson() => toMap();
+  factory BudgetModel.fromJson(Map<String, dynamic> json) => BudgetModel.fromMap(json);
 }

@@ -12,11 +12,7 @@ import 'package:trust_tracker_flutter/features/categories/data/models/category_m
 import 'package:trust_tracker_flutter/core/utils/extensions.dart';
 import 'package:intl/intl.dart';
 
-final _pdfFormatter = NumberFormat.currency(
-  locale: 'en_IN',
-  symbol: '₹',
-  decimalDigits: 2,
-);
+
 
 class ReportService {
   Future<void> generateAndShareReport({
@@ -33,8 +29,8 @@ class ReportService {
     final pdf = pw.Document();
 
     // Load fonts for Unicode support
-    final fontRegular = await PdfGoogleFonts.notoSansRegular();
-    final fontBold = await PdfGoogleFonts.notoSansBold();
+    final fontRegular = await PdfGoogleFonts.hindRegular();
+    final fontBold = await PdfGoogleFonts.hindBold();
 
     // 1. Calculations
     double totalIncome = 0;
@@ -115,14 +111,19 @@ class ReportService {
     );
   }
 
-  pw.Widget _buildSummary(double income, double expense, double balance, String currency) {
+  pw.Widget _buildSummary(
+      double income, double expense, double balance, String currencyCode) {
     return pw.Row(
       children: [
-        _summaryItem('Total Income', _pdfFormatter.format(income), PdfColors.green800, PdfColors.green50),
+        _summaryItem('Total Income', income.toCurrency(currencyCode),
+            PdfColors.green800, PdfColors.green50),
         pw.SizedBox(width: 12),
-        _summaryItem('Total Expense', _pdfFormatter.format(-expense), PdfColors.red800, PdfColors.red50),
+        _summaryItem('Total Expense', (-expense).toCurrency(currencyCode),
+            PdfColors.red800, PdfColors.red50),
         pw.SizedBox(width: 12),
-        _summaryItem('Net Balance', _pdfFormatter.format(balance), balance >= 0 ? PdfColors.blue800 : PdfColors.red800, balance >= 0 ? PdfColors.blue50 : PdfColors.red50),
+        _summaryItem('Net Balance', balance.toCurrency(currencyCode),
+            balance >= 0 ? PdfColors.blue800 : PdfColors.red800,
+            balance >= 0 ? PdfColors.blue50 : PdfColors.red50),
       ],
     );
   }
@@ -190,19 +191,23 @@ class ReportService {
     );
   }
 
-  pw.Widget _buildTransactionTable(List<TransactionModel> txns, List<CategoryModel> categories, String currency) {
+  pw.Widget _buildTransactionTable(
+      List<TransactionModel> txns, List<CategoryModel> categories, String currencyCode) {
     final headers = ['Date', 'Description', 'Category', 'Amount'];
     final data = txns.map((t) {
       final category = categories.where((c) => c.id == t.categoryId).firstOrNull;
+      final amount = t.type == TransactionType.income ? t.amount : -t.amount;
       return [
         DateFormat('dd MMM').format(t.date),
         t.description,
         category?.name ?? 'Uncategorized',
         pw.Text(
-          _pdfFormatter.format(t.type == TransactionType.income ? t.amount : -t.amount),
+          amount.toCurrency(currencyCode),
           style: pw.TextStyle(
             fontWeight: pw.FontWeight.bold,
-            color: t.type == TransactionType.income ? PdfColors.green800 : PdfColors.red800,
+            color: t.type == TransactionType.income
+                ? PdfColors.green800
+                : PdfColors.red800,
           ),
         ),
       ];
@@ -212,7 +217,8 @@ class ReportService {
       headers: headers,
       data: data,
       border: null,
-      headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white, fontSize: 10),
+      headerStyle: pw.TextStyle(
+          fontWeight: pw.FontWeight.bold, color: PdfColors.white, fontSize: 10),
       headerDecoration: const pw.BoxDecoration(
         color: PdfColors.blue800,
         borderRadius: pw.BorderRadius.vertical(top: pw.Radius.circular(6)),
@@ -226,7 +232,8 @@ class ReportService {
       },
       cellStyle: const pw.TextStyle(fontSize: 10),
       rowDecoration: const pw.BoxDecoration(
-        border: pw.Border(bottom: pw.BorderSide(color: PdfColors.grey200, width: 0.5)),
+        border: pw.Border(
+            bottom: pw.BorderSide(color: PdfColors.grey200, width: 0.5)),
       ),
     );
   }

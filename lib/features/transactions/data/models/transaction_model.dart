@@ -1,30 +1,14 @@
-import 'package:isar/isar.dart';
-
-part 'transaction_model.g.dart';
-
 enum TransactionType { income, expense }
 
-@collection
 class TransactionModel {
-  Id id = Isar.autoIncrement;
-
+  int? id;
   late double amount;
   late String description;
-
-  /// The user-selected transaction date+time (full timestamp).
-  /// e.g. DateTime(2026, 3, 8, 14, 30) for March 8 2026 at 2:30 PM
   late DateTime date;
-
-  @enumerated
   late TransactionType type;
-
   int? categoryId;
   String? note;
-
-  @Index()
-  late String monthKey; // Format: "yyyy-MM" for quick monthly queries
-
-  /// The record creation time (when addTransaction was called)
+  late String monthKey;
   late DateTime createdAt;
 
   TransactionModel();
@@ -38,11 +22,11 @@ class TransactionModel {
     this.note,
   }) {
     monthKey = '${date.year}-${date.month.toString().padLeft(2, '0')}';
-    createdAt = date; // createdAt = the user-chosen timestamp for display
+    createdAt = date;
   }
 
-  Map<String, dynamic> toJson() => {
-        'id': id == Isar.autoIncrement ? null : id,
+  Map<String, dynamic> toMap() => {
+        'id': id,
         'amount': amount,
         'description': description,
         'date': date.toIso8601String(),
@@ -53,17 +37,21 @@ class TransactionModel {
         'createdAt': createdAt.toIso8601String(),
       };
 
-  factory TransactionModel.fromJson(Map<String, dynamic> json) {
+  factory TransactionModel.fromMap(Map<String, dynamic> map) {
     final t = TransactionModel();
-    if (json['id'] != null) t.id = json['id'];
-    t.amount = (json['amount'] as num).toDouble();
-    t.description = json['description'];
-    t.date = DateTime.parse(json['date']);
-    t.type = TransactionType.values[json['type'] as int];
-    t.categoryId = json['categoryId'];
-    t.note = json['note'];
-    t.monthKey = json['monthKey'];
-    t.createdAt = DateTime.parse(json['createdAt']);
+    t.id = map['id'];
+    t.amount = (map['amount'] as num).toDouble();
+    t.description = map['description'];
+    t.date = DateTime.parse(map['date']);
+    t.type = TransactionType.values[map['type'] as int];
+    t.categoryId = map['categoryId'];
+    t.note = map['note'];
+    t.monthKey = map['monthKey'];
+    t.createdAt = DateTime.parse(map['createdAt']);
     return t;
   }
+
+  // Keep compatibility if needed
+  Map<String, dynamic> toJson() => toMap();
+  factory TransactionModel.fromJson(Map<String, dynamic> json) => TransactionModel.fromMap(json);
 }

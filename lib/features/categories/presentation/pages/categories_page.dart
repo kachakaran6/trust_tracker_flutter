@@ -225,7 +225,7 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
                           SnackBar(content: Text(AppLocalizations.of(context)!.cantDeleteDefault)));
                         return;
                       }
-                      await ref.read(categoryRepositoryProvider).delete(c.id);
+                      await ref.read(categoryRepositoryProvider).delete(c.id!);
                       _invalidateAll();
                     })),
               ],
@@ -241,7 +241,7 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
                           SnackBar(content: Text(AppLocalizations.of(context)!.cantDeleteDefault)));
                         return;
                       }
-                      await ref.read(categoryRepositoryProvider).delete(c.id);
+                      await ref.read(categoryRepositoryProvider).delete(c.id!);
                       _invalidateAll();
                     })),
               ],

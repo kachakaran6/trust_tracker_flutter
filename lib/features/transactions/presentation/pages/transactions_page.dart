@@ -25,7 +25,7 @@ final _txnFilterProvider = StateProvider.autoDispose<TransactionFilter>((ref) =>
 
 class _GroupedResult {
   final List<_DayGroup> groups;
-  final Map<int, CategoryModel> catMap;
+  final Map<int?, CategoryModel> catMap;
   _GroupedResult(this.groups, this.catMap);
 }
 
@@ -82,7 +82,7 @@ final _groupedFutureProvider = FutureProvider.autoDispose<_GroupedResult>((ref) 
   // Categories
   final catRepo = ref.watch(categoryRepositoryProvider);
   final cats = await catRepo.getAll();
-  final Map<int, CategoryModel> catMap = {for (final c in cats) c.id: c};
+  final Map<int?, CategoryModel> catMap = {for (final c in cats) c.id: c};
 
   return _GroupedResult(groups, catMap);
 });
@@ -160,7 +160,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     );
 
     if (confirmed == true) {
-      await ref.read(transactionListProvider.notifier).deleteTransaction(transaction.id);
+      await ref.read(transactionListProvider.notifier).deleteTransaction(transaction.id!);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.transactionDeleted)),
@@ -317,7 +317,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                                       return Padding(
                                         padding: const EdgeInsets.only(bottom: 10),
                                         child: _SwipeableTransactionTile(
-                                          key: ValueKey(t.id),
+                                          key: ValueKey(t.id!),
                                           transaction: t,
                                           category: catMap[t.categoryId],
                                           currency: currency,
@@ -515,7 +515,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                               key: ValueKey('cat_$id'),
                               label: cat.name,
                               onRemove: () {
-                                final newIds = List<int>.from(filter.categoryIds)..remove(id);
+                                final newIds = List<int>.from(filter.categoryIds)..remove(id!);
                                 ref.read(_txnFilterProvider.notifier).update((s) => s.copyWith(categoryIds: newIds));
                               },
                             ).animate().scale(duration: 200.ms).fadeIn();
@@ -627,7 +627,7 @@ class _SwipeableTransactionTile extends StatelessWidget {
     }
 
     return Slidable(
-      key: ValueKey(transaction.id),
+      key: ValueKey(transaction.id!),
       endActionPane: ActionPane(
         motion: const BehindMotion(),
         extentRatio: 0.25,
