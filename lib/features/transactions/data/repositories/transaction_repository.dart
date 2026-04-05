@@ -1,52 +1,90 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:isar/isar.dart';
-import 'package:trust_tracker_flutter/core/di/providers.dart';
+import 'package:trust_tracker_flutter/core/database/database_helper.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
 
 class TransactionRepository {
-  final Isar _db;
-  TransactionRepository(this._db);
+  final DatabaseHelper _dbHelper;
+  final _controller = StreamController<List<TransactionModel>>.broadcast();
+
+  TransactionRepository(this._dbHelper);
 
   // WRITE
   Future<int> addTransaction(TransactionModel t) async {
-    return await _db.writeTxn(() => _db.transactionModels.put(t));
+    final db = await _dbHelper.database;
+    final id = await db.insert('transactions', t.toMap());
+    t.id = id; // Set the ID on the object
+    _refresh();
+    return id;
   }
 
   Future<void> updateTransaction(TransactionModel t) async {
-    await _db.writeTxn(() => _db.transactionModels.put(t));
+    final db = await _dbHelper.database;
+    await db.update(
+      'transactions',
+      t.toMap(),
+      where: 'id = ?',
+      whereArgs: [t.id],
+    );
+    _refresh();
   }
 
   Future<void> deleteTransaction(int id) async {
-    await _db.writeTxn(() => _db.transactionModels.delete(id));
+    final db = await _dbHelper.database;
+    await db.delete(
+      'transactions',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    _refresh();
   }
 
   // READ — All for a given month key (e.g. "2025-03")
-  Future<List<TransactionModel>> getByMonth(String monthKey) {
-    return _db.transactionModels
-        .filter()
-        .monthKeyEqualTo(monthKey)
-        .sortByDateDesc()
-        .findAll();
+  Future<List<TransactionModel>> getByMonth(String monthKey) async {
+    final db = await _dbHelper.database;
+    final result = await db.query(
+      'transactions',
+      where: 'monthKey = ?',
+      whereArgs: [monthKey],
+      orderBy: 'date DESC',
+    );
+    return result.map((e) => TransactionModel.fromMap(e)).toList();
   }
 
   // READ — All transactions (for analytics / history)
-  Future<List<TransactionModel>> getAll() {
-    return _db.transactionModels.where().sortByDateDesc().findAll();
+  Future<List<TransactionModel>> getAll() async {
+    final db = await _dbHelper.database;
+    final result = await db.query('transactions', orderBy: 'date DESC');
+    return result.map((e) => TransactionModel.fromMap(e)).toList();
   }
 
   // READ — paginated (date desc) for transaction list
-  Future<List<TransactionModel>> getPaginated({int offset = 0, int limit = 20}) {
-    return _db.transactionModels
-        .where()
-        .sortByDateDesc()
-        .offset(offset)
-        .limit(limit)
-        .findAll();
+  Future<List<TransactionModel>> getPaginated({int offset = 0, int limit = 20}) async {
+    final db = await _dbHelper.database;
+    final result = await db.query(
+      'transactions',
+      orderBy: 'date DESC',
+      limit: limit,
+      offset: offset,
+    );
+    return result.map((e) => TransactionModel.fromMap(e)).toList();
   }
 
   // READ — recent N
-  Future<List<TransactionModel>> getRecent(int n) {
-    return _db.transactionModels.where().sortByDateDesc().limit(n).findAll();
+  Future<List<TransactionModel>> getRecent(int n) async {
+    final db = await _dbHelper.database;
+    final result = await db.query('transactions', orderBy: 'date DESC', limit: n);
+    return result.map((e) => TransactionModel.fromMap(e)).toList();
+  }
+
+  Stream<List<TransactionModel>> watchAll() {
+    _refresh();
+    return _controller.stream;
+  }
+
+  Future<void> _refresh() async {
+    final list = await getAll();
+    if (!_controller.isClosed) _controller.add(list);
   }
 
   // Monthly Summary (income vs expense)
@@ -66,19 +104,21 @@ class TransactionRepository {
   // Category spending for a month by transaction type
   Future<Map<int, double>> getCategorySpendingForMonth(
       String monthKey, TransactionType type) async {
-    final txns = await _db.transactionModels
-        .filter()
-        .monthKeyEqualTo(monthKey)
-        .typeEqualTo(type)
-        .findAll();
+    final db = await _dbHelper.database;
+    final result = await db.query(
+      'transactions',
+      where: 'monthKey = ? AND type = ?',
+      whereArgs: [monthKey, type.index],
+    );
 
-    final Map<int, double> result = {};
-    for (final t in txns) {
-      if (t.categoryId != null) {
-        result[t.categoryId!] = (result[t.categoryId!] ?? 0) + t.amount;
+    final Map<int, double> spending = {};
+    for (final t in result) {
+      final model = TransactionModel.fromMap(t);
+      if (model.categoryId != null) {
+        spending[model.categoryId!] = (spending[model.categoryId!] ?? 0) + model.amount;
       }
     }
-    return result;
+    return spending;
   }
 
   // Last 6 months summary for trend chart
@@ -108,64 +148,70 @@ class TransactionRepository {
 
   // NEW: Daily spending for a month
   Future<Map<int, double>> getDailySpending(String monthKey, TransactionType type) async {
-    final txns = await _db.transactionModels
-        .filter()
-        .monthKeyEqualTo(monthKey)
-        .typeEqualTo(type)
-        .findAll();
+    final db = await _dbHelper.database;
+    final result = await db.query(
+      'transactions',
+      where: 'monthKey = ? AND type = ?',
+      whereArgs: [monthKey, type.index],
+    );
 
-    final Map<int, double> result = {};
-    for (final t in txns) {
-      final day = t.date.day;
-      result[day] = (result[day] ?? 0) + t.amount;
+    final Map<int, double> daily = {};
+    for (final t in result) {
+      final model = TransactionModel.fromMap(t);
+      final day = model.date.day;
+      daily[day] = (daily[day] ?? 0) + model.amount;
     }
-    return result;
+    return daily;
   }
 
   // NEW: Weekday distribution for a month
   Future<Map<int, double>> getWeekdaySpending(String monthKey, TransactionType type) async {
-    final txns = await _db.transactionModels
-        .filter()
-        .monthKeyEqualTo(monthKey)
-        .typeEqualTo(type)
-        .findAll();
+    final db = await _dbHelper.database;
+    final result = await db.query(
+      'transactions',
+      where: 'monthKey = ? AND type = ?',
+      whereArgs: [monthKey, type.index],
+    );
 
-    final Map<int, double> result = {};
-    for (final t in txns) {
-      final weekday = t.date.weekday; // 1 = Monday, 7 = Sunday
-      result[weekday] = (result[weekday] ?? 0) + t.amount;
+    final Map<int, double> distribution = {};
+    for (final t in result) {
+      final model = TransactionModel.fromMap(t);
+      final weekday = model.date.weekday;
+      distribution[weekday] = (distribution[weekday] ?? 0) + model.amount;
     }
-    return result;
+    return distribution;
   }
 
   // NEW: Time of day distribution
   Future<Map<String, double>> getTimeOfDaySpending(String monthKey, TransactionType type) async {
-    final txns = await _db.transactionModels
-        .filter()
-        .monthKeyEqualTo(monthKey)
-        .typeEqualTo(type)
-        .findAll();
+    final db = await _dbHelper.database;
+    final result = await db.query(
+      'transactions',
+      where: 'monthKey = ? AND type = ?',
+      whereArgs: [monthKey, type.index],
+    );
 
-    final Map<String, double> result = {
+    final Map<String, double> hourly = {
       'morning': 0,   // 5am - 12pm
       'afternoon': 0, // 12pm - 5pm
       'evening': 0,   // 5pm - 9pm
       'night': 0,     // 9pm - 5am
     };
 
-    for (final t in txns) {
-      final hour = t.date.hour;
+    for (final t in result) {
+      final model = TransactionModel.fromMap(t);
+      final hour = model.date.hour;
       if (hour >= 5 && hour < 12) {
-        result['morning'] = result['morning']! + t.amount;
+        hourly['morning'] = hourly['morning']! + model.amount;
       } else if (hour >= 12 && hour < 17) {
-        result['afternoon'] = result['afternoon']! + t.amount;
+        hourly['afternoon'] = hourly['afternoon']! + model.amount;
       } else if (hour >= 17 && hour < 21) {
-        result['evening'] = result['evening']! + t.amount;
+        hourly['evening'] = hourly['evening']! + model.amount;
       } else {
-        result['night'] = result['night']! + t.amount;
+        hourly['night'] = hourly['night']! + model.amount;
       }
     }
-    return result;
+    return hourly;
   }
 
   // NEW: Savings rate trend (last N months)
@@ -191,6 +237,5 @@ class TransactionRepository {
 }
 
 final transactionRepositoryProvider = Provider<TransactionRepository>((ref) {
-  final isar = ref.watch(isarServiceProvider).db;
-  return TransactionRepository(isar);
+  return TransactionRepository(DatabaseHelper.instance);
 });

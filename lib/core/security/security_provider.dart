@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:trust_tracker_flutter/core/constants/app_constants.dart';
 
 // ── Secure Storage ─────────────────────────────────────────────────────────
 const _storage = FlutterSecureStorage(
@@ -18,6 +20,8 @@ class SecurityState {
   final bool isLocked;
   final bool canUseBiometrics;
   final bool isAppVisible; // For Recents screen protection
+  final int failedAttempts;
+  final DateTime? lockUntil;
 
   const SecurityState({
     this.isPinEnabled = false,
@@ -25,6 +29,8 @@ class SecurityState {
     this.isLocked = false,
     this.canUseBiometrics = false,
     this.isAppVisible = true,
+    this.failedAttempts = 0,
+    this.lockUntil,
   });
 
   SecurityState copyWith({
@@ -33,6 +39,9 @@ class SecurityState {
     bool? isLocked,
     bool? canUseBiometrics,
     bool? isAppVisible,
+    int? failedAttempts,
+    DateTime? lockUntil,
+    bool clearLockUntil = false,
   }) {
     return SecurityState(
       isPinEnabled: isPinEnabled ?? this.isPinEnabled,
@@ -40,6 +49,8 @@ class SecurityState {
       isLocked: isLocked ?? this.isLocked,
       canUseBiometrics: canUseBiometrics ?? this.canUseBiometrics,
       isAppVisible: isAppVisible ?? this.isAppVisible,
+      failedAttempts: failedAttempts ?? this.failedAttempts,
+      lockUntil: clearLockUntil ? null : (lockUntil ?? this.lockUntil),
     );
   }
 }
@@ -47,8 +58,9 @@ class SecurityState {
 // ── Security Notifier ───────────────────────────────────────────────────────
 class SecurityNotifier extends StateNotifier<SecurityState> {
   final LocalAuthentication _localAuth;
+  final SharedPreferences _prefs;
 
-  SecurityNotifier(this._localAuth) : super(const SecurityState()) {
+  SecurityNotifier(this._localAuth, this._prefs) : super(const SecurityState()) {
     _init();
   }
 
@@ -59,22 +71,55 @@ class SecurityNotifier extends StateNotifier<SecurityState> {
     final available = await _localAuth.getAvailableBiometrics();
     final hasBio = canAuth && (available.isNotEmpty || await _localAuth.isDeviceSupported());
 
+    final failedAttempts = _prefs.getInt(AppConstants.prefPinAttempts) ?? 0;
+    final lockUntilTimestamp = _prefs.getInt(AppConstants.prefPinLockUntil);
+    final lockUntil = lockUntilTimestamp != null ? DateTime.fromMillisecondsSinceEpoch(lockUntilTimestamp) : null;
+
     state = state.copyWith(
       isPinEnabled: pinEnabled == 'true',
       isBiometricEnabled: bioEnabled == 'true' && hasBio,
       isLocked: pinEnabled == 'true',
       canUseBiometrics: hasBio,
+      failedAttempts: failedAttempts,
+      lockUntil: lockUntil,
     );
   }
 
   /// Verify PIN. Returns true on match and unlocks the app.
   Future<bool> verifyPin(String pin) async {
+    if (state.lockUntil != null && DateTime.now().isBefore(state.lockUntil!)) {
+      return false; // Still locked
+    }
+
     final stored = await _storage.read(key: _kPin);
     if (stored == pin) {
+      await _resetAttempts();
       state = state.copyWith(isLocked: false);
       return true;
+    } else {
+      await _incrementAttempts();
+      return false;
     }
-    return false;
+  }
+
+  Future<void> _incrementAttempts() async {
+    final newAttempts = state.failedAttempts + 1;
+    
+    if (newAttempts >= 5) {
+      final lockUntil = DateTime.now().add(const Duration(minutes: 1));
+      state = state.copyWith(lockUntil: lockUntil, failedAttempts: 5);
+      await _prefs.setInt(AppConstants.prefPinLockUntil, lockUntil.millisecondsSinceEpoch);
+      await _prefs.setInt(AppConstants.prefPinAttempts, 0);
+    } else {
+      state = state.copyWith(failedAttempts: newAttempts);
+      await _prefs.setInt(AppConstants.prefPinAttempts, newAttempts);
+    }
+  }
+
+  Future<void> _resetAttempts() async {
+    state = state.copyWith(failedAttempts: 0, clearLockUntil: true);
+    await _prefs.setInt(AppConstants.prefPinAttempts, 0);
+    await _prefs.remove(AppConstants.prefPinLockUntil);
   }
 
   /// Verify OLD pin without unlocking – used during flows where verification is required.
@@ -157,5 +202,5 @@ final localAuthProvider = Provider<LocalAuthentication>((ref) {
 
 final securityProvider =
     StateNotifierProvider<SecurityNotifier, SecurityState>((ref) {
-  return SecurityNotifier(ref.watch(localAuthProvider));
+  throw UnimplementedError('Initialize with SharedPreferences override');
 });

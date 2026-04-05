@@ -295,7 +295,7 @@ abstract class AppLocalizations {
   /// No description provided for @thisMonth.
   ///
   /// In en, this message translates to:
-  /// **'This month'**
+  /// **'This Month'**
   String get thisMonth;
 
   /// No description provided for @expenses.
@@ -583,7 +583,7 @@ abstract class AppLocalizations {
   /// No description provided for @setPin.
   ///
   /// In en, this message translates to:
-  /// **'Set PIN Lock'**
+  /// **'Set PIN'**
   String get setPin;
 
   /// No description provided for @changePin.
@@ -595,7 +595,7 @@ abstract class AppLocalizations {
   /// No description provided for @disablePin.
   ///
   /// In en, this message translates to:
-  /// **'Disable PIN Lock'**
+  /// **'Disable PIN'**
   String get disablePin;
 
   /// No description provided for @disablePinConfirm.
@@ -607,7 +607,7 @@ abstract class AppLocalizations {
   /// No description provided for @disablePinDetails.
   ///
   /// In en, this message translates to:
-  /// **'Your app will no longer require a PIN to open.'**
+  /// **'Your app will no longer be protected by a PIN.'**
   String get disablePinDetails;
 
   /// No description provided for @biometricUnlock.
@@ -897,6 +897,372 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Net Savings'**
   String get netSavings;
+
+  /// No description provided for @activity.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get activity;
+
+  /// No description provided for @home.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get home;
+
+  /// No description provided for @exitApplication.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit Application'**
+  String get exitApplication;
+
+  /// No description provided for @exitConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to close the application? Any unsaved changes might be lost.'**
+  String get exitConfirmMessage;
+
+  /// No description provided for @exit.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit'**
+  String get exit;
+
+  /// No description provided for @builtWithLove.
+  ///
+  /// In en, this message translates to:
+  /// **'Built with ❤️ by {name}'**
+  String builtWithLove(Object name);
+
+  /// No description provided for @budgetFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget for {name}'**
+  String budgetFor(Object name);
+
+  /// No description provided for @monthlyLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly limit'**
+  String get monthlyLimit;
+
+  /// No description provided for @removeBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove budget'**
+  String get removeBudget;
+
+  /// No description provided for @setBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Set Budget'**
+  String get setBudget;
+
+  /// No description provided for @updateBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Budget'**
+  String get updateBudget;
+
+  /// No description provided for @tapToSetBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap any category below to set a monthly budget limit.'**
+  String get tapToSetBudget;
+
+  /// No description provided for @monthlyBudgetOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'MONTHLY BUDGET OVERVIEW'**
+  String get monthlyBudgetOverview;
+
+  /// No description provided for @ofAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'of {amount}'**
+  String ofAmount(Object amount);
+
+  /// No description provided for @overBudgetBy.
+  ///
+  /// In en, this message translates to:
+  /// **'🚨 Over budget by {amount}'**
+  String overBudgetBy(Object amount);
+
+  /// No description provided for @remainingAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'✅ {amount} remaining'**
+  String remainingAmount(Object amount);
+
+  /// No description provided for @over.
+  ///
+  /// In en, this message translates to:
+  /// **'OVER'**
+  String get over;
+
+  /// No description provided for @spentAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} spent'**
+  String spentAmount(Object amount);
+
+  /// No description provided for @noBudgetSet.
+  ///
+  /// In en, this message translates to:
+  /// **'No budget set — tap \"SET\" to add a limit'**
+  String get noBudgetSet;
+
+  /// No description provided for @filterTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter Transactions'**
+  String get filterTransactions;
+
+  /// No description provided for @reset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get reset;
+
+  /// No description provided for @sortBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort By'**
+  String get sortBy;
+
+  /// No description provided for @ascending.
+  ///
+  /// In en, this message translates to:
+  /// **'Ascending'**
+  String get ascending;
+
+  /// No description provided for @descending.
+  ///
+  /// In en, this message translates to:
+  /// **'Descending'**
+  String get descending;
+
+  /// No description provided for @selectDateRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Select date range'**
+  String get selectDateRange;
+
+  /// No description provided for @errorLoadingCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading categories'**
+  String get errorLoadingCategories;
+
+  /// No description provided for @applyFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply Filter'**
+  String get applyFilter;
+
+  /// No description provided for @description.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get description;
+
+  /// No description provided for @whatWasThisFor.
+  ///
+  /// In en, this message translates to:
+  /// **'What was this for?'**
+  String get whatWasThisFor;
+
+  /// No description provided for @enterDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a description'**
+  String get enterDescription;
+
+  /// No description provided for @noResultsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No results found'**
+  String get noResultsFound;
+
+  /// No description provided for @error.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get error;
+
+  /// No description provided for @budgetLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget'**
+  String get budgetLabel;
+
+  /// No description provided for @dataManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'Data Management'**
+  String get dataManagement;
+
+  /// No description provided for @exportDataJson.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Data (JSON)'**
+  String get exportDataJson;
+
+  /// No description provided for @importDataJson.
+  ///
+  /// In en, this message translates to:
+  /// **'Import Data (JSON)'**
+  String get importDataJson;
+
+  /// No description provided for @on.
+  ///
+  /// In en, this message translates to:
+  /// **'ON'**
+  String get on;
+
+  /// No description provided for @off.
+  ///
+  /// In en, this message translates to:
+  /// **'OFF'**
+  String get off;
+
+  /// No description provided for @setPinBeforeBiometric.
+  ///
+  /// In en, this message translates to:
+  /// **'Please set a PIN before enabling biometric security'**
+  String get setPinBeforeBiometric;
+
+  /// No description provided for @shareSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'Trust Tracker – Smart Expense Tracker'**
+  String get shareSubject;
+
+  /// No description provided for @shareMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Take control of your personal finances with Trust Tracker.\n\nTrust Tracker is a private, offline-first expense tracker designed to help you manage your income, expenses, and budgets with ease.\n\nKey Features:\n• Simple expense and income tracking\n• Budget management and financial insights\n• Secure PIN and biometric protection\n• Completely offline and privacy focused\n• Clean and easy-to-use interface\n\nDownload the app from the Google Play Store:\nhttps://play.google.com/store/apps/details?id=com.trusttracker.trust_tracker_flutter\n\nYour feedback and support would mean a lot.'**
+  String get shareMessage;
+
+  /// No description provided for @appTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'App Theme'**
+  String get appTheme;
+
+  /// No description provided for @selectAccentColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Accent Color'**
+  String get selectAccentColor;
+
+  /// No description provided for @selectFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'SELECT FORMAT'**
+  String get selectFormat;
+
+  /// No description provided for @pdfReport.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF Report'**
+  String get pdfReport;
+
+  /// No description provided for @pdfReportDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Formatted financial report'**
+  String get pdfReportDesc;
+
+  /// No description provided for @excelExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Excel Export'**
+  String get excelExport;
+
+  /// No description provided for @excelExportDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'For spreadsheet analysis'**
+  String get excelExportDesc;
+
+  /// No description provided for @dateRangeCaps.
+  ///
+  /// In en, this message translates to:
+  /// **'DATE RANGE'**
+  String get dateRangeCaps;
+
+  /// No description provided for @generateExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate Export'**
+  String get generateExport;
+
+  /// No description provided for @exportTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Transactions'**
+  String get exportTransactions;
+
+  /// No description provided for @exportDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Save or share your financial data'**
+  String get exportDesc;
+
+  /// No description provided for @lastMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Month'**
+  String get lastMonth;
+
+  /// No description provided for @threeMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'3 Months'**
+  String get threeMonths;
+
+  /// No description provided for @allHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'All History'**
+  String get allHistory;
+
+  /// No description provided for @custom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get custom;
+
+  /// No description provided for @pleaseSelectDateRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a date range'**
+  String get pleaseSelectDateRange;
+
+  /// No description provided for @user.
+  ///
+  /// In en, this message translates to:
+  /// **'there'**
+  String get user;
+
+  /// No description provided for @categoriesCaps.
+  ///
+  /// In en, this message translates to:
+  /// **'CATEGORIES'**
+  String get categoriesCaps;
+
+  /// No description provided for @chooseAvatar.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Avatar'**
+  String get chooseAvatar;
+
+  /// No description provided for @resetAvatar.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Avatar'**
+  String get resetAvatar;
 }
 
 class _AppLocalizationsDelegate

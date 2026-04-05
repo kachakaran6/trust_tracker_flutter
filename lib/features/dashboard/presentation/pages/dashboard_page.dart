@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -13,6 +14,8 @@ import 'package:trust_tracker_flutter/features/transactions/data/models/transact
 import 'package:trust_tracker_flutter/features/transactions/presentation/providers/transaction_provider.dart';
 import 'package:trust_tracker_flutter/features/categories/data/models/category_model.dart';
 import 'package:trust_tracker_flutter/generated/app_localizations.dart';
+import 'package:trust_tracker_flutter/features/settings/presentation/widgets/avatar_selection_modal.dart';
+import 'package:trust_tracker_flutter/core/security/security_provider.dart';
 
 // --- Providers ---
 final dashboardSummaryProvider =
@@ -64,6 +67,7 @@ class DashboardPage extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final settings = ref.watch(settingsProvider);
     final summary = ref.watch(dashboardSummaryProvider);
+    final security = ref.watch(securityProvider);
     final recentAsync = ref.watch(recentTransactionsProvider);
     final categoriesAsync = ref.watch(allCategoriesProvider);
     final now = DateTime.now();
@@ -77,7 +81,7 @@ class DashboardPage extends ConsumerWidget {
       backgroundColor: theme.scaffoldBackgroundColor,
       body: CustomScrollView(
         slivers: [
-          _buildAppBar(context, settings, now),
+          _buildAppBar(context, ref, settings, security, now),
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             sliver: SliverList(
@@ -146,6 +150,7 @@ class DashboardPage extends ConsumerWidget {
 
   Future<void> _confirmDelete(
       BuildContext context, WidgetRef ref, TransactionModel t) async {
+    final theme = Theme.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -163,8 +168,8 @@ class DashboardPage extends ConsumerWidget {
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFEF4444),
-              foregroundColor: Colors.white,
+              backgroundColor: theme.colorScheme.error,
+              foregroundColor: theme.colorScheme.onError,
             ),
             child: Text(AppLocalizations.of(context)!.delete),
           ),
@@ -172,20 +177,38 @@ class DashboardPage extends ConsumerWidget {
       ),
     );
     if (confirm == true) {
-      await ref.read(transactionListProvider.notifier).deleteTransaction(t.id);
+      await ref.read(transactionListProvider.notifier).deleteTransaction(t.id!);
     }
   }
 
+  Widget _buildPopupItem(BuildContext context, IconData icon, String label) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: theme.colorScheme.onSurfaceVariant),
+        const SizedBox(width: 12),
+        Text(
+          label,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurface,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
   SliverAppBar _buildAppBar(
-      BuildContext context, SettingsState settings, DateTime now) {
+      BuildContext context, WidgetRef ref, SettingsState settings, SecurityState security, DateTime now) {
+    final theme = Theme.of(context);
     return SliverAppBar(
-      expandedHeight: 100,
+      expandedHeight: 70,
       pinned: true,
       elevation: 0,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: theme.colorScheme.surface.withOpacity(0.8),
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
-          padding: const EdgeInsets.fromLTRB(20, 60, 20, 12),
+          padding: const EdgeInsets.fromLTRB(20, 54, 20, 10),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -200,16 +223,112 @@ class DashboardPage extends ConsumerWidget {
               ),
               Builder(builder: (ctx) {
                 final cs = Theme.of(ctx).colorScheme;
-                return GestureDetector(
-                  onTap: () => context.push('/budget'),
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: cs.primaryContainer,
-                      borderRadius: BorderRadius.circular(12),
+                final tt = Theme.of(ctx).textTheme;
+                final l10n = AppLocalizations.of(ctx)!;
+                return PopupMenuButton<String>(
+                  offset: const Offset(0, 48), // Reduced offset to pull menu up
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 6,
+                  color: cs.surface,
+                  // position: PopupMenuPosition.under handles bottom-left/right, but offset 44 is safer
+                  onSelected: (value) {
+                    if (value == 'avatar') {
+                      showAvatarSelectionModal(context: context, ref: ref, settings: settings);
+                    } else if (value == 'pin') {
+                      context.push('/set-pin', extra: {'changing': true});
+                    } else if (value == 'budget') {
+                      context.push('/budget');
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      enabled: false,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 16,
+                            backgroundColor: cs.primaryContainer,
+                            backgroundImage: settings.userAvatar != null
+                                ? (settings.userAvatar!.startsWith('assets/')
+                                    ? AssetImage(settings.userAvatar!)
+                                    : FileImage(File(settings.userAvatar!)) as ImageProvider)
+                                : null,
+                            child: settings.userAvatar == null
+                                ? Text(
+                                    settings.userName.isNotEmpty
+                                        ? settings.userName[0].toUpperCase()
+                                        : '?',
+                                    style: tt.labelMedium?.copyWith(
+                                        color: cs.onPrimaryContainer,
+                                        fontWeight: FontWeight.bold),
+                                  )
+                                : null,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  settings.userName.isEmpty ? l10n.user : settings.userName,
+                                  style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold, height: 1.1),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  l10n.trustTrackerUser,
+                                  style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant, height: 1.1),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: Icon(Icons.account_balance_wallet_outlined,
-                        color: cs.onPrimaryContainer),
+                    const PopupMenuDivider(height: 1),
+                    PopupMenuItem(
+                      value: 'avatar',
+                      height: 44,
+                      child: _buildPopupItem(ctx, Icons.person_outline_rounded, l10n.chooseAvatar),
+                    ),
+                    PopupMenuItem(
+                      value: 'pin',
+                      height: 44,
+                      child: _buildPopupItem(ctx, Icons.lock_outline_rounded, 
+                          security.isPinEnabled ? l10n.changePin : l10n.setPin),
+                    ),
+                    PopupMenuItem(
+                      value: 'budget',
+                      height: 44,
+                      child: _buildPopupItem(ctx, Icons.account_balance_wallet_outlined, l10n.setBudget),
+                    ),
+                  ],
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: cs.primary.withOpacity(0.12), width: 2),
+                    ),
+                    child: CircleAvatar(
+                      radius: 20,
+                      backgroundColor: cs.primaryContainer,
+                      backgroundImage: settings.userAvatar != null
+                          ? (settings.userAvatar!.startsWith('assets/')
+                              ? AssetImage(settings.userAvatar!)
+                              : FileImage(File(settings.userAvatar!)) as ImageProvider)
+                          : null,
+                      child: settings.userAvatar == null
+                          ? Text(
+                              settings.userName.isNotEmpty
+                                  ? settings.userName[0].toUpperCase()
+                                  : '?',
+                              style: tt.titleLarge?.copyWith(
+                                  color: cs.onPrimaryContainer,
+                                  fontWeight: FontWeight.bold),
+                            )
+                          : null,
+                    ),
                   ),
                 );
               }),
@@ -229,7 +348,7 @@ class _GreetingText extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final hour = DateTime.now().hour;
-    final name = userName.isNotEmpty ? userName.split(' ').first : 'there';
+    final name = userName.isNotEmpty ? userName.split(' ').first : l10n.user;
     final tt = Theme.of(context).textTheme;
 
     String greeting;
@@ -272,13 +391,14 @@ class _DashboardTransactionTile extends StatelessWidget {
     final isIncome = transaction.type == TransactionType.income;
     final theme = Theme.of(context);
     final tt = theme.textTheme;
-    final color = isIncome ? AppColors.success500 : AppColors.danger500;
+    final cs = theme.colorScheme;
+    final color = isIncome ? AppColors.success : cs.error;
     final bgColor = category != null
         ? Color(category!.colorHex.toColorInt()).withOpacity(0.12)
-        : AppColors.gray100;
+        : cs.surfaceVariant;
     final iconColor = category != null
         ? Color(category!.colorHex.toColorInt())
-        : AppColors.gray400;
+        : cs.onSurfaceVariant;
 
     final cs3 = theme.colorScheme;
 
@@ -312,11 +432,11 @@ class _DashboardTransactionTile extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEF4444).withOpacity(0.08),
+                  color: theme.colorScheme.error.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child:
-                    const Icon(Icons.close, size: 18, color: Color(0xFFEF4444)),
+                child: Icon(Icons.close,
+                    size: 18, color: theme.colorScheme.error),
               ),
             ),
           ],
@@ -328,9 +448,9 @@ class _DashboardTransactionTile extends StatelessWidget {
       return Container(
         margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
-          color: theme.cardTheme.color ?? cs3.surface,
+          color: cs3.surface,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: cs3.outlineVariant.withOpacity(0.5)),
+          border: Border.all(color: cs3.outline.withOpacity(0.1)),
         ),
         child: InkWell(
           onTap: onEdit,
@@ -343,7 +463,7 @@ class _DashboardTransactionTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Slidable(
-        key: ValueKey(transaction.id),
+        key: ValueKey(transaction.id!),
         startActionPane: ActionPane(
           motion: const BehindMotion(),
           extentRatio: 0.25,
@@ -352,8 +472,7 @@ class _DashboardTransactionTile extends StatelessWidget {
               onPressed: (_) => onEdit(),
               backgroundColor: cs3.primary,
               foregroundColor: cs3.onPrimary,
-              icon: Icons.edit_outlined,
-              label: AppLocalizations.of(context)!.edit,
+              icon: Icons.edit_rounded,
               borderRadius: BorderRadius.circular(14),
             ),
           ],
@@ -364,19 +483,18 @@ class _DashboardTransactionTile extends StatelessWidget {
           children: [
             SlidableAction(
               onPressed: (_) => onDelete(),
-              backgroundColor: const Color(0xFFEF4444),
-              foregroundColor: Colors.white,
-              icon: Icons.delete_outline,
-              label: AppLocalizations.of(context)!.delete,
+              backgroundColor: theme.colorScheme.error,
+              foregroundColor: theme.colorScheme.onError,
+              icon: Icons.delete_outline_rounded,
               borderRadius: BorderRadius.circular(14),
             ),
           ],
         ),
         child: Container(
           decoration: BoxDecoration(
-            color: theme.cardTheme.color ?? cs3.surface,
+            color: cs3.surface,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: cs3.outlineVariant.withOpacity(0.5)),
+            border: Border.all(color: cs3.outline.withOpacity(0.1)),
           ),
           child: innerContent,
         ),
@@ -435,36 +553,55 @@ class _SummarySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final tt = theme.textTheme;
+
     return Column(children: [
-      Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AppColors.primary600, AppColors.primary500],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+      _BalanceCardAnimationWrapper(
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: cs.primary.withOpacity(0.08), // Sophisticated accent tint
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: cs.primary.withOpacity(0.12)),
           ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary500.withOpacity(0.35),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            )
-          ],
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(AppLocalizations.of(context)!.netBalance,
+                style: tt.bodySmall?.copyWith(
+                    color: cs.primary.withOpacity(0.6), // Accent-tinted label
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.1)),
+            const SizedBox(height: 8),
+            _AnimatedBalanceText(
+              value: balance,
+              currency: currency,
+              style: tt.balanceAmount.copyWith(
+                color: cs.onSurface,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -1.0,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: cs.primary.withOpacity(0.06),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.calendar_today_rounded, size: 10, color: cs.primary.withOpacity(0.6)),
+                  const SizedBox(width: 6),
+                  Text(AppLocalizations.of(context)!.thisMonth,
+                      style: tt.labelSmall?.copyWith(color: cs.primary.withOpacity(0.6))),
+                ],
+              ),
+            ),
+          ]),
         ),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(AppLocalizations.of(context)!.netBalance,
-              style: tt.bodySmall?.copyWith(color: Colors.white.withOpacity(0.8), fontWeight: FontWeight.w600)),
-          const SizedBox(height: 4),
-          Text(balance.toCurrency(currency),
-              style: tt.balanceAmount.copyWith(color: Colors.white)),
-          const SizedBox(height: 4),
-          Text(AppLocalizations.of(context)!.thisMonth,
-              style: tt.labelSmall?.copyWith(color: Colors.white.withOpacity(0.6))),
-        ]),
       ),
       const SizedBox(height: 12),
       Row(children: [
@@ -473,7 +610,7 @@ class _SummarySection extends StatelessWidget {
                 label: AppLocalizations.of(context)!.income,
                 amount: income,
                 currency: currency,
-                color: AppColors.success500,
+                color: AppColors.success,
                 icon: Icons.arrow_upward_rounded)),
         const SizedBox(width: 12),
         Expanded(
@@ -481,7 +618,7 @@ class _SummarySection extends StatelessWidget {
                 label: AppLocalizations.of(context)!.expenses,
                 amount: expense,
                 currency: currency,
-                color: AppColors.danger500,
+                color: cs.error,
                 icon: Icons.arrow_downward_rounded)),
       ]),
     ]);
@@ -508,9 +645,9 @@ class _MiniCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.cardTheme.color ?? cs2.surface,
+        color: cs2.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cs2.outlineVariant.withOpacity(0.5)),
+        border: Border.all(color: cs2.outline.withOpacity(0.1)),
       ),
       child: Row(children: [
         Container(
@@ -596,5 +733,164 @@ class _EmptyTransactions extends StatelessWidget {
         ]),
       ),
     );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PREMIUM MICRO-INTERACTIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _AnimatedBalanceText extends StatelessWidget {
+  final double value;
+  final String currency;
+  final TextStyle style;
+
+  const _AnimatedBalanceText({
+    required this.value,
+    required this.currency,
+    required this.style,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: value),
+      duration: const Duration(milliseconds: 1200),
+      curve: Curves.easeOutExpo,
+      builder: (context, val, child) {
+        return Text(
+          val.toCurrency(currency),
+          style: style,
+        );
+      },
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PREMIUM MICRO-INTERACTIONS (Refined for Professional Look)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _BalanceCardAnimationWrapper extends StatefulWidget {
+  final Widget child;
+  const _BalanceCardAnimationWrapper({required this.child});
+
+  @override
+  State<_BalanceCardAnimationWrapper> createState() =>
+      _BalanceCardAnimationWrapperState();
+}
+
+class _BalanceCardAnimationWrapperState
+    extends State<_BalanceCardAnimationWrapper>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _slideAnimation;
+  late Animation<double> _shimmerAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 5000),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(
+          parent: _controller,
+          curve: const Interval(0.0, 0.3, curve: Curves.easeOutCubic)),
+    );
+
+    _slideAnimation = Tween<double>(begin: 16, end: 0).animate(
+      CurvedAnimation(
+          parent: _controller,
+          curve: const Interval(0.0, 0.3, curve: Curves.easeOutCubic)),
+    );
+
+    _shimmerAnimation = Tween<double>(begin: -1.5, end: 1.5).animate(
+      CurvedAnimation(
+          parent: _controller,
+          curve: const Interval(0.4, 0.9, curve: Curves.easeInOutExpo)),
+    );
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Opacity(
+              opacity: _fadeAnimation.value,
+              child: Transform.translate(
+                offset: Offset(0, _slideAnimation.value),
+                child: ShaderMask(
+                  shaderCallback: (bounds) {
+                    return LinearGradient(
+                      colors: [
+                        Colors.white.withOpacity(0),
+                        // Very subtle shimmer (0.05 for premium feel)
+                        (isDark ? Colors.white : Colors.blue.shade200).withOpacity(0.05),
+                        Colors.white.withOpacity(0),
+                      ],
+                      stops: const [0.35, 0.5, 0.65],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      transform: _GradientRotation(_shimmerAnimation.value),
+                    ).createShader(bounds);
+                  },
+                  blendMode: BlendMode.srcOver,
+                  child: widget.child,
+                ),
+              ),
+            ),
+            // Refined Floating particles (Subtle hints of motion)
+            ..._buildParticles(),
+          ],
+        );
+      },
+    );
+  }
+
+  List<Widget> _buildParticles() {
+    final cs = Theme.of(context).colorScheme;
+    return List.generate(3, (i) {
+      final delay = i * 0.12;
+      final progress = (_controller.value - delay).clamp(0.0, 0.4) * 2.5;
+      if (progress <= 0 || progress >= 1) return const SizedBox.shrink();
+
+      return Positioned(
+        left: 80.0 + (i * 100),
+        bottom: 20 + (progress * 40),
+        child: Opacity(
+          opacity: (1 - progress) * 0.2, // Significantly reduced opacity
+          child: Icon(Icons.circle,
+              size: 4 + i.toDouble(), color: cs.primary.withOpacity(0.3)),
+        ),
+      );
+    });
+  }
+}
+
+class _GradientRotation extends GradientTransform {
+  final double progress;
+  const _GradientRotation(this.progress);
+
+  @override
+  Matrix4? transform(Rect bounds, {TextDirection? textDirection}) {
+    return Matrix4.translationValues(bounds.width * progress * 2, 0, 0);
   }
 }

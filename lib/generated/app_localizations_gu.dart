@@ -263,20 +263,20 @@ class AppLocalizationsGu extends AppLocalizations {
   String get tapMode => 'ટેપ મોડ';
 
   @override
-  String get setPin => 'પિન લોક સેટ કરો';
+  String get setPin => 'પિન સેટ કરો';
 
   @override
   String get changePin => 'પિન બદલો';
 
   @override
-  String get disablePin => 'પિન લોક અક્ષમ કરો';
+  String get disablePin => 'પિન અક્ષમ કરો';
 
   @override
   String get disablePinConfirm => 'પિન અક્ષમ કરો?';
 
   @override
   String get disablePinDetails =>
-      'તમારી એપ્લિકેશન ખોલવા માટે હવે પિનની જરૂર રહેશે નહીં.';
+      'તમારી એપ્લિકેશન હવે પિન દ્વારા સુરક્ષિત રહેશે નહીં.';
 
   @override
   String get biometricUnlock => 'બાયોમેટ્રિક અનલોક';
@@ -422,4 +422,204 @@ class AppLocalizationsGu extends AppLocalizations {
 
   @override
   String get netSavings => 'ચોખ્ખી બચત';
+
+  @override
+  String get activity => 'પ્રવૃત્તિ';
+
+  @override
+  String get home => 'હોમ';
+
+  @override
+  String get exitApplication => 'એપ્લિકેશનમાંથી બહાર નીકળો';
+
+  @override
+  String get exitConfirmMessage =>
+      'તમે ખરેખર એપ બંધ કરવા માંગો છો? કોઈપણ ન સેવ કરેલો ડેટા ખોવાઈ શકે છે.';
+
+  @override
+  String get exit => 'બહાર નીકળો';
+
+  @override
+  String builtWithLove(Object name) {
+    return '$name દ્વારા ❤️ સાથે બનાવવામાં આવ્યું';
+  }
+
+  @override
+  String budgetFor(Object name) {
+    return '$name માટે બજેટ';
+  }
+
+  @override
+  String get monthlyLimit => 'માસિક મર્યાદા';
+
+  @override
+  String get removeBudget => 'બજેટ દૂર કરો';
+
+  @override
+  String get setBudget => 'બજેટ સેટ કરો';
+
+  @override
+  String get updateBudget => 'બજેટ અપડેટ કરો';
+
+  @override
+  String get tapToSetBudget =>
+      'માસિક બજેટ મર્યાદા સેટ કરવા માટે નીચેની કોઈપણ શ્રેણી પર ટેપ કરો.';
+
+  @override
+  String get monthlyBudgetOverview => 'માસિક બજેટ વિહંગાવલોકન';
+
+  @override
+  String ofAmount(Object amount) {
+    return '$amount માંથી';
+  }
+
+  @override
+  String overBudgetBy(Object amount) {
+    return '🚨 બજેટ કરતા $amount વધુ';
+  }
+
+  @override
+  String remainingAmount(Object amount) {
+    return '✅ $amount બાકી છે';
+  }
+
+  @override
+  String get over => 'વધારે';
+
+  @override
+  String spentAmount(Object amount) {
+    return '$amount ખર્ચ';
+  }
+
+  @override
+  String get noBudgetSet =>
+      'કોઈ બજેટ સેટ નથી — મર્યાદા ઉમેરવા માટે \"SET\" પર ટેપ કરો';
+
+  @override
+  String get filterTransactions => 'ટ્રાન્ઝેક્શન ફિલ્ટર કરો';
+
+  @override
+  String get reset => 'રીસેટ';
+
+  @override
+  String get sortBy => 'ક્રમમાં ગોઠવો';
+
+  @override
+  String get ascending => 'ચઢતા ક્રમમાં';
+
+  @override
+  String get descending => 'ઉતરતા ક્રમમાં';
+
+  @override
+  String get selectDateRange => 'તારીખ મર્યાદા પસંદ કરો';
+
+  @override
+  String get errorLoadingCategories => 'શ્રેણીઓ લોડ કરવામાં ભૂલ';
+
+  @override
+  String get applyFilter => 'ફિલ્ટર લાગુ કરો';
+
+  @override
+  String get description => 'વર્ણન';
+
+  @override
+  String get whatWasThisFor => 'આ શેના માટે હતું?';
+
+  @override
+  String get enterDescription => 'વર્ણન દાખલ કરો';
+
+  @override
+  String get noResultsFound => 'કોઈ પરિણામ મળ્યા નથી';
+
+  @override
+  String get error => 'ભૂલ';
+
+  @override
+  String get budgetLabel => 'બજેટ';
+
+  @override
+  String get dataManagement => 'ડેટા મેનેજમેન્ટ';
+
+  @override
+  String get exportDataJson => 'ડેટા નિકાસ કરો (JSON)';
+
+  @override
+  String get importDataJson => 'ડેટા આયાત કરો (JSON)';
+
+  @override
+  String get on => 'ચાલુ';
+
+  @override
+  String get off => 'બંધ';
+
+  @override
+  String get setPinBeforeBiometric =>
+      'બાયોમેટ્રિક સુરક્ષા સક્ષમ કરતા પહેલા કૃપા કરીને પિન સેટ કરો';
+
+  @override
+  String get shareSubject => 'ટ્રસ્ટ ટ્રેકર - સ્માર્ટ મની મેનેજર';
+
+  @override
+  String get shareMessage =>
+      'ટ્રસ્ટ ટ્રેકર સાથે તમારા નાણાકીય વ્યવહાર પર નિયંત્રણ મેળવો.\n\nટ્રસ્ટ ટ્રેકર એ એક ખાનગી, ઓફલાઇન-પ્રથમ ખર્ચ ટ્રેકર છે જે તમને તમારી આવક, ખર્ચ અને બજેટને સરળતાથી સંચાલિત કરવામાં મદદ કરવા માટે રચાયેલ છે.\n\nમુખ્ય લાક્ષણિકતાઓ:\n• સરળ ખર્ચ અને આવક ટ્રેકિંગ\n• બજેટ મેનેજમેન્ટ અને નાણાકીય સમજ\n• સુરક્ષિત પિન અને બાયોમેટ્રિક સુરક્ષા\n• સંપૂર્ણપણે ઓફલાઇન અને ગોપનીયતા પર ધ્યાન કેન્દ્રિત\n• સ્વચ્છ અને વાપરવામાં સરળ ઇન્ટરફેસ\n\nGoogle Play Store પરથી એપ ડાઉનલોડ કરો:\nhttps://play.google.com/store/apps/details?id=com.trusttracker.trust_tracker_flutter\n\nતમારો પ્રતિસાદ અને સમર્થન ખૂબ મૂલ્યવાન છે.';
+
+  @override
+  String get appTheme => 'એપ થીમ';
+
+  @override
+  String get selectAccentColor => 'એક્સેંટ કલર પસંદ કરો';
+
+  @override
+  String get selectFormat => 'ફોર્મેટ પસંદ કરો';
+
+  @override
+  String get pdfReport => 'PDF રિપોર્ટ';
+
+  @override
+  String get pdfReportDesc => 'નાણાકીય રિપોર્ટ';
+
+  @override
+  String get excelExport => 'Excel નિકાસ';
+
+  @override
+  String get excelExportDesc => 'સ્પ્રેડશીટ વિશ્લેષણ માટે';
+
+  @override
+  String get dateRangeCaps => 'તારીખ મર્યાદા';
+
+  @override
+  String get generateExport => 'નિકાસ કરો';
+
+  @override
+  String get exportTransactions => 'વ્યવહારો નિકાસ કરો';
+
+  @override
+  String get exportDesc => 'તમારા ડેટાને શેર કરો';
+
+  @override
+  String get lastMonth => 'ગયા મહિને';
+
+  @override
+  String get threeMonths => '3 મહિના';
+
+  @override
+  String get allHistory => 'તમામ ઇતિહાસ';
+
+  @override
+  String get custom => 'કસ્ટમ';
+
+  @override
+  String get pleaseSelectDateRange => 'કૃપા કરીને તારીખ મર્યાદા પસંદ કરો';
+
+  @override
+  String get user => 'ત્યાં';
+
+  @override
+  String get categoriesCaps => 'કેટેગરીઝ';
+
+  @override
+  String get chooseAvatar => 'અવતાર પસંદ કરો';
+
+  @override
+  String get resetAvatar => 'અવતાર ફરી સેટ કરો';
 }

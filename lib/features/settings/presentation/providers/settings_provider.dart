@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trust_tracker_flutter/core/constants/app_constants.dart';
+import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
 import 'package:trust_tracker_flutter/core/utils/currency_detector.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -14,8 +15,9 @@ class SettingsState {
   final bool isDarkMode;
   final bool isFirstRun;
   final TransactionActionMode transactionActionMode;
-
   final String languageCode;
+  final String accentColorHex;
+  final String? userAvatar;
 
   const SettingsState({
     this.currency = 'USD',
@@ -24,6 +26,8 @@ class SettingsState {
     this.isFirstRun = true,
     this.transactionActionMode = TransactionActionMode.swipe,
     this.languageCode = 'en',
+    this.accentColorHex = '#3B82F6', // Default Blue
+    this.userAvatar,
   });
 
   SettingsState copyWith({
@@ -33,6 +37,8 @@ class SettingsState {
     bool? isFirstRun,
     TransactionActionMode? transactionActionMode,
     String? languageCode,
+    String? accentColorHex,
+    String? userAvatar,
   }) {
     return SettingsState(
       currency: currency ?? this.currency,
@@ -42,8 +48,34 @@ class SettingsState {
       transactionActionMode:
           transactionActionMode ?? this.transactionActionMode,
       languageCode: languageCode ?? this.languageCode,
+      accentColorHex: accentColorHex ?? this.accentColorHex,
+      userAvatar: userAvatar ?? this.userAvatar,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'currency': currency,
+        'userName': userName,
+        'isDarkMode': isDarkMode,
+        'isFirstRun': isFirstRun,
+        'transactionActionMode': transactionActionMode.name,
+        'languageCode': languageCode,
+        'accentColorHex': accentColorHex,
+        'userAvatar': userAvatar,
+      };
+
+  factory SettingsState.fromJson(Map<String, dynamic> json) => SettingsState(
+        currency: json['currency'] ?? 'USD',
+        userName: json['userName'] ?? '',
+        isDarkMode: json['isDarkMode'] ?? false,
+        isFirstRun: json['isFirstRun'] ?? true,
+        transactionActionMode: json['transactionActionMode'] == 'tap'
+            ? TransactionActionMode.tap
+            : TransactionActionMode.swipe,
+        languageCode: json['languageCode'] ?? 'en',
+        accentColorHex: json['accentColorHex'] ?? '#3B82F6',
+        userAvatar: json['userAvatar'],
+      );
 }
 
 const _kTxnActionMode = 'txn_action_mode';
@@ -62,6 +94,8 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
               ? TransactionActionMode.tap
               : TransactionActionMode.swipe,
           languageCode: _prefs.getString(AppConstants.prefLanguage) ?? 'en',
+          accentColorHex: _prefs.getString(AppConstants.prefAccentColor) ?? '#3B82F6',
+          userAvatar: _prefs.getString(AppConstants.prefUserAvatar),
         ));
 
   Future<void> setCurrency(String code) async {
@@ -90,6 +124,19 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     state = state.copyWith(languageCode: code);
   }
 
+  Future<void> setAccentColor(String hex) async {
+    await _prefs.setString(AppConstants.prefAccentColor, hex);
+    state = state.copyWith(accentColorHex: hex);
+  }
+
+  Future<void> setUserAvatar(String? path) async {
+    if (path == null) {
+      await _prefs.remove(AppConstants.prefUserAvatar);
+    } else {
+      await _prefs.setString(AppConstants.prefUserAvatar, path);
+    }
+    state = state.copyWith(userAvatar: path);
+  }
 
   Future<void> completeOnboarding(String name, String currency) async {
     await _prefs.setString(AppConstants.prefUserName, name);
@@ -100,6 +147,18 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       currency: currency,
       isFirstRun: false,
     );
+  }
+
+  Future<void> restoreSettings(SettingsState other) async {
+    await _prefs.setString(AppConstants.prefCurrency, other.currency);
+    await _prefs.setString(AppConstants.prefUserName, other.userName);
+    await _prefs.setBool(AppConstants.prefTheme, other.isDarkMode);
+    await _prefs.setBool(AppConstants.prefIsFirstRun, other.isFirstRun);
+    await _prefs.setString(_kTxnActionMode,
+        other.transactionActionMode == TransactionActionMode.tap ? 'tap' : 'swipe');
+    await _prefs.setString(AppConstants.prefLanguage, other.languageCode);
+    await _prefs.setString(AppConstants.prefAccentColor, other.accentColorHex);
+    state = other;
   }
 }
 

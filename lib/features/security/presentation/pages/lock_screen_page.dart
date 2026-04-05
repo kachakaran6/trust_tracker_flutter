@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,6 +21,7 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
   late final AnimationController _shakeController;
   late final Animation<double> _shakeAnim;
   late final List<AnimationController> _digitControllers;
+  Timer? _cooldownTimer;
 
   @override
   void initState() {
@@ -39,11 +41,21 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
 
     // Feature 6: Auto-authentication attempt on screen load
     WidgetsBinding.instance.addPostFrameCallback((_) => _tryBiometric());
+
+    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        final security = ref.read(securityProvider);
+        if (security.lockUntil != null) {
+          setState(() {}); // Repaint for countdown
+        }
+      }
+    });
   }
 
   @override
   void dispose() {
     _shakeController.dispose();
+    _cooldownTimer?.cancel();
     for (var c in _digitControllers) {
       c.dispose();
     }
@@ -53,6 +65,9 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
   Future<void> _tryBiometric() async {
     final security = ref.read(securityProvider);
     if (!security.isBiometricEnabled) return;
+    
+    final isLocked = security.lockUntil != null && DateTime.now().isBefore(security.lockUntil!);
+    if (isLocked) return;
     
     // Feature 7: Handle biometric gracefully
     await Future.delayed(const Duration(milliseconds: 400));
@@ -65,7 +80,9 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
   }
 
   void _onKeyTap(String digit) {
-    if (_pin.length >= _pinLength) return;
+    final security = ref.read(securityProvider);
+    final isLocked = security.lockUntil != null && DateTime.now().isBefore(security.lockUntil!);
+    if (isLocked || _pin.length >= _pinLength) return;
     HapticFeedback.lightImpact();
     setState(() {
       _pin.add(digit);
@@ -79,7 +96,9 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
   }
 
   void _onBackspace() {
-    if (_pin.isEmpty) return;
+    final security = ref.read(securityProvider);
+    final isLocked = security.lockUntil != null && DateTime.now().isBefore(security.lockUntil!);
+    if (isLocked || _pin.isEmpty) return;
     HapticFeedback.lightImpact();
     _digitControllers[_pin.length - 1].reverse();
     setState(() => _pin.removeLast());
@@ -152,12 +171,27 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
             Text('Trust Tracker', style: tt.displaySmall?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -1.0)),
             const SizedBox(height: spTight),
             
-            Text(
-              _hasError ? 'Incorrect PIN. Try again.' : 'Enter your security PIN',
-              style: tt.bodyMedium?.copyWith(
-                color: _hasError ? AppColors.danger500 : cs.onSurface.withOpacity(0.4),
-                fontWeight: _hasError ? FontWeight.w700 : FontWeight.w500,
-              ),
+            Builder(
+              builder: (context) {
+                final isLocked = security.lockUntil != null && DateTime.now().isBefore(security.lockUntil!);
+                if (isLocked) {
+                  final remaining = security.lockUntil!.difference(DateTime.now()).inSeconds;
+                  return Text(
+                    'Locked. Try again in $remaining${remaining > 1 ? 's' : 's'}',
+                    style: tt.bodyMedium?.copyWith(
+                      color: cs.error,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  );
+                }
+                return Text(
+                  _hasError ? 'Incorrect PIN (${security.failedAttempts}/5)' : 'Enter your security PIN',
+                  style: tt.bodyMedium?.copyWith(
+                    color: _hasError ? cs.error : cs.onSurface.withOpacity(0.4),
+                    fontWeight: _hasError ? FontWeight.w700 : FontWeight.w500,
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 48),
 
@@ -183,11 +217,11 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
                       height: 20,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: _hasError ? AppColors.danger500 : filled ? cs.primary : cs.surfaceContainerHighest,
+                        color: _hasError ? cs.error : filled ? cs.primary : cs.surfaceVariant,
                         boxShadow: filled && !_hasError
                             ? [BoxShadow(color: cs.primary.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))]
                             : null,
-                        border: !filled ? Border.all(color: cs.outlineVariant.withOpacity(0.3), width: 1.5) : null,
+                        border: !filled ? Border.all(color: cs.outline.withOpacity(0.1), width: 1.5) : null,
                       ),
                     ),
                   );
@@ -198,38 +232,46 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
             const Spacer(flex: 1),
 
             // --- Secure Keypad ---
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40),
-              child: Column(
-                children: [
-                  for (final row in [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9'], ['bio', '0', '⌫']])
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: spStd),
-                      child: Row(
-                        children: row.map((key) {
-                          if (key == '⌫') {
-                            return _KeypadButton(
-                              child: Icon(Icons.backspace_rounded, size: 24, color: cs.onSurface),
-                              onTap: _onBackspace,
-                            );
-                          }
-                          if (key == 'bio') {
-                            return security.isBiometricEnabled
-                                ? _KeypadButton(
-                                    child: Icon(Icons.fingerprint_rounded, size: 32, color: cs.primary),
-                                    onTap: _tryBiometric,
-                                  )
-                                : const Expanded(child: SizedBox());
-                          }
-                          return _KeypadButton(
-                            child: Text(key, style: tt.displaySmall?.copyWith(fontSize: 32, fontWeight: FontWeight.w700, color: cs.onSurface)),
-                            onTap: () => _onKeyTap(key),
-                          );
-                        }).toList(),
-                      ),
+            Builder(
+              builder: (context) {
+                final isLocked = security.lockUntil != null && DateTime.now().isBefore(security.lockUntil!);
+                return Opacity(
+                  opacity: isLocked ? 0.3 : 1.0,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 40),
+                    child: Column(
+                      children: [
+                        for (final row in [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9'], ['bio', '0', '⌫']])
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: spStd),
+                            child: Row(
+                              children: row.map((key) {
+                                if (key == '⌫') {
+                                  return _KeypadButton(
+                                    child: Icon(Icons.backspace_rounded, size: 24, color: cs.onSurface),
+                                    onTap: isLocked ? () {} : _onBackspace,
+                                  );
+                                }
+                                if (key == 'bio') {
+                                  return security.isBiometricEnabled
+                                      ? _KeypadButton(
+                                          child: Icon(Icons.fingerprint_rounded, size: 32, color: cs.primary),
+                                          onTap: isLocked ? () {} : _tryBiometric,
+                                        )
+                                      : const Expanded(child: SizedBox());
+                                }
+                                return _KeypadButton(
+                                  child: Text(key, style: tt.displaySmall?.copyWith(fontSize: 32, fontWeight: FontWeight.w700, color: cs.onSurface)),
+                                  onTap: isLocked ? () {} : () => _onKeyTap(key),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                      ],
                     ),
-                ],
-              ),
+                  ),
+                );
+              },
             ),
             const Spacer(flex: 1),
           ],
@@ -247,8 +289,7 @@ class _KeypadButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
 
     return Expanded(
       child: Padding(
@@ -261,11 +302,11 @@ class _KeypadButton extends StatelessWidget {
             child: Container(
               height: 76,
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                color: cs.surfaceVariant,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+                    color: Colors.black.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.3 : 0.05),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),

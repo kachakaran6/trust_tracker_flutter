@@ -1,39 +1,60 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:isar/isar.dart';
-import 'package:trust_tracker_flutter/core/di/providers.dart';
+import 'package:trust_tracker_flutter/core/database/database_helper.dart';
 import 'package:trust_tracker_flutter/features/budget/data/models/budget_model.dart';
 
 class BudgetRepository {
-  final Isar _db;
-  BudgetRepository(this._db);
+  final DatabaseHelper _dbHelper;
+  BudgetRepository(this._dbHelper);
 
-  Future<List<BudgetModel>> getByMonth(String monthKey) {
-    return _db.budgetModels.filter().monthKeyEqualTo(monthKey).findAll();
+  Future<List<BudgetModel>> getByMonth(String monthKey) async {
+    final db = await _dbHelper.database;
+    final result = await db.query(
+      'budgets',
+      where: 'monthKey = ?',
+      whereArgs: [monthKey],
+    );
+    return result.map((e) => BudgetModel.fromMap(e)).toList();
   }
 
-  Future<BudgetModel?> getByCategoryAndMonth(int categoryId, String monthKey) {
-    return _db.budgetModels
-        .filter()
-        .categoryIdEqualTo(categoryId)
-        .monthKeyEqualTo(monthKey)
-        .findFirst();
+  Future<BudgetModel?> getByCategoryAndMonth(int categoryId, String monthKey) async {
+    final db = await _dbHelper.database;
+    final result = await db.query(
+      'budgets',
+      where: 'categoryId = ? AND monthKey = ?',
+      whereArgs: [categoryId, monthKey],
+    );
+    if (result.isNotEmpty) {
+      return BudgetModel.fromMap(result.first);
+    }
+    return null;
   }
 
   Future<void> setbudget(BudgetModel b) async {
-    // Upsert: delete old for same category+month, then insert
+    final db = await _dbHelper.database;
     final existing = await getByCategoryAndMonth(b.categoryId, b.monthKey);
-    await _db.writeTxn(() async {
-      if (existing != null) await _db.budgetModels.delete(existing.id);
-      await _db.budgetModels.put(b);
-    });
+    if (existing != null) {
+      await db.update(
+        'budgets',
+        b.toMap(),
+        where: 'id = ?',
+        whereArgs: [existing.id],
+      );
+    } else {
+      await db.insert('budgets', b.toMap());
+    }
   }
 
   Future<void> deleteBudget(int id) async {
-    await _db.writeTxn(() => _db.budgetModels.delete(id));
+    final db = await _dbHelper.database;
+    await db.delete(
+      'budgets',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 }
 
 final budgetRepositoryProvider = Provider<BudgetRepository>((ref) {
-  final isar = ref.watch(isarServiceProvider).db;
-  return BudgetRepository(isar);
+  return BudgetRepository(DatabaseHelper.instance);
 });

@@ -111,7 +111,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get netBalance => 'Net Balance';
 
   @override
-  String get thisMonth => 'This month';
+  String get thisMonth => 'This Month';
 
   @override
   String get expenses => 'Expenses';
@@ -259,20 +259,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tapMode => 'Tap Mode';
 
   @override
-  String get setPin => 'Set PIN Lock';
+  String get setPin => 'Set PIN';
 
   @override
   String get changePin => 'Change PIN';
 
   @override
-  String get disablePin => 'Disable PIN Lock';
+  String get disablePin => 'Disable PIN';
 
   @override
   String get disablePinConfirm => 'Disable PIN?';
 
   @override
   String get disablePinDetails =>
-      'Your app will no longer require a PIN to open.';
+      'Your app will no longer be protected by a PIN.';
 
   @override
   String get biometricUnlock => 'Biometric Unlock';
@@ -418,4 +418,203 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get netSavings => 'Net Savings';
+
+  @override
+  String get activity => 'Activity';
+
+  @override
+  String get home => 'Home';
+
+  @override
+  String get exitApplication => 'Exit Application';
+
+  @override
+  String get exitConfirmMessage =>
+      'Are you sure you want to close the application? Any unsaved changes might be lost.';
+
+  @override
+  String get exit => 'Exit';
+
+  @override
+  String builtWithLove(Object name) {
+    return 'Built with ❤️ by $name';
+  }
+
+  @override
+  String budgetFor(Object name) {
+    return 'Budget for $name';
+  }
+
+  @override
+  String get monthlyLimit => 'Monthly limit';
+
+  @override
+  String get removeBudget => 'Remove budget';
+
+  @override
+  String get setBudget => 'Set Budget';
+
+  @override
+  String get updateBudget => 'Update Budget';
+
+  @override
+  String get tapToSetBudget =>
+      'Tap any category below to set a monthly budget limit.';
+
+  @override
+  String get monthlyBudgetOverview => 'MONTHLY BUDGET OVERVIEW';
+
+  @override
+  String ofAmount(Object amount) {
+    return 'of $amount';
+  }
+
+  @override
+  String overBudgetBy(Object amount) {
+    return '🚨 Over budget by $amount';
+  }
+
+  @override
+  String remainingAmount(Object amount) {
+    return '✅ $amount remaining';
+  }
+
+  @override
+  String get over => 'OVER';
+
+  @override
+  String spentAmount(Object amount) {
+    return '$amount spent';
+  }
+
+  @override
+  String get noBudgetSet => 'No budget set — tap \"SET\" to add a limit';
+
+  @override
+  String get filterTransactions => 'Filter Transactions';
+
+  @override
+  String get reset => 'Reset';
+
+  @override
+  String get sortBy => 'Sort By';
+
+  @override
+  String get ascending => 'Ascending';
+
+  @override
+  String get descending => 'Descending';
+
+  @override
+  String get selectDateRange => 'Select date range';
+
+  @override
+  String get errorLoadingCategories => 'Error loading categories';
+
+  @override
+  String get applyFilter => 'Apply Filter';
+
+  @override
+  String get description => 'Description';
+
+  @override
+  String get whatWasThisFor => 'What was this for?';
+
+  @override
+  String get enterDescription => 'Enter a description';
+
+  @override
+  String get noResultsFound => 'No results found';
+
+  @override
+  String get error => 'Error';
+
+  @override
+  String get budgetLabel => 'Budget';
+
+  @override
+  String get dataManagement => 'Data Management';
+
+  @override
+  String get exportDataJson => 'Export Data (JSON)';
+
+  @override
+  String get importDataJson => 'Import Data (JSON)';
+
+  @override
+  String get on => 'ON';
+
+  @override
+  String get off => 'OFF';
+
+  @override
+  String get setPinBeforeBiometric =>
+      'Please set a PIN before enabling biometric security';
+
+  @override
+  String get shareSubject => 'Trust Tracker – Smart Expense Tracker';
+
+  @override
+  String get shareMessage =>
+      'Take control of your personal finances with Trust Tracker.\n\nTrust Tracker is a private, offline-first expense tracker designed to help you manage your income, expenses, and budgets with ease.\n\nKey Features:\n• Simple expense and income tracking\n• Budget management and financial insights\n• Secure PIN and biometric protection\n• Completely offline and privacy focused\n• Clean and easy-to-use interface\n\nDownload the app from the Google Play Store:\nhttps://play.google.com/store/apps/details?id=com.trusttracker.trust_tracker_flutter\n\nYour feedback and support would mean a lot.';
+
+  @override
+  String get appTheme => 'App Theme';
+
+  @override
+  String get selectAccentColor => 'Select Accent Color';
+
+  @override
+  String get selectFormat => 'SELECT FORMAT';
+
+  @override
+  String get pdfReport => 'PDF Report';
+
+  @override
+  String get pdfReportDesc => 'Formatted financial report';
+
+  @override
+  String get excelExport => 'Excel Export';
+
+  @override
+  String get excelExportDesc => 'For spreadsheet analysis';
+
+  @override
+  String get dateRangeCaps => 'DATE RANGE';
+
+  @override
+  String get generateExport => 'Generate Export';
+
+  @override
+  String get exportTransactions => 'Export Transactions';
+
+  @override
+  String get exportDesc => 'Save or share your financial data';
+
+  @override
+  String get lastMonth => 'Last Month';
+
+  @override
+  String get threeMonths => '3 Months';
+
+  @override
+  String get allHistory => 'All History';
+
+  @override
+  String get custom => 'Custom';
+
+  @override
+  String get pleaseSelectDateRange => 'Please select a date range';
+
+  @override
+  String get user => 'there';
+
+  @override
+  String get categoriesCaps => 'CATEGORIES';
+
+  @override
+  String get chooseAvatar => 'Choose Avatar';
+
+  @override
+  String get resetAvatar => 'Reset Avatar';
 }

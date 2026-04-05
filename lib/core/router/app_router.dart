@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:trust_tracker_flutter/generated/app_localizations.dart';
 import 'package:trust_tracker_flutter/features/onboarding/presentation/pages/onboarding_page.dart';
 import 'package:trust_tracker_flutter/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:trust_tracker_flutter/features/transactions/presentation/pages/transactions_page.dart';
@@ -15,6 +16,7 @@ import 'package:trust_tracker_flutter/features/settings/presentation/providers/s
 import 'package:trust_tracker_flutter/features/security/presentation/pages/lock_screen_page.dart';
 import 'package:trust_tracker_flutter/features/security/presentation/pages/set_pin_page.dart';
 import 'package:trust_tracker_flutter/core/security/security_provider.dart';
+import 'package:trust_tracker_flutter/core/services/update_service.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Router Notifier — bridges Riverpod state into GoRouter's refreshListenable.
@@ -47,7 +49,7 @@ final _routerNotifierProvider = Provider<_RouterNotifier>((ref) {
   return _RouterNotifier(ref);
 });
 
-final _rootNavigatorKey = GlobalKey<NavigatorState>();
+final rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKeyDashboard =
     GlobalKey<NavigatorState>(debugLabel: 'dashboard');
 final _shellNavigatorKeyTransactions =
@@ -71,7 +73,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final notifier = ref.watch(_routerNotifierProvider);
 
   return GoRouter(
-    navigatorKey: _rootNavigatorKey,
+    navigatorKey: rootNavigatorKey,
     debugLogDiagnostics: false,
     refreshListenable: notifier,
     redirect: (context, state) {
@@ -110,12 +112,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/lock',
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const LockScreenPage(),
       ),
       GoRoute(
         path: '/set-pin',
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
           return SetPinPage(
@@ -170,7 +172,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/add-transaction',
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
           return AddTransactionPage(
@@ -182,12 +184,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/budget',
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const BudgetPage(),
       ),
       GoRoute(
         path: '/categories',
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const CategoriesPage(),
       ),
     ],
@@ -197,17 +199,46 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Main Shell — StatefulShellRoute builder with custom bottom nav
 // ─────────────────────────────────────────────────────────────────────────────
-class MainShell extends StatefulWidget {
+class MainShell extends ConsumerStatefulWidget {
   final StatefulNavigationShell navigationShell;
   const MainShell({super.key, required this.navigationShell});
 
   @override
-  State<MainShell> createState() => _MainShellState();
+  ConsumerState<MainShell> createState() => _MainShellState();
 }
 
-class _MainShellState extends State<MainShell> {
+class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserver {
   NavigatorState? get _activeBranchNavigator =>
       _shellNavigatorKeys[widget.navigationShell.currentIndex].currentState;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // Initial update check
+    _checkForUpdate();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkForUpdate();
+    }
+  }
+
+  Future<void> _checkForUpdate() async {
+    // Wait for everything to settle
+    await Future.delayed(const Duration(seconds: 2));
+    if (mounted) {
+      await ref.read(updateServiceProvider).checkForUpdate(context);
+    }
+  }
 
   void _onTabTapped(int index) {
     widget.navigationShell.goBranch(
@@ -219,7 +250,7 @@ class _MainShellState extends State<MainShell> {
 
   Future<void> _handleBackPressed() async {
     // Priority 1: Check if the Root Navigator (full-screen sub-pages) can pop.
-    final rootNavigator = _rootNavigatorKey.currentState;
+    final rootNavigator = rootNavigatorKey.currentState;
     if (rootNavigator != null && rootNavigator.canPop()) {
       debugPrint('[Navigation] Pop Request: Root Navigator Popped');
       rootNavigator.pop();
@@ -275,13 +306,14 @@ class _MainShellState extends State<MainShell> {
           backgroundColor: cs.primary,
           elevation: 4,
           shape: const CircleBorder(),
-          child: const Icon(Icons.add, size: 28, color: Colors.white),
+          child: Icon(Icons.add, size: 28, color: Colors.white),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         bottomNavigationBar: _BottomNavBar(
           selectedIndex: selectedIndex,
           onTap: _onTabTapped,
           cs: cs,
+          l10n: AppLocalizations.of(context)!,
         ),
       ),
     );
@@ -293,10 +325,11 @@ Future<bool?> showExitConfirmationDialog(BuildContext context) {
   final cs = theme.colorScheme;
   final textTheme = theme.textTheme;
   final isDark = theme.brightness == Brightness.dark;
+  final l10n = AppLocalizations.of(context)!;
 
   return showGeneralDialog<bool>(
     context: context,
-    barrierLabel: 'Exit Application',
+    barrierLabel: l10n.exitApplication,
     barrierDismissible: true,
     barrierColor: Colors.black.withValues(alpha: isDark ? 0.45 : 0.3),
     transitionDuration: const Duration(milliseconds: 300),
@@ -360,7 +393,7 @@ Future<bool?> showExitConfirmationDialog(BuildContext context) {
                       ),
                       const SizedBox(height: 24),
                       Text(
-                        'Exit Application',
+                        l10n.exitApplication,
                         style: textTheme.headlineSmall?.copyWith(
                           color: cs.onSurface,
                           fontWeight: FontWeight.w800,
@@ -369,7 +402,7 @@ Future<bool?> showExitConfirmationDialog(BuildContext context) {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Are you sure you want to close the application? Any unsaved changes might be lost.',
+                        l10n.exitConfirmMessage,
                         textAlign: TextAlign.center,
                         style: textTheme.bodyMedium?.copyWith(
                           color: cs.onSurfaceVariant,
@@ -390,7 +423,7 @@ Future<bool?> showExitConfirmationDialog(BuildContext context) {
                                 ),
                               ),
                               child: Text(
-                                'Cancel',
+                                l10n.cancel,
                                 style: TextStyle(
                                   color: cs.onSurface.withValues(alpha: 0.6),
                                   fontWeight: FontWeight.w600,
@@ -412,9 +445,9 @@ Future<bool?> showExitConfirmationDialog(BuildContext context) {
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                               ),
-                              child: const Text(
-                                'Exit',
-                                style: TextStyle(fontWeight: FontWeight.w700),
+                              child: Text(
+                                l10n.exit,
+                                style: const TextStyle(fontWeight: FontWeight.w700),
                               ),
                             ),
                           ),
@@ -447,11 +480,13 @@ class _BottomNavBar extends StatelessWidget {
   final int selectedIndex;
   final void Function(int) onTap;
   final ColorScheme cs;
+  final AppLocalizations l10n;
 
   const _BottomNavBar({
     required this.selectedIndex,
     required this.onTap,
     required this.cs,
+    required this.l10n,
   });
 
   @override
@@ -476,7 +511,7 @@ class _BottomNavBar extends StatelessWidget {
               _NavItem(
                 icon: Icons.dashboard_outlined,
                 activeIcon: Icons.dashboard_rounded,
-                label: 'Home',
+                label: l10n.home,
                 selected: selectedIndex == 0,
                 onTap: () => onTap(0),
                 cs: cs,
@@ -484,7 +519,7 @@ class _BottomNavBar extends StatelessWidget {
               _NavItem(
                 icon: Icons.receipt_long_outlined,
                 activeIcon: Icons.receipt_long_rounded,
-                label: 'Activity',
+                label: l10n.activity,
                 selected: selectedIndex == 1,
                 onTap: () => onTap(1),
                 cs: cs,
@@ -494,7 +529,7 @@ class _BottomNavBar extends StatelessWidget {
               _NavItem(
                 icon: Icons.bar_chart_outlined,
                 activeIcon: Icons.bar_chart_rounded,
-                label: 'Analytics',
+                label: l10n.analytics,
                 selected: selectedIndex == 2,
                 onTap: () => onTap(2),
                 cs: cs,
@@ -502,7 +537,7 @@ class _BottomNavBar extends StatelessWidget {
               _NavItem(
                 icon: Icons.settings_outlined,
                 activeIcon: Icons.settings_rounded,
-                label: 'Settings',
+                label: l10n.settings,
                 selected: selectedIndex == 3,
                 onTap: () => onTap(3),
                 cs: cs,

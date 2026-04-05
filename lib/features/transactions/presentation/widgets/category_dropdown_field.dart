@@ -79,7 +79,7 @@ class _TransactionCategoryDropdownState
         final entries = <DropdownMenuEntry<int>>[
           for (final category in categories)
             DropdownMenuEntry<int>(
-              value: category.id,
+              value: category.id!,
               label: category.name,
               leadingIcon: Text(
                 CategoryUtils.getEmoji(category.iconName),

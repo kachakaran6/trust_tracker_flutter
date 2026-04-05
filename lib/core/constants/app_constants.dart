@@ -1,6 +1,6 @@
 class AppConstants {
   static const String appName = 'Trust Tracker';
-  static const String dbName = 'trust_tracker.isar';
+  static const String dbName = 'trust_tracker.db';
 
   // Currencies
   static const List<Map<String, String>> currencies = [
@@ -112,4 +112,8 @@ class AppConstants {
   static const String prefLanguage = 'pref_language';
   static const String prefUserName = 'pref_user_name';
   static const String prefIsFirstRun = 'pref_is_first_run';
+  static const String prefAccentColor = 'pref_accent_color';
+  static const String prefUserAvatar = 'pref_user_avatar';
+  static const String prefPinAttempts = 'pref_pin_attempts';
+  static const String prefPinLockUntil = 'pref_pin_lock_until';
 }

@@ -8,11 +8,19 @@ import 'package:trust_tracker_flutter/features/transactions/data/repositories/tr
 import 'package:trust_tracker_flutter/features/categories/data/repositories/category_repository.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
 import 'package:trust_tracker_flutter/features/transactions/presentation/providers/transaction_provider.dart';
-import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
-import 'package:trust_tracker_flutter/core/utils/category_utils.dart';
+import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_filter.dart';
+import 'package:trust_tracker_flutter/features/transactions/data/models/filter_utils.dart';
+import 'package:trust_tracker_flutter/features/transactions/presentation/widgets/filter_bottom_sheet.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:ui' as ui;
+import 'dart:typed_data';
+import 'package:flutter/rendering.dart';
+import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
+import 'package:trust_tracker_flutter/core/utils/category_utils.dart';
+import 'package:trust_tracker_flutter/core/services/report_service.dart';
 import 'package:trust_tracker_flutter/generated/app_localizations.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // ── Providers ─────────────────────────────────────────────────────────────────
 enum AnalyticsMode { overview, spending, categories, trends }
@@ -106,6 +114,7 @@ class AnalyticsPage extends ConsumerStatefulWidget {
 }
 
 class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
+  final GlobalKey _trendChartKey = GlobalKey();
   int _touchedExpenseIndex = -1;
   int _touchedIncomeIndex = -1;
 
@@ -140,6 +149,14 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
         title: Text(l10n.analytics),
         elevation: 0,
         scrolledUnderElevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf_outlined),
+            tooltip: 'Generate Report',
+            onPressed: () => _showReportOptions(context),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: Column(
         children: [
@@ -154,7 +171,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
               color: cs.surface,
-              border: Border(bottom: BorderSide(color: cs.outlineVariant.withOpacity(0.5), width: 0.5)),
+              border: Border(bottom: BorderSide(color: cs.outline.withOpacity(0.1), width: 0.5)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -193,10 +210,187 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
     );
   }
 
+  Future<void> _showReportOptions(BuildContext context) async {
+    final now = DateTime.now();
+    final selectedMonth = ref.read(selectedMonthProvider);
+    
+    TransactionFilter currentFilter = TransactionFilter(
+      dateRange: DateTimeRange(
+        start: DateTime(selectedMonth.year, selectedMonth.month, 1),
+        end: DateTime(selectedMonth.year, selectedMonth.month, DateUtils.getDaysInMonth(selectedMonth.year, selectedMonth.month)),
+      ),
+    );
+
+    bool includeGraphs = true;
+    bool includeSummary = true;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Report Options', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+                  IconButton(onPressed: () => Navigator.pop(ctx), icon: const Icon(Icons.close)),
+                ],
+              ),
+              const SizedBox(height: 24),
+              
+              const Text('Filter Data', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              InkWell(
+                onTap: () async {
+                  await showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) => FilterBottomSheet(
+                      initialFilter: currentFilter,
+                      onApply: (newFilter) => setModalState(() => currentFilter = newFilter),
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.1)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.tune_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          FilterUtils.getFilterSummary(currentFilter, context),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      Icon(Icons.chevron_right_rounded, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
+                    ],
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 24),
+              const Text('Components', style: TextStyle(fontWeight: FontWeight.bold)),
+              SwitchListTile(
+                title: const Text('Financial Summary'),
+                subtitle: const Text('Include income/expense overview'),
+                value: includeSummary,
+                onChanged: (val) => setModalState(() => includeSummary = val),
+              ),
+              SwitchListTile(
+                title: const Text('Visual Charts'),
+                subtitle: const Text('Capture currently visible charts'),
+                value: includeGraphs,
+                onChanged: (val) => setModalState(() => includeGraphs = val),
+              ),
+              const SizedBox(height: 32),
+
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    Navigator.pop(ctx);
+                    _generateReport(
+                      filter: currentFilter,
+                      includeGraphs: includeGraphs,
+                      includeSummary: includeSummary,
+                    );
+                  },
+                  icon: const Icon(Icons.picture_as_pdf_outlined),
+                  label: const Text('Generate PDF Report', style: TextStyle(fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _generateReport({
+    required TransactionFilter filter,
+    required bool includeGraphs,
+    required bool includeSummary,
+  }) async {
+    final settings = ref.read(settingsProvider);
+    final reportService = ref.read(reportServiceProvider);
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      // 1. Fetch & Filter Data
+      final allTxns = await ref.read(transactionRepositoryProvider).getAll();
+      final categories = await ref.read(categoryRepositoryProvider).getAll();
+      
+      final filteredTxns = FilterUtils.applyFilter(allTxns, filter);
+
+      // Sort by date ascending (First to Last) for the report
+      filteredTxns.sort((a, b) => a.date.compareTo(b.date));
+
+      // 2. Capture Chart if requested
+      Uint8List? barChartImage;
+      if (includeGraphs) {
+        try {
+          final boundary = _trendChartKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+          if (boundary != null) {
+            final image = await boundary.toImage(pixelRatio: 3.0);
+            final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+            barChartImage = byteData?.buffer.asUint8List();
+          }
+        } catch (e) {
+          print("Analytics Report: Chart capture skipped: $e");
+        }
+      }
+
+      // 3. Generate PDF
+      await reportService.generateAndShareReport(
+        transactions: filteredTxns,
+        categories: categories,
+        currency: settings.currency,
+        dateRange: filter.dateRange ?? DateTimeRange(start: DateTime.now(), end: DateTime.now()),
+        reportType: filter.type == 'all' ? 'All' : (filter.type == 'income' ? 'Income' : 'Expense'),
+        includeGraphs: includeGraphs,
+        includeSummary: includeSummary,
+        barChartImage: barChartImage,
+      );
+
+      if (mounted) Navigator.of(context, rootNavigator: true).pop(); // Close loader
+    } catch (e) {
+      if (mounted) Navigator.of(context, rootNavigator: true).pop();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to generate report: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
   Widget _buildModeContent(AnalyticsMode mode) {
     switch (mode) {
       case AnalyticsMode.overview:
-        return const _OverviewModule(key: ValueKey('overview'));
+        return _OverviewModule(key: const ValueKey('overview'), trendChartKey: _trendChartKey);
       case AnalyticsMode.spending:
         return const _SpendingModule(key: ValueKey('spending'));
       case AnalyticsMode.categories:
@@ -224,8 +418,9 @@ class _AnalyticsSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       height: 56,
@@ -289,13 +484,13 @@ class _SelectorChip extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? cs.primary : cs.surfaceContainerHighest.withOpacity(0.5),
+          color: selected ? cs.primary : cs.surfaceVariant.withOpacity(0.5),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: selected ? cs.primary : cs.outlineVariant.withOpacity(0.3),
+            color: selected ? cs.primary : cs.outline.withOpacity(0.1),
           ),
           boxShadow: selected
-              ? [BoxShadow(color: cs.primary.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))]
+              ? [BoxShadow(color: cs.primary.withOpacity(0.15), blurRadius: 10, offset: const Offset(0, 4))]
               : null,
         ),
         child: Row(
@@ -317,7 +512,8 @@ class _SelectorChip extends StatelessWidget {
 }
 
 class _OverviewModule extends ConsumerWidget {
-  const _OverviewModule({super.key});
+  final GlobalKey? trendChartKey;
+  const _OverviewModule({super.key, this.trendChartKey});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -349,7 +545,7 @@ class _OverviewModule extends ConsumerWidget {
                         title: l10n.income,
                         amount: inc,
                         currency: settings.currency,
-                        color: AppColors.success500,
+                        color: AppColors.success,
                         icon: Icons.south_west_rounded,
                       ),
                     ),
@@ -359,7 +555,7 @@ class _OverviewModule extends ConsumerWidget {
                         title: l10n.expense,
                         amount: exp,
                         currency: settings.currency,
-                        color: AppColors.danger500,
+                        color: cs.error,
                         icon: Icons.north_east_rounded,
                       ),
                     ),
@@ -370,7 +566,10 @@ class _OverviewModule extends ConsumerWidget {
                 const SizedBox(height: 24),
                 _SectionTitle(title: l10n.incomeVsExpense),
                 const SizedBox(height: 16),
-                _MiniTrendChart(summary: summary, currency: settings.currency),
+                RepaintBoundary(
+                  key: trendChartKey,
+                  child: _MiniTrendChart(summary: summary, currency: settings.currency),
+                ),
               ],
             );
           },
@@ -561,6 +760,7 @@ class _SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -615,10 +815,11 @@ class _SavingsRateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context)!;
     final isPositive = rate >= 0;
-    final color = isPositive ? AppColors.success500 : AppColors.danger500;
+    final color = isPositive ? AppColors.success : cs.error;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -732,7 +933,7 @@ class _MiniTrendChart extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 8.0),
                     child: Text(
                       val == 0 ? l10n.income : l10n.expense,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600, color: AppColors.gray500),
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurfaceVariant),
                     ),
                   );
                 },
@@ -750,13 +951,13 @@ class _MiniTrendChart extends StatelessWidget {
               barRods: [
                 BarChartRodData(
                   toY: inc,
-                  color: AppColors.success500,
+                  color: AppColors.success,
                   width: 40,
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
                   backDrawRodData: BackgroundBarChartRodData(
                     show: true,
                     toY: maxVal * 1.2,
-                    color: AppColors.success500.withOpacity(0.05),
+                    color: AppColors.success.withOpacity(0.05),
                   ),
                 ),
               ],
@@ -766,13 +967,13 @@ class _MiniTrendChart extends StatelessWidget {
               barRods: [
                 BarChartRodData(
                   toY: exp,
-                  color: AppColors.danger500,
+                  color: Theme.of(context).colorScheme.error,
                   width: 40,
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
                   backDrawRodData: BackgroundBarChartRodData(
                     show: true,
                     toY: maxVal * 1.2,
-                    color: AppColors.danger500.withOpacity(0.05),
+                    color: Theme.of(context).colorScheme.error.withOpacity(0.05),
                   ),
                 ),
               ],
@@ -797,6 +998,8 @@ class _DailyBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     double maxVal = 0;
     data.values.forEach((v) => maxVal = v > maxVal ? v : maxVal);
 
@@ -831,7 +1034,7 @@ class _DailyBarChart extends StatelessWidget {
                   if (val % 5 != 0 && val != 1 && val != daysInMonth) return const SizedBox.shrink();
                   return Text(
                     val.toInt().toString(),
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 9, color: AppColors.gray500),
+                    style: tt.labelSmall?.copyWith(fontSize: 9, color: cs.onSurfaceVariant),
                   );
                 },
               ),
@@ -871,6 +1074,8 @@ class _WeekdayBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context)!;
     final weekdays = [l10n.mon, l10n.tue, l10n.wed, l10n.thu, l10n.fri, l10n.sat, l10n.sun];
     double maxVal = 0;
@@ -898,7 +1103,7 @@ class _WeekdayBarChart extends StatelessWidget {
                   if (idx < 0 || idx >= 7) return const SizedBox.shrink();
                   return Text(
                     weekdays[idx],
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.gray500, fontWeight: FontWeight.bold),
+                    style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant, fontWeight: FontWeight.bold),
                   );
                 },
               ),
@@ -917,7 +1122,7 @@ class _WeekdayBarChart extends StatelessWidget {
               barRods: [
                 BarChartRodData(
                   toY: val,
-                  color: AppColors.secondary500,
+                  color: cs.secondary,
                   width: 16,
                   borderRadius: BorderRadius.circular(4),
                 ),
@@ -938,6 +1143,8 @@ class _TimeOfDayChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context)!;
     final times = [l10n.morning, l10n.afternoon, l10n.evening, l10n.night];
     final keys = ['morning', 'afternoon', 'evening', 'night'];
@@ -966,7 +1173,7 @@ class _TimeOfDayChart extends StatelessWidget {
                   if (idx < 0 || idx >= 4) return const SizedBox.shrink();
                   return Text(
                     times[idx],
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.gray500, fontWeight: FontWeight.bold),
+                    style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant, fontWeight: FontWeight.bold),
                   );
                 },
               ),
@@ -985,7 +1192,7 @@ class _TimeOfDayChart extends StatelessWidget {
               barRods: [
                 BarChartRodData(
                   toY: val,
-                  color: const Color(0xFF8B5CF6),
+                  color: Theme.of(context).colorScheme.tertiary,
                   width: 32,
                   borderRadius: BorderRadius.circular(6),
                 ),
@@ -1017,6 +1224,8 @@ class _PieChartSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     final catMap = {for (final c in categories) c.id: c};
     final colors = kChartColors;
     final entries = spendingData.entries.toList();
@@ -1072,9 +1281,7 @@ class _PieChartSection extends StatelessWidget {
             color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-                color: themeMode == Brightness.dark
-                    ? const Color(0xFF2D3748)
-                    : AppColors.gray200),
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.1)),
           ),
           child: Row(children: [
             Text(
@@ -1086,12 +1293,12 @@ class _PieChartSection extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: Text('$catName — $pct%',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                  style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: cs.onSurface)),
             ),
             const SizedBox(width: 8),
             Text(
               e.value.value.toCurrency(currency),
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(color: AppColors.gray500, fontWeight: FontWeight.w700),
+              style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant, fontWeight: FontWeight.w700),
             ),
           ]),
         );
@@ -1107,6 +1314,8 @@ class _TrendBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     final maxY = data.fold<double>(0, (m, d) {
       final inc = (d['income'] as double? ?? 0);
       final exp = (d['expense'] as double? ?? 0);
@@ -1119,15 +1328,17 @@ class _TrendBarChart extends StatelessWidget {
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? const Color(0xFF2D3748)
-                : AppColors.gray200),
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.1)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          _LegendDot(color: AppColors.success500, label: AppLocalizations.of(context)!.income),
+          _LegendDot(
+              color: AppColors.success,
+              label: AppLocalizations.of(context)!.income),
           const SizedBox(width: 16),
-          _LegendDot(color: AppColors.danger500, label: AppLocalizations.of(context)!.expense),
+          _LegendDot(
+              color: Theme.of(context).colorScheme.error,
+              label: AppLocalizations.of(context)!.expense),
         ]),
         const SizedBox(height: 24),
         SizedBox(
@@ -1157,7 +1368,7 @@ class _TrendBarChart extends StatelessWidget {
                     showTitles: true,
                     getTitlesWidget: (val, _) => Text(
                       data[val.toInt()]['label'] as String,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.gray500, fontWeight: FontWeight.w600),
+                      style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant, fontWeight: FontWeight.w600),
                     ),
                   ),
                 ),
@@ -1174,13 +1385,13 @@ class _TrendBarChart extends StatelessWidget {
                   barRods: [
                     BarChartRodData(
                       toY: (d['income'] as double? ?? 0),
-                      color: AppColors.success500,
+                      color: AppColors.success,
                       width: 10,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     BarChartRodData(
                       toY: (d['expense'] as double? ?? 0),
-                      color: AppColors.danger500,
+                      color: Theme.of(context).colorScheme.error,
                       width: 10,
                       borderRadius: BorderRadius.circular(4),
                     ),
@@ -1204,14 +1415,15 @@ class _SavingsTrendLineChart extends StatelessWidget {
   Widget build(BuildContext context) {
     if (data.isEmpty) return const SizedBox.shrink();
     final cs = Theme.of(context).colorScheme;
-
+    final tt = Theme.of(context).textTheme;
+    
     return Container(
       height: 180,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: cs.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: cs.outlineVariant.withOpacity(0.5)),
+        border: Border.all(color: cs.outline.withOpacity(0.1)),
       ),
       child: LineChart(
         LineChartData(
@@ -1230,7 +1442,7 @@ class _SavingsTrendLineChart extends StatelessWidget {
                   if (idx < 0 || idx >= data.length) return const SizedBox.shrink();
                   return Text(
                     data[idx]['label'],
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.gray500, fontWeight: FontWeight.w600),
+                    style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant, fontWeight: FontWeight.w600),
                   );
                 },
               ),
@@ -1269,12 +1481,13 @@ class _IntensityPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest.withOpacity(0.3),
+        color: cs.surfaceVariant.withOpacity(0.3),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: cs.outlineVariant.withOpacity(0.5), style: BorderStyle.none),
+        border: Border.all(color: cs.outline.withOpacity(0.1)),
       ),
       child: Column(
         children: [
@@ -1302,10 +1515,12 @@ class _LegendDot extends StatelessWidget {
   const _LegendDot({required this.color, required this.label});
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     return Row(children: [
       Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
       const SizedBox(width: 6),
-      Text(label, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.gray500, fontWeight: FontWeight.w600)),
+      Text(label, style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant, fontWeight: FontWeight.w600)),
     ]);
   }
 }
@@ -1315,10 +1530,12 @@ class _ChartSkeleton extends StatelessWidget {
   const _ChartSkeleton({required this.height});
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     return Container(
       height: height,
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkCard : AppColors.gray100,
+        color: cs.surfaceVariant.withOpacity(0.3),
         borderRadius: BorderRadius.circular(20),
       ),
     );
@@ -1330,13 +1547,15 @@ class _EmptyNamedChart extends StatelessWidget {
   const _EmptyNamedChart({required this.label});
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 32),
         child: Column(children: [
-          Icon(Icons.query_stats_rounded, size: 48, color: AppColors.gray300.withOpacity(0.5)),
+          Icon(Icons.query_stats_rounded, size: 48, color: cs.onSurface.withOpacity(0.1)),
           const SizedBox(height: 16),
-          Text(AppLocalizations.of(context)!.noDataFor(label), style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.gray500, fontWeight: FontWeight.w500)),
+          Text(AppLocalizations.of(context)!.noDataFor(label), style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant, fontWeight: FontWeight.w500)),
         ]),
       ),
     );
@@ -1349,6 +1568,7 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 60),
@@ -1365,13 +1585,13 @@ class _EmptyState extends StatelessWidget {
 }
 
 const List<Color> kChartColors = [
-  AppColors.primary500,
-  AppColors.success500,
-  AppColors.warning500,
-  AppColors.danger500,
-  Color(0xFF8B5CF6),
-  Color(0xFFEC4899),
-  Color(0xFF06B6D4),
-  Color(0xFF84CC16),
+  Color(0xFF6366F1), // Muted Indigo
+  Color(0xFF16A34A), // True Green
+  Color(0xFFF59E0B), // Amber
+  Color(0xFFEC4899), // Pink
+  Color(0xFF8B5CF6), // Violet
+  Color(0xFF06B6D4), // Cyan
+  Color(0xFFF97316), // Orange
+  Color(0xFF3B82F6), // Blue
 ];
 

@@ -1,4 +1,5 @@
 import 'package:intl/intl.dart';
+import 'package:trust_tracker_flutter/core/constants/app_constants.dart';
 
 extension CurrencyFormat on double {
   String toCurrency(String currencyCode) {
@@ -20,11 +21,12 @@ extension CurrencyFormat on double {
   }
 
   static String _getSymbol(String code) {
-    try {
-      return NumberFormat.simpleCurrency(name: code).currencySymbol;
-    } catch (_) {
-      return code;
+    for (final c in AppConstants.currencies) {
+      if (c['code'] == code) {
+        return c['symbol']!;
+      }
     }
+    return code;
   }
 }
 

@@ -1,708 +1,305 @@
-﻿Resolving dependencies...
-Downloading packages...
-  _fe_analyzer_shared 61.0.0 (97.0.0 available)
-  analyzer 5.13.0 (11.0.0 available)
-  archive 3.6.1 (4.0.9 available)
-  build 2.4.1 (4.0.4 available)
-  build_config 1.1.2 (1.3.0 available)
-  build_resolvers 2.4.2 (3.0.4 available)
-  build_runner 2.4.13 (2.12.2 available)
-  build_runner_core 7.3.2 (9.3.2 available)
-  dart_style 2.3.2 (3.1.7 available)
-  fl_chart 0.69.2 (1.1.1 available)
-  flutter_launcher_icons 0.13.1 (0.14.4 available)
-  flutter_lints 3.0.2 (6.0.0 available)
-  flutter_riverpod 2.6.1 (3.3.1 available)
-  flutter_secure_storage 9.2.4 (10.0.0 available)
-  flutter_secure_storage_linux 1.2.3 (3.0.0 available)
-  flutter_secure_storage_macos 3.1.3 (4.0.0 available)
-  flutter_secure_storage_platform_interface 1.1.2 (2.0.1 available)
-  flutter_secure_storage_web 1.2.1 (2.1.0 available)
-  flutter_secure_storage_windows 3.1.2 (4.1.0 available)
-  flutter_slidable 3.1.2 (4.0.3 available)
-  go_router 14.8.1 (17.1.0 available)
-  google_fonts 6.3.3 (8.0.2 available)
-  image 4.3.0 (4.8.0 available)
-  intl 0.19.0 (0.20.2 available)
-  js 0.6.7 (0.7.2 available)
-  lints 3.0.0 (6.1.0 available)
-  local_auth 2.3.0 (3.0.1 available)
-  local_auth_android 1.0.56 (2.0.5 available)
-  local_auth_darwin 1.6.1 (2.0.3 available)
-  local_auth_windows 1.0.11 (2.0.1 available)
-  matcher 0.12.18 (0.12.19 available)
-  meta 1.17.0 (1.18.1 available)
-  package_info_plus 8.3.1 (9.0.0 available)
-  pinput 5.0.2 (6.0.2 available)
-  riverpod 2.6.1 (3.2.1 available)
-  share_plus 10.1.4 (12.0.1 available)
-  share_plus_platform_interface 5.0.2 (6.1.0 available)
-  shelf_web_socket 2.0.1 (3.0.0 available)
-  source_gen 1.5.0 (4.2.0 available)
-  test_api 0.7.9 (0.7.10 available)
-  win32 5.15.0 (6.0.0 available)
-Got dependencies!
-41 packages have newer versions incompatible with dependency constraints.
-Try `flutter pub outdated` for more information.
-Analyzing trust_tracker_flutter...                              
+﻿Analyzing trust_tracker_flutter...                              
 
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\router\app_router.dart:187:38 - deprecated_member_use
-   info - Don't use 'BuildContext's across async gaps - lib\core\services\update_service.dart:39:55 - use_build_context_synchronously
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\services\update_service.dart:96:69 - deprecated_member_use
+warning - Unused import: 'package:permission_handler/permission_handler.dart' - lib\core\services\backup_service.dart:6:8 - unused_import
+warning - Unused import: 'package:trust_tracker_flutter/core/storage/isar_service.dart' - lib\core\services\backup_service.dart:8:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\core\services\backup_service.dart:23:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\core\services\backup_service.dart:26:7 - avoid_print
+warning - The member 'state' can only be used within 'package:state_notifier/state_notifier.dart' or a test - lib\core\services\backup_service.dart:30:42 - invalid_use_of_visible_for_testing_member
+warning - The member 'state' can only be used within instance members of subclasses of 'StateNotifier' - lib\core\services\backup_service.dart:30:42 - invalid_use_of_protected_member
+   info - Don't invoke 'print' in production code - lib\core\services\backup_service.dart:45:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\core\services\backup_service.dart:47:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\core\services\backup_service.dart:54:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\core\services\backup_service.dart:57:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\core\services\backup_service.dart:60:7 - avoid_print
+warning - Unused import: 'package:printing/printing.dart' - lib\core\services\report_service.dart:7:8 - unused_import
+   info - Use 'const' with the constructor to improve performance - lib\core\services\report_service.dart:84:57 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\core\services\report_service.dart:101:19 - prefer_const_constructors
+   info - Don't use 'BuildContext's across async gaps - lib\core\services\update_service.dart:43:55 - use_build_context_synchronously
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\services\update_service.dart:104:69 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\core\theme\app_theme.dart:28:22 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\core\theme\app_theme.dart:28:37 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\core\theme\app_theme.dart:37:24 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\theme\app_theme.dart:145:85 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\theme\app_theme.dart:195:32 - deprecated_member_use
+   info - 'surfaceVariant' is deprecated and shouldn't be used. Use surfaceContainerHighest instead. This feature was deprecated after v3.18.0-0.1.pre - lib\core\theme\app_theme.dart:199:9 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\theme\app_theme.dart:211:40 - deprecated_member_use
+   info - 'surfaceVariant' is deprecated and shouldn't be used. Use surfaceContainerHighest instead. This feature was deprecated after v3.18.0-0.1.pre - lib\core\theme\app_theme.dart:215:9 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\core\theme\app_theme.dart:215:25 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\theme\app_theme.dart:234:96 - deprecated_member_use
    info - Use 'const' with the constructor to improve performance - lib\core\utils\pdf_generator.dart:56:27 - prefer_const_constructors
    info - Use 'const' with the constructor to improve performance - lib\core\utils\pdf_generator.dart:77:30 - prefer_const_constructors
    info - Use 'const' with the constructor to improve performance - lib\core\utils\pdf_generator.dart:79:30 - prefer_const_constructors
    info - Use 'const' with the constructor to improve performance - lib\core\utils\pdf_generator.dart:86:30 - prefer_const_constructors
-   info - Use 'const' with the constructor to improve performance - lib\core\utils\pdf_generator.dart:169:24 - prefer_const_constructors
-   info - Use 'const' with the constructor to improve performance - lib\core\utils\pdf_generator.dart:196:24 - prefer_const_constructors
-   info - Use 'const' with the constructor to improve performance - lib\features\analytics\presentation\pages\analytics_page.dart:129:23 - prefer_const_constructors
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:133:36 - deprecated_member_use
-warning - The value of the local variable 'bal' isn't used - lib\features\analytics\presentation\pages\analytics_page.dart:144:21 - unused_local_variable
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:157:47 - deprecated_member_use
-  error - The method '_SummaryCard' isn't defined for the type '_AnalyticsPageState' - lib\features\analytics\presentation\pages\analytics_page.dart:166:28 - undefined_method
-  error - The method '_SummaryCard' isn't defined for the type '_AnalyticsPageState' - lib\features\analytics\presentation\pages\analytics_page.dart:175:28 - undefined_method
-  error - The name '_ChartSkeleton' isn't a class - lib\features\analytics\presentation\pages\analytics_page.dart:185:34 - creation_with_non_type
-  error - The name '_EmptyNamedChart' isn't a class - lib\features\analytics\presentation\pages\analytics_page.dart:198:32 - creation_with_non_type
-  error - The method '_PieChartSection' isn't defined for the type '_AnalyticsPageState' - lib\features\analytics\presentation\pages\analytics_page.dart:200:24 - undefined_method
-  error - The name '_ChartSkeleton' isn't a class - lib\features\analytics\presentation\pages\analytics_page.dart:209:36 - creation_with_non_type
-  error - The name '_ChartSkeleton' isn't a class - lib\features\analytics\presentation\pages\analytics_page.dart:212:34 - creation_with_non_type
-  error - The name '_EmptyNamedChart' isn't a class - lib\features\analytics\presentation\pages\analytics_page.dart:225:32 - creation_with_non_type
-  error - The method '_PieChartSection' isn't defined for the type '_AnalyticsPageState' - lib\features\analytics\presentation\pages\analytics_page.dart:227:24 - undefined_method
-  error - The name '_ChartSkeleton' isn't a class - lib\features\analytics\presentation\pages\analytics_page.dart:236:36 - creation_with_non_type
-  error - The name '_ChartSkeleton' isn't a class - lib\features\analytics\presentation\pages\analytics_page.dart:239:34 - creation_with_non_type
-  error - The method '_TrendBarChart' isn't defined for the type '_AnalyticsPageState' - lib\features\analytics\presentation\pages\analytics_page.dart:250:17 - undefined_method
-  error - The name '_ChartSkeleton' isn't a class - lib\features\analytics\presentation\pages\analytics_page.dart:251:34 - creation_with_non_type
-  error - Classes can't be declared inside other classes - lib\features\analytics\presentation\pages\analytics_page.dart:259:1 - class_in_class
-  error - Expected a class member - lib\features\analytics\presentation\pages\analytics_page.dart:259:20 - expected_class_member
-   info - The variable name 'StatelessWidget' isn't a lowerCamelCase identifier - lib\features\analytics\presentation\pages\analytics_page.dart:259:28 - non_constant_identifier_names
-  error - Methods must have an explicit list of parameters - lib\features\analytics\presentation\pages\analytics_page.dart:259:28 - missing_method_parameters
-  error - The name '_SummaryCard' isn't a class - lib\features\analytics\presentation\pages\analytics_page.dart:265:9 - creation_with_non_type
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\analytics\presentation\pages\analytics_page.dart:266:5 - deprecated_member_use
-  error - Expected to find ',' - lib\features\analytics\presentation\pages\analytics_page.dart:266:14 - expected_token
-  error - The getter 'title' isn't defined for the type '_AnalyticsPageState' - lib\features\analytics\presentation\pages\analytics_page.dart:266:19 - undefined_getter
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\analytics\presentation\pages\analytics_page.dart:267:5 - deprecated_member_use
-  error - Expected to find ',' - lib\features\analytics\presentation\pages\analytics_page.dart:267:14 - expected_token
-  error - The getter 'amount' isn't defined for the type '_AnalyticsPageState' - lib\features\analytics\presentation\pages\analytics_page.dart:267:19 - undefined_getter
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\analytics\presentation\pages\analytics_page.dart:268:5 - deprecated_member_use
-  error - Expected to find ',' - lib\features\analytics\presentation\pages\analytics_page.dart:268:14 - expected_token
-  error - The getter 'currency' isn't defined for the type '_AnalyticsPageState' - lib\features\analytics\presentation\pages\analytics_page.dart:268:19 - undefined_getter
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\analytics\presentation\pages\analytics_page.dart:269:5 - deprecated_member_use
-  error - Expected to find ',' - lib\features\analytics\presentation\pages\analytics_page.dart:269:14 - expected_token
-  error - The getter 'color' isn't defined for the type '_AnalyticsPageState' - lib\features\analytics\presentation\pages\analytics_page.dart:269:19 - undefined_getter
-warning - The declaration 'build' isn't referenced - lib\features\analytics\presentation\pages\analytics_page.dart:273:10 - unused_element
-  error - The final variable 'color' can't be read because it's potentially unassigned at this point - lib\features\analytics\presentation\pages\analytics_page.dart:278:16 - read_potentially_unassigned_final
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:278:22 - deprecated_member_use
-  error - The final variable 'color' can't be read because it's potentially unassigned at this point - lib\features\analytics\presentation\pages\analytics_page.dart:280:35 - read_potentially_unassigned_final
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:280:41 - deprecated_member_use
-  error - The final variable 'title' can't be read because it's potentially unassigned at this point - lib\features\analytics\presentation\pages\analytics_page.dart:285:16 - read_potentially_unassigned_final
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:289:39 - deprecated_member_use
-  error - The final variable 'amount' can't be read because it's potentially unassigned at this point - lib\features\analytics\presentation\pages\analytics_page.dart:291:16 - read_potentially_unassigned_final
-  error - The final variable 'currency' can't be read because it's potentially unassigned at this point - lib\features\analytics\presentation\pages\analytics_page.dart:291:34 - read_potentially_unassigned_final
-  error - The final variable 'color' can't be read because it's potentially unassigned at this point - lib\features\analytics\presentation\pages\analytics_page.dart:295:26 - read_potentially_unassigned_final
-  error - Classes can't be declared inside other classes - lib\features\analytics\presentation\pages\analytics_page.dart:302:1 - class_in_class
-  error - Expected a class member - lib\features\analytics\presentation\pages\analytics_page.dart:302:24 - expected_class_member
-   info - The variable name 'StatelessWidget' isn't a lowerCamelCase identifier - lib\features\analytics\presentation\pages\analytics_page.dart:302:32 - non_constant_identifier_names
-  error - Methods must have an explicit list of parameters - lib\features\analytics\presentation\pages\analytics_page.dart:302:32 - missing_method_parameters
-  error - The name 'StatelessWidget' is already defined - lib\features\analytics\presentation\pages\analytics_page.dart:302:32 - duplicate_definition
-  error - The name '_PieChartSection' isn't a class - lib\features\analytics\presentation\pages\analytics_page.dart:310:9 - creation_with_non_type
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\analytics\presentation\pages\analytics_page.dart:311:5 - deprecated_member_use
-  error - Expected to find ',' - lib\features\analytics\presentation\pages\analytics_page.dart:311:14 - expected_token
-  error - The getter 'spendingData' isn't defined for the type '_AnalyticsPageState' - lib\features\analytics\presentation\pages\analytics_page.dart:311:19 - undefined_getter
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\analytics\presentation\pages\analytics_page.dart:312:5 - deprecated_member_use
-  error - Expected to find ',' - lib\features\analytics\presentation\pages\analytics_page.dart:312:14 - expected_token
-  error - The getter 'categories' isn't defined for the type '_AnalyticsPageState' - lib\features\analytics\presentation\pages\analytics_page.dart:312:19 - undefined_getter
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\analytics\presentation\pages\analytics_page.dart:313:5 - deprecated_member_use
-  error - Expected to find ',' - lib\features\analytics\presentation\pages\analytics_page.dart:313:14 - expected_token
-  error - The getter 'currency' isn't defined for the type '_AnalyticsPageState' - lib\features\analytics\presentation\pages\analytics_page.dart:313:19 - undefined_getter
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\analytics\presentation\pages\analytics_page.dart:314:5 - deprecated_member_use
-  error - Expected to find ',' - lib\features\analytics\presentation\pages\analytics_page.dart:314:14 - expected_token
-  error - The getter 'touchedIndex' isn't defined for the type '_AnalyticsPageState' - lib\features\analytics\presentation\pages\analytics_page.dart:314:19 - undefined_getter
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\analytics\presentation\pages\analytics_page.dart:315:5 - deprecated_member_use
-  error - Expected to find ',' - lib\features\analytics\presentation\pages\analytics_page.dart:315:14 - expected_token
-  error - The getter 'onTouched' isn't defined for the type '_AnalyticsPageState' - lib\features\analytics\presentation\pages\analytics_page.dart:315:19 - undefined_getter
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\analytics\presentation\pages\analytics_page.dart:316:5 - deprecated_member_use
-  error - Expected to find ',' - lib\features\analytics\presentation\pages\analytics_page.dart:316:14 - expected_token
-  error - The getter 'themeMode' isn't defined for the type '_AnalyticsPageState' - lib\features\analytics\presentation\pages\analytics_page.dart:316:19 - undefined_getter
-warning - The declaration 'build' isn't referenced - lib\features\analytics\presentation\pages\analytics_page.dart:320:10 - unused_element
-  error - The final variable 'categories' can't be read because it's potentially unassigned at this point - lib\features\analytics\presentation\pages\analytics_page.dart:321:37 - read_potentially_unassigned_final
-   info - Use 'const' for final variables initialized to a constant value - lib\features\analytics\presentation\pages\analytics_page.dart:322:5 - prefer_const_declarations
-  error - The final variable 'spendingData' can't be read because it's potentially unassigned at this point - lib\features\analytics\presentation\pages\analytics_page.dart:323:21 - read_potentially_unassigned_final
-  error - The final variable 'onTouched' can't be read because it's potentially unassigned at this point - lib\features\analytics\presentation\pages\analytics_page.dart:334:17 - read_potentially_unassigned_final
-  error - The final variable 'touchedIndex' can't be read because it's potentially unassigned at this point - lib\features\analytics\presentation\pages\analytics_page.dart:341:42 - read_potentially_unassigned_final
-  error - The final variable 'themeMode' can't be read because it's potentially unassigned at this point - lib\features\analytics\presentation\pages\analytics_page.dart:377:24 - read_potentially_unassigned_final
-  error - The final variable 'currency' can't be read because it's potentially unassigned at this point - lib\features\analytics\presentation\pages\analytics_page.dart:398:40 - read_potentially_unassigned_final
-  error - Classes can't be declared inside other classes - lib\features\analytics\presentation\pages\analytics_page.dart:410:1 - class_in_class
-  error - Expected a class member - lib\features\analytics\presentation\pages\analytics_page.dart:410:22 - expected_class_member
-   info - The variable name 'StatelessWidget' isn't a lowerCamelCase identifier - lib\features\analytics\presentation\pages\analytics_page.dart:410:30 - non_constant_identifier_names
-  error - Methods must have an explicit list of parameters - lib\features\analytics\presentation\pages\analytics_page.dart:410:30 - missing_method_parameters
-  error - The name 'StatelessWidget' is already defined - lib\features\analytics\presentation\pages\analytics_page.dart:410:30 - duplicate_definition
-  error - The name '_TrendBarChart' isn't a class - lib\features\analytics\presentation\pages\analytics_page.dart:413:9 - creation_with_non_type
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\analytics\presentation\pages\analytics_page.dart:413:25 - deprecated_member_use
-  error - Expected to find ',' - lib\features\analytics\presentation\pages\analytics_page.dart:413:34 - expected_token
-  error - The getter 'data' isn't defined for the type '_AnalyticsPageState' - lib\features\analytics\presentation\pages\analytics_page.dart:413:39 - undefined_getter
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\analytics\presentation\pages\analytics_page.dart:413:45 - deprecated_member_use
-  error - Expected to find ',' - lib\features\analytics\presentation\pages\analytics_page.dart:413:54 - expected_token
-  error - The getter 'currency' isn't defined for the type '_AnalyticsPageState' - lib\features\analytics\presentation\pages\analytics_page.dart:413:59 - undefined_getter
-warning - The declaration 'build' isn't referenced - lib\features\analytics\presentation\pages\analytics_page.dart:416:10 - unused_element
-  error - The final variable 'data' can't be read because it's potentially unassigned at this point - lib\features\analytics\presentation\pages\analytics_page.dart:417:18 - read_potentially_unassigned_final
-  error - The method '_LegendDot' isn't defined for the type '_AnalyticsPageState' - lib\features\analytics\presentation\pages\analytics_page.dart:436:11 - undefined_method
-  error - The method '_LegendDot' isn't defined for the type '_AnalyticsPageState' - lib\features\analytics\presentation\pages\analytics_page.dart:438:11 - undefined_method
-  error - The final variable 'data' can't be read because it's potentially unassigned at this point - lib\features\analytics\presentation\pages\analytics_page.dart:450:31 - read_potentially_unassigned_final
-  error - The final variable 'currency' can't be read because it's potentially unassigned at this point - lib\features\analytics\presentation\pages\analytics_page.dart:452:80 - read_potentially_unassigned_final
-  error - The final variable 'currency' can't be read because it's potentially unassigned at this point - lib\features\analytics\presentation\pages\analytics_page.dart:453:82 - read_potentially_unassigned_final
-  error - The final variable 'data' can't be read because it's potentially unassigned at this point - lib\features\analytics\presentation\pages\analytics_page.dart:468:23 - read_potentially_unassigned_final
-  error - The final variable 'data' can't be read because it's potentially unassigned at this point - lib\features\analytics\presentation\pages\analytics_page.dart:483:26 - read_potentially_unassigned_final
-  error - Classes can't be declared inside other classes - lib\features\analytics\presentation\pages\analytics_page.dart:512:1 - class_in_class
-  error - Expected a class member - lib\features\analytics\presentation\pages\analytics_page.dart:512:18 - expected_class_member
-   info - The variable name 'StatelessWidget' isn't a lowerCamelCase identifier - lib\features\analytics\presentation\pages\analytics_page.dart:512:26 - non_constant_identifier_names
-  error - Methods must have an explicit list of parameters - lib\features\analytics\presentation\pages\analytics_page.dart:512:26 - missing_method_parameters
-  error - The name 'StatelessWidget' is already defined - lib\features\analytics\presentation\pages\analytics_page.dart:512:26 - duplicate_definition
-  error - The name '_LegendDot' isn't a class - lib\features\analytics\presentation\pages\analytics_page.dart:515:9 - creation_with_non_type
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\analytics\presentation\pages\analytics_page.dart:515:21 - deprecated_member_use
-  error - Expected to find ',' - lib\features\analytics\presentation\pages\analytics_page.dart:515:30 - expected_token
-  error - The getter 'color' isn't defined for the type '_AnalyticsPageState' - lib\features\analytics\presentation\pages\analytics_page.dart:515:35 - undefined_getter
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\analytics\presentation\pages\analytics_page.dart:515:42 - deprecated_member_use
-  error - Expected to find ',' - lib\features\analytics\presentation\pages\analytics_page.dart:515:51 - expected_token
-  error - The getter 'label' isn't defined for the type '_AnalyticsPageState' - lib\features\analytics\presentation\pages\analytics_page.dart:515:56 - undefined_getter
-warning - The declaration 'build' isn't referenced - lib\features\analytics\presentation\pages\analytics_page.dart:517:10 - unused_element
-  error - The final variable 'color' can't be read because it's potentially unassigned at this point - lib\features\analytics\presentation\pages\analytics_page.dart:521:44 - read_potentially_unassigned_final
-  error - The final variable 'label' can't be read because it's potentially unassigned at this point - lib\features\analytics\presentation\pages\analytics_page.dart:523:12 - read_potentially_unassigned_final
-  error - Classes can't be declared inside other classes - lib\features\analytics\presentation\pages\analytics_page.dart:531:1 - class_in_class
-  error - Expected a class member - lib\features\analytics\presentation\pages\analytics_page.dart:531:22 - expected_class_member
-   info - The variable name 'StatelessWidget' isn't a lowerCamelCase identifier - lib\features\analytics\presentation\pages\analytics_page.dart:531:30 - non_constant_identifier_names
-  error - Methods must have an explicit list of parameters - lib\features\analytics\presentation\pages\analytics_page.dart:531:30 - missing_method_parameters
-  error - The name 'StatelessWidget' is already defined - lib\features\analytics\presentation\pages\analytics_page.dart:531:30 - duplicate_definition
-  error - The name '_ChartSkeleton' isn't a class - lib\features\analytics\presentation\pages\analytics_page.dart:533:9 - creation_with_non_type
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\analytics\presentation\pages\analytics_page.dart:533:25 - deprecated_member_use
-  error - Expected to find ',' - lib\features\analytics\presentation\pages\analytics_page.dart:533:34 - expected_token
-  error - The getter 'height' isn't defined for the type '_AnalyticsPageState' - lib\features\analytics\presentation\pages\analytics_page.dart:533:39 - undefined_getter
-warning - The declaration 'build' isn't referenced - lib\features\analytics\presentation\pages\analytics_page.dart:535:10 - unused_element
-  error - The final variable 'height' can't be read because it's potentially unassigned at this point - lib\features\analytics\presentation\pages\analytics_page.dart:537:15 - read_potentially_unassigned_final
-  error - Classes can't be declared inside other classes - lib\features\analytics\presentation\pages\analytics_page.dart:548:1 - class_in_class
-  error - Expected a class member - lib\features\analytics\presentation\pages\analytics_page.dart:548:24 - expected_class_member
-   info - The variable name 'StatelessWidget' isn't a lowerCamelCase identifier - lib\features\analytics\presentation\pages\analytics_page.dart:548:32 - non_constant_identifier_names
-  error - Methods must have an explicit list of parameters - lib\features\analytics\presentation\pages\analytics_page.dart:548:32 - missing_method_parameters
-  error - The name 'StatelessWidget' is already defined - lib\features\analytics\presentation\pages\analytics_page.dart:548:32 - duplicate_definition
-  error - The name '_EmptyNamedChart' isn't a class - lib\features\analytics\presentation\pages\analytics_page.dart:551:9 - creation_with_non_type
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\analytics\presentation\pages\analytics_page.dart:551:27 - deprecated_member_use
-  error - Expected to find ',' - lib\features\analytics\presentation\pages\analytics_page.dart:551:36 - expected_token
-  error - The getter 'label' isn't defined for the type '_AnalyticsPageState' - lib\features\analytics\presentation\pages\analytics_page.dart:551:41 - undefined_getter
-warning - The declaration 'build' isn't referenced - lib\features\analytics\presentation\pages\analytics_page.dart:554:10 - unused_element
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:560:50 - deprecated_member_use
-  error - The final variable 'label' can't be read because it's potentially unassigned at this point - lib\features\analytics\presentation\pages\analytics_page.dart:562:21 - read_potentially_unassigned_final
-  error - Only static fields can be declared as const - lib\features\analytics\presentation\pages\analytics_page.dart:571:1 - const_instance_field
-  error - Expected to find '}' - lib\features\analytics\presentation\pages\analytics_page.dart:581:1 - expected_token
-   info - Statements in a for should be enclosed in a block - lib\features\budget\presentation\pages\budget_page.dart:52:38 - curly_braces_in_flow_control_structures
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\budget\presentation\pages\budget_page.dart:241:33 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\budget\presentation\pages\budget_page.dart:359:37 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\budget\presentation\pages\budget_page.dart:369:39 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\budget\presentation\pages\budget_page.dart:380:45 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\budget\presentation\pages\budget_page.dart:439:43 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\budget\presentation\pages\budget_page.dart:440:37 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\budget\presentation\pages\budget_page.dart:448:31 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\budget\presentation\pages\budget_page.dart:500:55 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\budget\presentation\pages\budget_page.dart:503:55 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\budget\presentation\pages\budget_page.dart:544:53 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\categories\presentation\pages\categories_page.dart:113:53 - deprecated_member_use
-   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\categories\presentation\pages\categories_page.dart:145:45 - use_build_context_synchronously
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\categories\presentation\pages\categories_page.dart:260:42 - deprecated_member_use
-  error - Undefined class 'Widget' - lib\features\dashboard\presentation\pages\dashboard_page.dart:63:3 - undefined_class
-  error - Undefined class 'BuildContext' - lib\features\dashboard\presentation\pages\dashboard_page.dart:63:16 - undefined_class
-  error - The method 'Scaffold' isn't defined for the type 'DashboardPage' - lib\features\dashboard\presentation\pages\dashboard_page.dart:74:12 - undefined_method
-  error - Undefined name 'Theme' - lib\features\dashboard\presentation\pages\dashboard_page.dart:75:24 - undefined_identifier
-  error - The method 'CustomScrollView' isn't defined for the type 'DashboardPage' - lib\features\dashboard\presentation\pages\dashboard_page.dart:76:13 - undefined_method
-  error - The method 'SliverPadding' isn't defined for the type 'DashboardPage' - lib\features\dashboard\presentation\pages\dashboard_page.dart:79:11 - undefined_method
-  error - Undefined name 'EdgeInsets' - lib\features\dashboard\presentation\pages\dashboard_page.dart:80:28 - undefined_identifier
-  error - The method 'SliverList' isn't defined for the type 'DashboardPage' - lib\features\dashboard\presentation\pages\dashboard_page.dart:81:21 - undefined_method
-  error - The method 'SliverChildListDelegate' isn't defined for the type 'DashboardPage' - lib\features\dashboard\presentation\pages\dashboard_page.dart:82:25 - undefined_method
-  error - The name 'SizedBox' isn't a class - lib\features\dashboard\presentation\pages\dashboard_page.dart:92:23 - creation_with_non_type
-  error - The method 'Row' isn't defined for the type 'DashboardPage' - lib\features\dashboard\presentation\pages\dashboard_page.dart:95:17 - undefined_method
-  error - Undefined name 'MainAxisAlignment' - lib\features\dashboard\presentation\pages\dashboard_page.dart:96:38 - undefined_identifier
-  error - The method 'Text' isn't defined for the type 'DashboardPage' - lib\features\dashboard\presentation\pages\dashboard_page.dart:98:21 - undefined_method
-  error - Undefined name 'Theme' - lib\features\dashboard\presentation\pages\dashboard_page.dart:99:32 - undefined_identifier
-  error - The method 'TextButton' isn't defined for the type 'DashboardPage' - lib\features\dashboard\presentation\pages\dashboard_page.dart:100:21 - undefined_method
-  error - The name 'Text' isn't a class - lib\features\dashboard\presentation\pages\dashboard_page.dart:102:36 - creation_with_non_type
-  error - The name 'SizedBox' isn't a class - lib\features\dashboard\presentation\pages\dashboard_page.dart:106:23 - creation_with_non_type
+   info - Use 'const' with the constructor to improve performance - lib\core\utils\pdf_generator.dart:177:24 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\core\utils\pdf_generator.dart:204:24 - prefer_const_constructors
+warning - Unused import: 'package:google_fonts/google_fonts.dart' - lib\features\analytics\presentation\pages\analytics_page.dart:14:8 - unused_import
+warning - Unused import: 'package:go_router/go_router.dart' - lib\features\analytics\presentation\pages\analytics_page.dart:15:8 - unused_import
+warning - Duplicate import - lib\features\analytics\presentation\pages\analytics_page.dart:23:8 - duplicate_import
+warning - Unused import: 'package:google_fonts/google_fonts.dart' - lib\features\analytics\presentation\pages\analytics_page.dart:23:8 - unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:174:67 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\features\analytics\presentation\pages\analytics_page.dart:191:25 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:195:38 - deprecated_member_use
+warning - The value of the local variable 'now' isn't used - lib\features\analytics\presentation\pages\analytics_page.dart:214:11 - unused_local_variable
+   info - 'surfaceVariant' is deprecated and shouldn't be used. Use surfaceContainerHighest instead. This feature was deprecated after v3.18.0-0.1.pre - lib\features\analytics\presentation\pages\analytics_page.dart:265:58 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:265:73 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:267:85 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:279:104 - deprecated_member_use
+   info - Don't invoke 'print' in production code - lib\features\analytics\presentation\pages\analytics_page.dart:363:11 - avoid_print
+warning - The value of the local variable 'cs' isn't used - lib\features\analytics\presentation\pages\analytics_page.dart:421:11 - unused_local_variable
+warning - The value of the local variable 'tt' isn't used - lib\features\analytics\presentation\pages\analytics_page.dart:422:11 - unused_local_variable
+   info - 'surfaceVariant' is deprecated and shouldn't be used. Use surfaceContainerHighest instead. This feature was deprecated after v3.18.0-0.1.pre - lib\features\analytics\presentation\pages\analytics_page.dart:487:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:487:60 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:490:55 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:493:46 - deprecated_member_use
+warning - The value of the local variable 'tt' isn't used - lib\features\analytics\presentation\pages\analytics_page.dart:763:11 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:769:53 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:772:26 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:784:28 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:793:39 - deprecated_member_use
+warning - The value of the local variable 'tt' isn't used - lib\features\analytics\presentation\pages\analytics_page.dart:819:11 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:829:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:830:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:836:46 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:867:32 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:918:80 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:960:46 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:976:64 - deprecated_member_use
+   info - Function literals shouldn't be passed to 'forEach' - lib\features\analytics\presentation\pages\analytics_page.dart:1004:17 - avoid_function_literals_in_foreach_calls
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:1012:80 - deprecated_member_use
+   info - Function literals shouldn't be passed to 'forEach' - lib\features\analytics\presentation\pages\analytics_page.dart:1082:17 - avoid_function_literals_in_foreach_calls
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:1090:80 - deprecated_member_use
+   info - Function literals shouldn't be passed to 'forEach' - lib\features\analytics\presentation\pages\analytics_page.dart:1152:17 - avoid_function_literals_in_foreach_calls
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:1160:80 - deprecated_member_use
+   info - Use 'const' for final variables initialized to a constant value - lib\features\analytics\presentation\pages\analytics_page.dart:1230:5 - prefer_const_declarations
+warning - The value of the local variable 'catColor' isn't used - lib\features\analytics\presentation\pages\analytics_page.dart:1274:15 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:1284:62 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:1331:58 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:1426:46 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:1433:78 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:1466:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:1466:68 - deprecated_member_use
+warning - The value of the local variable 'tt' isn't used - lib\features\analytics\presentation\pages\analytics_page.dart:1484:11 - unused_local_variable
+   info - 'surfaceVariant' is deprecated and shouldn't be used. Use surfaceContainerHighest instead. This feature was deprecated after v3.18.0-0.1.pre - lib\features\analytics\presentation\pages\analytics_page.dart:1488:19 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:1488:34 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:1490:46 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:1494:69 - deprecated_member_use
+warning - The value of the local variable 'tt' isn't used - lib\features\analytics\presentation\pages\analytics_page.dart:1534:11 - unused_local_variable
+   info - 'surfaceVariant' is deprecated and shouldn't be used. Use surfaceContainerHighest instead. This feature was deprecated after v3.18.0-0.1.pre - lib\features\analytics\presentation\pages\analytics_page.dart:1538:19 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:1538:34 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:1556:73 - deprecated_member_use
+warning - The value of the local variable 'tt' isn't used - lib\features\analytics\presentation\pages\analytics_page.dart:1571:11 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\analytics\presentation\pages\analytics_page.dart:1577:72 - deprecated_member_use
+   info - Statements in a for should be enclosed in a block - lib\features\budget\presentation\pages\budget_page.dart:45:38 - curly_braces_in_flow_control_structures
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\budget\presentation\pages\budget_page.dart:215:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\budget\presentation\pages\budget_page.dart:291:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\budget\presentation\pages\budget_page.dart:316:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\budget\presentation\pages\budget_page.dart:317:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\budget\presentation\pages\budget_page.dart:324:53 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\budget\presentation\pages\budget_page.dart:332:65 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\budget\presentation\pages\budget_page.dart:338:66 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\budget\presentation\pages\budget_page.dart:349:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\budget\presentation\pages\budget_page.dart:404:38 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\budget\presentation\pages\budget_page.dart:404:68 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\budget\presentation\pages\budget_page.dart:412:31 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\features\categories\presentation\pages\categories_page.dart:38:24 - deprecated_member_use
+   info - 'surfaceVariant' is deprecated and shouldn't be used. Use surfaceContainerHighest instead. This feature was deprecated after v3.18.0-0.1.pre - lib\features\categories\presentation\pages\categories_page.dart:80:34 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\categories\presentation\pages\categories_page.dart:80:49 - deprecated_member_use
+   info - 'surfaceVariant' is deprecated and shouldn't be used. Use surfaceContainerHighest instead. This feature was deprecated after v3.18.0-0.1.pre - lib\features\categories\presentation\pages\categories_page.dart:111:61 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\categories\presentation\pages\categories_page.dart:111:76 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\categories\presentation\pages\categories_page.dart:114:60 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\categories\presentation\pages\categories_page.dart:146:53 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\categories\presentation\pages\categories_page.dart:179:45 - use_build_context_synchronously
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\categories\presentation\pages\categories_page.dart:288:61 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\categories\presentation\pages\categories_page.dart:294:42 - deprecated_member_use
+   info - The import of 'package:flutter/services.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\dashboard\presentation\pages\dashboard_page.dart:2:8 - unnecessary_import
+warning - Unused import: 'package:trust_tracker_flutter/core/router/app_router.dart' - lib\features\dashboard\presentation\pages\dashboard_page.dart:6:8 - unused_import
+warning - Unused import: 'package:trust_tracker_flutter/core/utils/greeting_helper.dart' - lib\features\dashboard\presentation\pages\dashboard_page.dart:9:8 - unused_import
    info - Statements in an if should be enclosed in a block - lib\features\dashboard\presentation\pages\dashboard_page.dart:111:25 - curly_braces_in_flow_control_structures
-  error - The method 'Column' isn't defined for the type 'DashboardPage' - lib\features\dashboard\presentation\pages\dashboard_page.dart:113:30 - undefined_method
-  error - Undefined name 'SizedBox' - lib\features\dashboard\presentation\pages\dashboard_page.dart:134:45 - undefined_identifier
-  error - Undefined name 'SizedBox' - lib\features\dashboard\presentation\pages\dashboard_page.dart:137:43 - undefined_identifier
-  error - The name 'SizedBox' isn't a class - lib\features\dashboard\presentation\pages\dashboard_page.dart:139:23 - creation_with_non_type
-  error - Undefined class 'BuildContext' - lib\features\dashboard\presentation\pages\dashboard_page.dart:150:7 - undefined_class
-  error - The method 'showDialog' isn't defined for the type 'DashboardPage' - lib\features\dashboard\presentation\pages\dashboard_page.dart:151:27 - undefined_method
-  error - The method 'AlertDialog' isn't defined for the type 'DashboardPage' - lib\features\dashboard\presentation\pages\dashboard_page.dart:153:25 - undefined_method
-  error - The method 'RoundedRectangleBorder' isn't defined for the type 'DashboardPage' - lib\features\dashboard\presentation\pages\dashboard_page.dart:154:16 - undefined_method
-  error - Undefined name 'BorderRadius' - lib\features\dashboard\presentation\pages\dashboard_page.dart:154:53 - undefined_identifier
-  error - The name 'Text' isn't a class - lib\features\dashboard\presentation\pages\dashboard_page.dart:155:22 - creation_with_non_type
-  error - The method 'Text' isn't defined for the type 'DashboardPage' - lib\features\dashboard\presentation\pages\dashboard_page.dart:156:18 - undefined_method
-  error - The method 'TextButton' isn't defined for the type 'DashboardPage' - lib\features\dashboard\presentation\pages\dashboard_page.dart:160:11 - undefined_method
-  error - Undefined name 'Navigator' - lib\features\dashboard\presentation\pages\dashboard_page.dart:161:30 - undefined_identifier
-  error - The name 'Text' isn't a class - lib\features\dashboard\presentation\pages\dashboard_page.dart:162:26 - creation_with_non_type
-  error - The method 'ElevatedButton' isn't defined for the type 'DashboardPage' - lib\features\dashboard\presentation\pages\dashboard_page.dart:164:11 - undefined_method
-  error - Undefined name 'Navigator' - lib\features\dashboard\presentation\pages\dashboard_page.dart:165:30 - undefined_identifier
-  error - Undefined name 'ElevatedButton' - lib\features\dashboard\presentation\pages\dashboard_page.dart:166:20 - undefined_identifier
-  error - Undefined name 'Colors' - lib\features\dashboard\presentation\pages\dashboard_page.dart:168:32 - undefined_identifier
-  error - The name 'Text' isn't a class - lib\features\dashboard\presentation\pages\dashboard_page.dart:170:26 - creation_with_non_type
-  error - Undefined class 'SliverAppBar' - lib\features\dashboard\presentation\pages\dashboard_page.dart:180:3 - undefined_class
-  error - Undefined class 'BuildContext' - lib\features\dashboard\presentation\pages\dashboard_page.dart:181:7 - undefined_class
-  error - The method 'SliverAppBar' isn't defined for the type 'DashboardPage' - lib\features\dashboard\presentation\pages\dashboard_page.dart:182:12 - undefined_method
-  error - Undefined name 'Theme' - lib\features\dashboard\presentation\pages\dashboard_page.dart:186:24 - undefined_identifier
-  error - The method 'FlexibleSpaceBar' isn't defined for the type 'DashboardPage' - lib\features\dashboard\presentation\pages\dashboard_page.dart:187:22 - undefined_method
-  error - The method 'Container' isn't defined for the type 'DashboardPage' - lib\features\dashboard\presentation\pages\dashboard_page.dart:188:21 - undefined_method
-  error - Undefined name 'EdgeInsets' - lib\features\dashboard\presentation\pages\dashboard_page.dart:189:26 - undefined_identifier
-  error - The method 'Row' isn't defined for the type 'DashboardPage' - lib\features\dashboard\presentation\pages\dashboard_page.dart:190:18 - undefined_method
-  error - Undefined name 'MainAxisAlignment' - lib\features\dashboard\presentation\pages\dashboard_page.dart:191:32 - undefined_identifier
-  error - The method 'Column' isn't defined for the type 'DashboardPage' - lib\features\dashboard\presentation\pages\dashboard_page.dart:193:15 - undefined_method
-  error - Undefined name 'MainAxisAlignment' - lib\features\dashboard\presentation\pages\dashboard_page.dart:194:36 - undefined_identifier
-  error - Undefined name 'CrossAxisAlignment' - lib\features\dashboard\presentation\pages\dashboard_page.dart:195:37 - undefined_identifier
-  error - The method 'Text' isn't defined for the type 'DashboardPage' - lib\features\dashboard\presentation\pages\dashboard_page.dart:197:19 - undefined_method
-  error - Undefined name 'Theme' - lib\features\dashboard\presentation\pages\dashboard_page.dart:202:34 - undefined_identifier
-  error - The method 'Text' isn't defined for the type 'DashboardPage' - lib\features\dashboard\presentation\pages\dashboard_page.dart:206:19 - undefined_method
-  error - Undefined name 'Theme' - lib\features\dashboard\presentation\pages\dashboard_page.dart:207:30 - undefined_identifier
-  error - The method 'Builder' isn't defined for the type 'DashboardPage' - lib\features\dashboard\presentation\pages\dashboard_page.dart:210:15 - undefined_method
-  error - Undefined name 'Theme' - lib\features\dashboard\presentation\pages\dashboard_page.dart:211:28 - undefined_identifier
-  error - The method 'GestureDetector' isn't defined for the type 'DashboardPage' - lib\features\dashboard\presentation\pages\dashboard_page.dart:212:24 - undefined_method
-  error - The method 'Container' isn't defined for the type 'DashboardPage' - lib\features\dashboard\presentation\pages\dashboard_page.dart:214:26 - undefined_method
-  error - Undefined name 'EdgeInsets' - lib\features\dashboard\presentation\pages\dashboard_page.dart:215:36 - undefined_identifier
-  error - The method 'BoxDecoration' isn't defined for the type 'DashboardPage' - lib\features\dashboard\presentation\pages\dashboard_page.dart:216:33 - undefined_method
-  error - Undefined name 'BorderRadius' - lib\features\dashboard\presentation\pages\dashboard_page.dart:218:37 - undefined_identifier
-  error - The method 'Icon' isn't defined for the type 'DashboardPage' - lib\features\dashboard\presentation\pages\dashboard_page.dart:220:28 - undefined_method
-  error - Undefined name 'Icons' - lib\features\dashboard\presentation\pages\dashboard_page.dart:220:33 - undefined_identifier
-  error - Classes can only extend other classes - lib\features\dashboard\presentation\pages\dashboard_page.dart:241:41 - extends_non_class
-  error - Undefined class 'Widget' - lib\features\dashboard\presentation\pages\dashboard_page.dart:261:3 - undefined_class
-warning - The method doesn't override an inherited method - lib\features\dashboard\presentation\pages\dashboard_page.dart:261:10 - override_on_non_overriding_member
-  error - Undefined class 'BuildContext' - lib\features\dashboard\presentation\pages\dashboard_page.dart:261:16 - undefined_class
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\pages\dashboard_page.dart:265:50 - deprecated_member_use
-  error - Undefined name 'Theme' - lib\features\dashboard\presentation\pages\dashboard_page.dart:271:17 - undefined_identifier
-  error - The method 'Padding' isn't defined for the type '_DashboardTransactionTile' - lib\features\dashboard\presentation\pages\dashboard_page.dart:274:26 - undefined_method
-  error - Undefined name 'EdgeInsets' - lib\features\dashboard\presentation\pages\dashboard_page.dart:275:22 - undefined_identifier
-  error - The method 'Row' isn't defined for the type '_DashboardTransactionTile' - lib\features\dashboard\presentation\pages\dashboard_page.dart:276:14 - undefined_method
-  error - The method 'Expanded' isn't defined for the type '_DashboardTransactionTile' - lib\features\dashboard\presentation\pages\dashboard_page.dart:278:11 - undefined_method
-  error - The name 'SizedBox' isn't a class - lib\features\dashboard\presentation\pages\dashboard_page.dart:282:17 - creation_with_non_type
-  error - The method 'GestureDetector' isn't defined for the type '_DashboardTransactionTile' - lib\features\dashboard\presentation\pages\dashboard_page.dart:284:11 - undefined_method
-  error - Undefined name 'HitTestBehavior' - lib\features\dashboard\presentation\pages\dashboard_page.dart:286:23 - undefined_identifier
-  error - The method 'Container' isn't defined for the type '_DashboardTransactionTile' - lib\features\dashboard\presentation\pages\dashboard_page.dart:287:20 - undefined_method
-  error - Undefined name 'EdgeInsets' - lib\features\dashboard\presentation\pages\dashboard_page.dart:288:30 - undefined_identifier
-  error - The method 'BoxDecoration' isn't defined for the type '_DashboardTransactionTile' - lib\features\dashboard\presentation\pages\dashboard_page.dart:289:27 - undefined_method
-  error - Undefined name 'BorderRadius' - lib\features\dashboard\presentation\pages\dashboard_page.dart:291:31 - undefined_identifier
-  error - The method 'Icon' isn't defined for the type '_DashboardTransactionTile' - lib\features\dashboard\presentation\pages\dashboard_page.dart:293:22 - undefined_method
-  error - Undefined name 'Icons' - lib\features\dashboard\presentation\pages\dashboard_page.dart:293:27 - undefined_identifier
-  error - The name 'SizedBox' isn't a class - lib\features\dashboard\presentation\pages\dashboard_page.dart:298:19 - creation_with_non_type
-  error - The method 'GestureDetector' isn't defined for the type '_DashboardTransactionTile' - lib\features\dashboard\presentation\pages\dashboard_page.dart:300:13 - undefined_method
-  error - Undefined name 'HitTestBehavior' - lib\features\dashboard\presentation\pages\dashboard_page.dart:302:25 - undefined_identifier
-  error - The method 'Container' isn't defined for the type '_DashboardTransactionTile' - lib\features\dashboard\presentation\pages\dashboard_page.dart:303:22 - undefined_method
-  error - Undefined name 'EdgeInsets' - lib\features\dashboard\presentation\pages\dashboard_page.dart:304:32 - undefined_identifier
-  error - The method 'BoxDecoration' isn't defined for the type '_DashboardTransactionTile' - lib\features\dashboard\presentation\pages\dashboard_page.dart:305:29 - undefined_method
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\pages\dashboard_page.dart:306:50 - deprecated_member_use
-  error - Undefined name 'BorderRadius' - lib\features\dashboard\presentation\pages\dashboard_page.dart:307:33 - undefined_identifier
-  error - The name 'Icon' isn't a class - lib\features\dashboard\presentation\pages\dashboard_page.dart:310:27 - creation_with_non_type
-  error - Undefined name 'Icons' - lib\features\dashboard\presentation\pages\dashboard_page.dart:310:32 - undefined_identifier
-  error - The method 'Container' isn't defined for the type '_DashboardTransactionTile' - lib\features\dashboard\presentation\pages\dashboard_page.dart:319:14 - undefined_method
-  error - Undefined name 'EdgeInsets' - lib\features\dashboard\presentation\pages\dashboard_page.dart:320:23 - undefined_identifier
-  error - The method 'BoxDecoration' isn't defined for the type '_DashboardTransactionTile' - lib\features\dashboard\presentation\pages\dashboard_page.dart:321:21 - undefined_method
-  error - Undefined name 'Theme' - lib\features\dashboard\presentation\pages\dashboard_page.dart:322:18 - undefined_identifier
-  error - Undefined name 'BorderRadius' - lib\features\dashboard\presentation\pages\dashboard_page.dart:323:25 - undefined_identifier
-  error - Undefined name 'Border' - lib\features\dashboard\presentation\pages\dashboard_page.dart:324:19 - undefined_identifier
-  error - The method 'InkWell' isn't defined for the type '_DashboardTransactionTile' - lib\features\dashboard\presentation\pages\dashboard_page.dart:326:16 - undefined_method
-  error - Undefined name 'BorderRadius' - lib\features\dashboard\presentation\pages\dashboard_page.dart:328:25 - undefined_identifier
-  error - The method 'Padding' isn't defined for the type '_DashboardTransactionTile' - lib\features\dashboard\presentation\pages\dashboard_page.dart:335:12 - undefined_method
-  error - Undefined name 'EdgeInsets' - lib\features\dashboard\presentation\pages\dashboard_page.dart:336:22 - undefined_identifier
-  error - The method 'ValueKey' isn't defined for the type '_DashboardTransactionTile' - lib\features\dashboard\presentation\pages\dashboard_page.dart:338:14 - undefined_method
-  error - Undefined name 'Icons' - lib\features\dashboard\presentation\pages\dashboard_page.dart:347:21 - undefined_identifier
-  error - Undefined name 'BorderRadius' - lib\features\dashboard\presentation\pages\dashboard_page.dart:349:29 - undefined_identifier
-  error - Undefined name 'Colors' - lib\features\dashboard\presentation\pages\dashboard_page.dart:360:32 - undefined_identifier
-  error - Undefined name 'Icons' - lib\features\dashboard\presentation\pages\dashboard_page.dart:361:21 - undefined_identifier
-  error - Undefined name 'BorderRadius' - lib\features\dashboard\presentation\pages\dashboard_page.dart:363:29 - undefined_identifier
-  error - The method 'Container' isn't defined for the type '_DashboardTransactionTile' - lib\features\dashboard\presentation\pages\dashboard_page.dart:367:16 - undefined_method
-  error - The method 'BoxDecoration' isn't defined for the type '_DashboardTransactionTile' - lib\features\dashboard\presentation\pages\dashboard_page.dart:368:23 - undefined_method
-  error - Undefined name 'Theme' - lib\features\dashboard\presentation\pages\dashboard_page.dart:369:20 - undefined_identifier
-  error - Undefined name 'BorderRadius' - lib\features\dashboard\presentation\pages\dashboard_page.dart:370:27 - undefined_identifier
-  error - Undefined name 'Border' - lib\features\dashboard\presentation\pages\dashboard_page.dart:371:21 - undefined_identifier
-  error - Undefined class 'Widget' - lib\features\dashboard\presentation\pages\dashboard_page.dart:379:3 - undefined_class
-  error - Undefined class 'BuildContext' - lib\features\dashboard\presentation\pages\dashboard_page.dart:379:24 - undefined_class
-  error - Undefined class 'ColorScheme' - lib\features\dashboard\presentation\pages\dashboard_page.dart:380:39 - undefined_class
-  error - The method 'Row' isn't defined for the type '_DashboardTransactionTile' - lib\features\dashboard\presentation\pages\dashboard_page.dart:381:12 - undefined_method
-  error - The method 'Container' isn't defined for the type '_DashboardTransactionTile' - lib\features\dashboard\presentation\pages\dashboard_page.dart:382:7 - undefined_method
-  error - The method 'BoxDecoration' isn't defined for the type '_DashboardTransactionTile' - lib\features\dashboard\presentation\pages\dashboard_page.dart:385:21 - undefined_method
-  error - Undefined name 'BorderRadius' - lib\features\dashboard\presentation\pages\dashboard_page.dart:386:43 - undefined_identifier
-  error - The method 'Center' isn't defined for the type '_DashboardTransactionTile' - lib\features\dashboard\presentation\pages\dashboard_page.dart:387:16 - undefined_method
-  error - The method 'Text' isn't defined for the type '_DashboardTransactionTile' - lib\features\dashboard\presentation\pages\dashboard_page.dart:388:18 - undefined_method
-  error - The name 'SizedBox' isn't a class - lib\features\dashboard\presentation\pages\dashboard_page.dart:397:13 - creation_with_non_type
-  error - The method 'Expanded' isn't defined for the type '_DashboardTransactionTile' - lib\features\dashboard\presentation\pages\dashboard_page.dart:398:7 - undefined_method
-  error - The method 'Column' isn't defined for the type '_DashboardTransactionTile' - lib\features\dashboard\presentation\pages\dashboard_page.dart:399:16 - undefined_method
-  error - Undefined name 'CrossAxisAlignment' - lib\features\dashboard\presentation\pages\dashboard_page.dart:399:43 - undefined_identifier
-  error - The method 'Text' isn't defined for the type '_DashboardTransactionTile' - lib\features\dashboard\presentation\pages\dashboard_page.dart:400:11 - undefined_method
-  error - Undefined name 'Theme' - lib\features\dashboard\presentation\pages\dashboard_page.dart:401:22 - undefined_identifier
-  error - Undefined name 'TextOverflow' - lib\features\dashboard\presentation\pages\dashboard_page.dart:406:25 - undefined_identifier
-  error - The method 'Text' isn't defined for the type '_DashboardTransactionTile' - lib\features\dashboard\presentation\pages\dashboard_page.dart:407:11 - undefined_method
-  error - Undefined name 'Theme' - lib\features\dashboard\presentation\pages\dashboard_page.dart:409:20 - undefined_identifier
-  error - The method 'Text' isn't defined for the type '_DashboardTransactionTile' - lib\features\dashboard\presentation\pages\dashboard_page.dart:413:7 - undefined_method
-  error - Classes can only extend other classes - lib\features\dashboard\presentation\pages\dashboard_page.dart:423:31 - extends_non_class
-  error - Undefined class 'Widget' - lib\features\dashboard\presentation\pages\dashboard_page.dart:433:3 - undefined_class
-warning - The method doesn't override an inherited method - lib\features\dashboard\presentation\pages\dashboard_page.dart:433:10 - override_on_non_overriding_member
-  error - Undefined class 'BuildContext' - lib\features\dashboard\presentation\pages\dashboard_page.dart:433:16 - undefined_class
-  error - The method 'Column' isn't defined for the type '_SummarySection' - lib\features\dashboard\presentation\pages\dashboard_page.dart:434:12 - undefined_method
-  error - The method 'Container' isn't defined for the type '_SummarySection' - lib\features\dashboard\presentation\pages\dashboard_page.dart:436:7 - undefined_method
-  error - Undefined name 'EdgeInsets' - lib\features\dashboard\presentation\pages\dashboard_page.dart:438:24 - undefined_identifier
-  error - The method 'BoxDecoration' isn't defined for the type '_SummarySection' - lib\features\dashboard\presentation\pages\dashboard_page.dart:439:21 - undefined_method
-  error - The name 'LinearGradient' isn't a class - lib\features\dashboard\presentation\pages\dashboard_page.dart:440:27 - creation_with_non_type
-  error - Undefined name 'Alignment' - lib\features\dashboard\presentation\pages\dashboard_page.dart:442:20 - undefined_identifier
-  error - Undefined name 'Alignment' - lib\features\dashboard\presentation\pages\dashboard_page.dart:443:18 - undefined_identifier
-  error - Undefined name 'BorderRadius' - lib\features\dashboard\presentation\pages\dashboard_page.dart:445:25 - undefined_identifier
-  error - The method 'BoxShadow' isn't defined for the type '_SummarySection' - lib\features\dashboard\presentation\pages\dashboard_page.dart:447:13 - undefined_method
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\pages\dashboard_page.dart:448:43 - deprecated_member_use
-  error - The method 'Column' isn't defined for the type '_SummarySection' - lib\features\dashboard\presentation\pages\dashboard_page.dart:454:16 - undefined_method
-  error - Undefined name 'CrossAxisAlignment' - lib\features\dashboard\presentation\pages\dashboard_page.dart:454:43 - undefined_identifier
-  error - The method 'Text' isn't defined for the type '_SummarySection' - lib\features\dashboard\presentation\pages\dashboard_page.dart:455:11 - undefined_method
-  error - Undefined name 'Colors' - lib\features\dashboard\presentation\pages\dashboard_page.dart:457:26 - undefined_identifier
-  error - The name 'SizedBox' isn't a class - lib\features\dashboard\presentation\pages\dashboard_page.dart:458:17 - creation_with_non_type
-  error - The method 'Text' isn't defined for the type '_SummarySection' - lib\features\dashboard\presentation\pages\dashboard_page.dart:459:11 - undefined_method
-  error - Undefined name 'Colors' - lib\features\dashboard\presentation\pages\dashboard_page.dart:461:26 - undefined_identifier
-  error - The name 'SizedBox' isn't a class - lib\features\dashboard\presentation\pages\dashboard_page.dart:464:17 - creation_with_non_type
-  error - The method 'Text' isn't defined for the type '_SummarySection' - lib\features\dashboard\presentation\pages\dashboard_page.dart:465:11 - undefined_method
-  error - Undefined name 'Colors' - lib\features\dashboard\presentation\pages\dashboard_page.dart:467:26 - undefined_identifier
-  error - The name 'SizedBox' isn't a class - lib\features\dashboard\presentation\pages\dashboard_page.dart:470:13 - creation_with_non_type
-  error - The method 'Row' isn't defined for the type '_SummarySection' - lib\features\dashboard\presentation\pages\dashboard_page.dart:471:7 - undefined_method
-  error - The method 'Expanded' isn't defined for the type '_SummarySection' - lib\features\dashboard\presentation\pages\dashboard_page.dart:472:9 - undefined_method
-  error - Undefined name 'Icons' - lib\features\dashboard\presentation\pages\dashboard_page.dart:478:23 - undefined_identifier
-  error - The name 'SizedBox' isn't a class - lib\features\dashboard\presentation\pages\dashboard_page.dart:479:15 - creation_with_non_type
-  error - The method 'Expanded' isn't defined for the type '_SummarySection' - lib\features\dashboard\presentation\pages\dashboard_page.dart:480:9 - undefined_method
-  error - Undefined name 'Icons' - lib\features\dashboard\presentation\pages\dashboard_page.dart:486:23 - undefined_identifier
-  error - Classes can only extend other classes - lib\features\dashboard\presentation\pages\dashboard_page.dart:492:25 - extends_non_class
-  error - Undefined class 'IconData' - lib\features\dashboard\presentation\pages\dashboard_page.dart:496:9 - undefined_class
-  error - Undefined class 'Widget' - lib\features\dashboard\presentation\pages\dashboard_page.dart:505:3 - undefined_class
-warning - The method doesn't override an inherited method - lib\features\dashboard\presentation\pages\dashboard_page.dart:505:10 - override_on_non_overriding_member
-  error - Undefined class 'BuildContext' - lib\features\dashboard\presentation\pages\dashboard_page.dart:505:16 - undefined_class
-  error - Undefined name 'Theme' - lib\features\dashboard\presentation\pages\dashboard_page.dart:506:17 - undefined_identifier
-  error - The method 'Container' isn't defined for the type '_MiniCard' - lib\features\dashboard\presentation\pages\dashboard_page.dart:507:12 - undefined_method
-  error - Undefined name 'EdgeInsets' - lib\features\dashboard\presentation\pages\dashboard_page.dart:508:22 - undefined_identifier
-  error - The method 'BoxDecoration' isn't defined for the type '_MiniCard' - lib\features\dashboard\presentation\pages\dashboard_page.dart:509:19 - undefined_method
-  error - Undefined name 'Theme' - lib\features\dashboard\presentation\pages\dashboard_page.dart:510:16 - undefined_identifier
-  error - Undefined name 'BorderRadius' - lib\features\dashboard\presentation\pages\dashboard_page.dart:511:23 - undefined_identifier
-  error - Undefined name 'Border' - lib\features\dashboard\presentation\pages\dashboard_page.dart:512:17 - undefined_identifier
-  error - The method 'Row' isn't defined for the type '_MiniCard' - lib\features\dashboard\presentation\pages\dashboard_page.dart:514:14 - undefined_method
-  error - The method 'Container' isn't defined for the type '_MiniCard' - lib\features\dashboard\presentation\pages\dashboard_page.dart:515:9 - undefined_method
-  error - Undefined name 'EdgeInsets' - lib\features\dashboard\presentation\pages\dashboard_page.dart:516:26 - undefined_identifier
-  error - The method 'BoxDecoration' isn't defined for the type '_MiniCard' - lib\features\dashboard\presentation\pages\dashboard_page.dart:517:23 - undefined_method
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\pages\dashboard_page.dart:518:28 - deprecated_member_use
-  error - Undefined name 'BorderRadius' - lib\features\dashboard\presentation\pages\dashboard_page.dart:519:29 - undefined_identifier
-  error - The method 'Icon' isn't defined for the type '_MiniCard' - lib\features\dashboard\presentation\pages\dashboard_page.dart:520:18 - undefined_method
-  error - The name 'SizedBox' isn't a class - lib\features\dashboard\presentation\pages\dashboard_page.dart:522:15 - creation_with_non_type
-  error - The method 'Expanded' isn't defined for the type '_MiniCard' - lib\features\dashboard\presentation\pages\dashboard_page.dart:523:9 - undefined_method
-  error - The method 'Column' isn't defined for the type '_MiniCard' - lib\features\dashboard\presentation\pages\dashboard_page.dart:525:15 - undefined_method
-  error - Undefined name 'CrossAxisAlignment' - lib\features\dashboard\presentation\pages\dashboard_page.dart:525:42 - undefined_identifier
-  error - The method 'Text' isn't defined for the type '_MiniCard' - lib\features\dashboard\presentation\pages\dashboard_page.dart:526:13 - undefined_method
-  error - The method 'Text' isn't defined for the type '_MiniCard' - lib\features\dashboard\presentation\pages\dashboard_page.dart:529:13 - undefined_method
-  error - Classes can only extend other classes - lib\features\dashboard\presentation\pages\dashboard_page.dart:542:39 - extends_non_class
-  error - Undefined class 'Widget' - lib\features\dashboard\presentation\pages\dashboard_page.dart:544:3 - undefined_class
-warning - The method doesn't override an inherited method - lib\features\dashboard\presentation\pages\dashboard_page.dart:544:10 - override_on_non_overriding_member
-  error - Undefined class 'BuildContext' - lib\features\dashboard\presentation\pages\dashboard_page.dart:544:16 - undefined_class
-  error - Undefined name 'Theme' - lib\features\dashboard\presentation\pages\dashboard_page.dart:545:16 - undefined_identifier
-  error - The method 'Container' isn't defined for the type '_SummarySectionSkeleton' - lib\features\dashboard\presentation\pages\dashboard_page.dart:546:12 - undefined_method
-  error - The method 'BoxDecoration' isn't defined for the type '_SummarySectionSkeleton' - lib\features\dashboard\presentation\pages\dashboard_page.dart:548:19 - undefined_method
-  error - Undefined name 'BorderRadius' - lib\features\dashboard\presentation\pages\dashboard_page.dart:550:23 - undefined_identifier
-  error - Classes can only extend other classes - lib\features\dashboard\presentation\pages\dashboard_page.dart:556:36 - extends_non_class
-  error - Undefined class 'Widget' - lib\features\dashboard\presentation\pages\dashboard_page.dart:559:3 - undefined_class
-warning - The method doesn't override an inherited method - lib\features\dashboard\presentation\pages\dashboard_page.dart:559:10 - override_on_non_overriding_member
-  error - Undefined class 'BuildContext' - lib\features\dashboard\presentation\pages\dashboard_page.dart:559:16 - undefined_class
-  error - Undefined name 'Theme' - lib\features\dashboard\presentation\pages\dashboard_page.dart:560:16 - undefined_identifier
-  error - The method 'Column' isn't defined for the type '_TransactionSkeleton' - lib\features\dashboard\presentation\pages\dashboard_page.dart:561:12 - undefined_method
-  error - The method 'Container' isn't defined for the type '_TransactionSkeleton' - lib\features\dashboard\presentation\pages\dashboard_page.dart:564:18 - undefined_method
-  error - Undefined name 'EdgeInsets' - lib\features\dashboard\presentation\pages\dashboard_page.dart:565:31 - undefined_identifier
-  error - The method 'BoxDecoration' isn't defined for the type '_TransactionSkeleton' - lib\features\dashboard\presentation\pages\dashboard_page.dart:567:29 - undefined_method
-  error - Undefined name 'BorderRadius' - lib\features\dashboard\presentation\pages\dashboard_page.dart:569:33 - undefined_identifier
-  error - Classes can only extend other classes - lib\features\dashboard\presentation\pages\dashboard_page.dart:576:34 - extends_non_class
-  error - Undefined class 'Widget' - lib\features\dashboard\presentation\pages\dashboard_page.dart:580:3 - undefined_class
-warning - The method doesn't override an inherited method - lib\features\dashboard\presentation\pages\dashboard_page.dart:580:10 - override_on_non_overriding_member
-  error - Undefined class 'BuildContext' - lib\features\dashboard\presentation\pages\dashboard_page.dart:580:16 - undefined_class
-  error - Undefined name 'Theme' - lib\features\dashboard\presentation\pages\dashboard_page.dart:581:16 - undefined_identifier
-  error - The method 'Center' isn't defined for the type '_EmptyTransactions' - lib\features\dashboard\presentation\pages\dashboard_page.dart:582:12 - undefined_method
-  error - The method 'Padding' isn't defined for the type '_EmptyTransactions' - lib\features\dashboard\presentation\pages\dashboard_page.dart:583:14 - undefined_method
-  error - Undefined name 'EdgeInsets' - lib\features\dashboard\presentation\pages\dashboard_page.dart:584:24 - undefined_identifier
-  error - The method 'Column' isn't defined for the type '_EmptyTransactions' - lib\features\dashboard\presentation\pages\dashboard_page.dart:585:16 - undefined_method
-  error - The method 'Icon' isn't defined for the type '_EmptyTransactions' - lib\features\dashboard\presentation\pages\dashboard_page.dart:586:11 - undefined_method
-  error - Undefined name 'Icons' - lib\features\dashboard\presentation\pages\dashboard_page.dart:586:16 - undefined_identifier
-  error - The name 'SizedBox' isn't a class - lib\features\dashboard\presentation\pages\dashboard_page.dart:588:17 - creation_with_non_type
-  error - The method 'Text' isn't defined for the type '_EmptyTransactions' - lib\features\dashboard\presentation\pages\dashboard_page.dart:589:11 - undefined_method
-  error - The name 'SizedBox' isn't a class - lib\features\dashboard\presentation\pages\dashboard_page.dart:594:17 - creation_with_non_type
-  error - Undefined name 'ElevatedButton' - lib\features\dashboard\presentation\pages\dashboard_page.dart:595:11 - undefined_identifier
-  error - The name 'Icon' isn't a class - lib\features\dashboard\presentation\pages\dashboard_page.dart:597:25 - creation_with_non_type
-  error - Undefined name 'Icons' - lib\features\dashboard\presentation\pages\dashboard_page.dart:597:30 - undefined_identifier
-  error - The name 'Text' isn't a class - lib\features\dashboard\presentation\pages\dashboard_page.dart:598:26 - creation_with_non_type
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\onboarding\presentation\pages\onboarding_page.dart:72:40 - deprecated_member_use
+warning - The value of the local variable 'tt' isn't used - lib\features\dashboard\presentation\pages\dashboard_page.dart:275:11 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\pages\dashboard_page.dart:279:50 - deprecated_member_use
+   info - 'surfaceVariant' is deprecated and shouldn't be used. Use surfaceContainerHighest instead. This feature was deprecated after v3.18.0-0.1.pre - lib\features\dashboard\presentation\pages\dashboard_page.dart:280:14 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\pages\dashboard_page.dart:302:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\pages\dashboard_page.dart:317:50 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\pages\dashboard_page.dart:335:49 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\pages\dashboard_page.dart:379:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\pages\dashboard_page.dart:449:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\pages\dashboard_page.dart:456:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\pages\dashboard_page.dart:466:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\pages\dashboard_page.dart:477:52 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\pages\dashboard_page.dart:525:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\pages\dashboard_page.dart:531:28 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\pages\dashboard_page.dart:598:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\pages\dashboard_page.dart:601:66 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\pages\dashboard_page.dart:713:38 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\pages\dashboard_page.dart:714:38 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\pages\dashboard_page.dart:715:38 - deprecated_member_use
+warning - Unused import: 'package:trust_tracker_flutter/core/theme/app_theme.dart' - lib\features\onboarding\presentation\pages\onboarding_page.dart:5:8 - unused_import
+warning - The value of the local variable 'isDark' isn't used - lib\features\onboarding\presentation\pages\onboarding_page.dart:55:11 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\onboarding\presentation\pages\onboarding_page.dart:74:40 - deprecated_member_use
    info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\onboarding\presentation\pages\onboarding_page.dart:129:35 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\onboarding\presentation\pages\onboarding_page.dart:147:37 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\onboarding\presentation\pages\onboarding_page.dart:166:31 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\onboarding\presentation\pages\onboarding_page.dart:175:37 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\onboarding\presentation\pages\onboarding_page.dart:197:39 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\onboarding\presentation\pages\onboarding_page.dart:242:41 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\onboarding\presentation\pages\onboarding_page.dart:265:42 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\onboarding\presentation\pages\onboarding_page.dart:300:57 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\onboarding\presentation\pages\onboarding_page.dart:316:56 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\quick_actions\presentation\pages\quick_add_transaction_page.dart:68:41 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\quick_actions\presentation\pages\quick_add_transaction_page.dart:88:50 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\quick_actions\presentation\pages\quick_add_transaction_page.dart:116:57 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\quick_actions\presentation\pages\quick_add_transaction_page.dart:135:61 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\quick_actions\presentation\pages\quick_add_transaction_page.dart:169:47 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\quick_actions\presentation\pages\quick_add_transaction_page.dart:194:58 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\quick_actions\presentation\pages\quick_add_transaction_page.dart:211:47 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\quick_actions\presentation\pages\quick_add_transaction_page.dart:230:47 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\quick_actions\presentation\pages\quick_add_transaction_page.dart:243:58 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\quick_actions\presentation\pages\quick_add_transaction_page.dart:432:63 - deprecated_member_use
-warning - Unused import: 'package:go_router/go_router.dart' - lib\features\security\presentation\pages\lock_screen_page.dart:4:8 - unused_import
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\security\presentation\pages\lock_screen_page.dart:123:49 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\security\presentation\pages\lock_screen_page.dart:188:51 - deprecated_member_use
-   info - The 'child' argument should be last in widget constructor invocations - lib\features\security\presentation\pages\lock_screen_page.dart:217:31 - sort_child_properties_last
-   info - The 'child' argument should be last in widget constructor invocations - lib\features\security\presentation\pages\lock_screen_page.dart:226:37 - sort_child_properties_last
-   info - The 'child' argument should be last in widget constructor invocations - lib\features\security\presentation\pages\lock_screen_page.dart:234:29 - sort_child_properties_last
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\security\presentation\pages\lock_screen_page.dart:289:41 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\security\presentation\pages\set_pin_page.dart:249:34 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\security\presentation\pages\set_pin_page.dart:320:51 - deprecated_member_use
-   info - The 'child' argument should be last in widget constructor invocations - lib\features\security\presentation\pages\set_pin_page.dart:351:31 - sort_child_properties_last
-   info - The 'child' argument should be last in widget constructor invocations - lib\features\security\presentation\pages\set_pin_page.dart:361:29 - sort_child_properties_last
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\security\presentation\pages\set_pin_page.dart:403:57 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\security\presentation\pages\set_pin_page.dart:441:41 - deprecated_member_use
-   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\settings\presentation\pages\settings_page.dart:246:19 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:250:45 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:286:47 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:301:55 - deprecated_member_use
-   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\settings\presentation\pages\settings_page.dart:484:42 - use_build_context_synchronously
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:516:43 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:552:39 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:553:42 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:556:36 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:575:41 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:641:63 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:654:28 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:679:53 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:702:37 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:709:55 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:746:56 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:759:45 - deprecated_member_use
-   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor or activeTrackColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\features\settings\presentation\pages\settings_page.dart:768:17 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:777:49 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:786:37 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:813:50 - deprecated_member_use
-   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor or activeTrackColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\features\settings\presentation\pages\settings_page.dart:820:11 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:852:58 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:859:35 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:263:46 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:300:41 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:362:43 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:429:33 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:444:42 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:454:29 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:462:44 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:501:42 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:509:29 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:521:39 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:538:43 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:566:31 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:585:47 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:587:50 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:590:54 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:638:49 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:640:52 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:645:41 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:649:45 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:670:53 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:673:55 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:679:42 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:700:41 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:238:37 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:263:41 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:267:59 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:296:47 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:301:42 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:307:40 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:308:40 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:327:41 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:334:57 - deprecated_member_use
-  error - The method '_EmptyState' isn't defined for the type '_TransactionsPageState' - lib\features\transactions\presentation\pages\transactions_page.dart:351:26 - undefined_method
-  error - The method '_DaySection' isn't defined for the type '_TransactionsPageState' - lib\features\transactions\presentation\pages\transactions_page.dart:360:28 - undefined_method
-  error - Classes can't be declared inside other classes - lib\features\transactions\presentation\pages\transactions_page.dart:383:1 - class_in_class
-  error - Expected a class member - lib\features\transactions\presentation\pages\transactions_page.dart:383:19 - expected_class_member
-   info - The variable name 'StatelessWidget' isn't a lowerCamelCase identifier - lib\features\transactions\presentation\pages\transactions_page.dart:383:27 - non_constant_identifier_names
-  error - Methods must have an explicit list of parameters - lib\features\transactions\presentation\pages\transactions_page.dart:383:27 - missing_method_parameters
-  error - The name '_DaySection' isn't a class - lib\features\transactions\presentation\pages\transactions_page.dart:393:9 - creation_with_non_type
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\transactions\presentation\pages\transactions_page.dart:394:5 - deprecated_member_use
-  error - Expected to find ',' - lib\features\transactions\presentation\pages\transactions_page.dart:394:14 - expected_token
-  error - The getter 'group' isn't defined for the type '_TransactionsPageState' - lib\features\transactions\presentation\pages\transactions_page.dart:394:19 - undefined_getter
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\transactions\presentation\pages\transactions_page.dart:395:5 - deprecated_member_use
-  error - Expected to find ',' - lib\features\transactions\presentation\pages\transactions_page.dart:395:14 - expected_token
-  error - The getter 'catMap' isn't defined for the type '_TransactionsPageState' - lib\features\transactions\presentation\pages\transactions_page.dart:395:19 - undefined_getter
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\transactions\presentation\pages\transactions_page.dart:396:5 - deprecated_member_use
-  error - Expected to find ',' - lib\features\transactions\presentation\pages\transactions_page.dart:396:14 - expected_token
-  error - The getter 'currency' isn't defined for the type '_TransactionsPageState' - lib\features\transactions\presentation\pages\transactions_page.dart:396:19 - undefined_getter
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\transactions\presentation\pages\transactions_page.dart:397:5 - deprecated_member_use
-  error - Expected to find ',' - lib\features\transactions\presentation\pages\transactions_page.dart:397:14 - expected_token
-  error - The getter 'onEdit' isn't defined for the type '_TransactionsPageState' - lib\features\transactions\presentation\pages\transactions_page.dart:397:19 - undefined_getter
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\transactions\presentation\pages\transactions_page.dart:398:5 - deprecated_member_use
-  error - Expected to find ',' - lib\features\transactions\presentation\pages\transactions_page.dart:398:14 - expected_token
-  error - The getter 'onDuplicate' isn't defined for the type '_TransactionsPageState' - lib\features\transactions\presentation\pages\transactions_page.dart:398:19 - undefined_getter
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\transactions\presentation\pages\transactions_page.dart:399:5 - deprecated_member_use
-  error - Expected to find ',' - lib\features\transactions\presentation\pages\transactions_page.dart:399:14 - expected_token
-  error - The getter 'onDelete' isn't defined for the type '_TransactionsPageState' - lib\features\transactions\presentation\pages\transactions_page.dart:399:19 - undefined_getter
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\transactions\presentation\pages\transactions_page.dart:400:5 - deprecated_member_use
-  error - Expected to find ',' - lib\features\transactions\presentation\pages\transactions_page.dart:400:14 - expected_token
-  error - The getter 'isTapMode' isn't defined for the type '_TransactionsPageState' - lib\features\transactions\presentation\pages\transactions_page.dart:400:19 - undefined_getter
-  error - The setter 'animate' isn't defined for the type '_TransactionsPageState' - lib\features\transactions\presentation\pages\transactions_page.dart:401:10 - undefined_setter
-warning - The declaration 'build' isn't referenced - lib\features\transactions\presentation\pages\transactions_page.dart:405:10 - unused_element
-  error - The final variable 'group' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:417:17 - read_potentially_unassigned_final
-  error - The final variable 'group' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:419:23 - read_potentially_unassigned_final
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:423:41 - deprecated_member_use
-  error - The final variable 'group' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:426:20 - read_potentially_unassigned_final
-  error - The final variable 'group' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:426:53 - read_potentially_unassigned_final
-  error - The final variable 'currency' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:426:79 - read_potentially_unassigned_final
-  error - The final variable 'group' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:430:28 - read_potentially_unassigned_final
-  error - The final variable 'group' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:438:12 - read_potentially_unassigned_final
-  error - The method '_SwipeableTransactionTile' isn't defined for the type '_TransactionsPageState' - lib\features\transactions\presentation\pages\transactions_page.dart:443:20 - undefined_method
-  error - The final variable 'catMap' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:446:25 - read_potentially_unassigned_final
-  error - The final variable 'currency' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:447:25 - read_potentially_unassigned_final
-  error - The final variable 'onEdit' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:448:29 - read_potentially_unassigned_final
-  error - The final variable 'onDuplicate' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:449:34 - read_potentially_unassigned_final
-  error - The final variable 'onDelete' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:450:31 - read_potentially_unassigned_final
-  error - The final variable 'isTapMode' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:451:26 - read_potentially_unassigned_final
-  error - The final variable 'onEdit' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:453:28 - read_potentially_unassigned_final
-  error - The final variable 'animate' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:457:15 - read_potentially_unassigned_final
-  error - Classes can't be declared inside other classes - lib\features\transactions\presentation\pages\transactions_page.dart:470:1 - class_in_class
-  error - Expected a class member - lib\features\transactions\presentation\pages\transactions_page.dart:470:33 - expected_class_member
-   info - The variable name 'StatelessWidget' isn't a lowerCamelCase identifier - lib\features\transactions\presentation\pages\transactions_page.dart:470:41 - non_constant_identifier_names
-  error - Methods must have an explicit list of parameters - lib\features\transactions\presentation\pages\transactions_page.dart:470:41 - missing_method_parameters
-  error - The name 'StatelessWidget' is already defined - lib\features\transactions\presentation\pages\transactions_page.dart:470:41 - duplicate_definition
-  error - The name '_SwipeableTransactionTile' isn't a class - lib\features\transactions\presentation\pages\transactions_page.dart:480:9 - creation_with_non_type
-  error - The getter 'key' isn't defined in a superclass of '_TransactionsPageState' - lib\features\transactions\presentation\pages\transactions_page.dart:481:11 - undefined_super_member
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\transactions\presentation\pages\transactions_page.dart:482:5 - deprecated_member_use
-  error - Expected to find ',' - lib\features\transactions\presentation\pages\transactions_page.dart:482:14 - expected_token
-  error - The getter 'transaction' isn't defined for the type '_TransactionsPageState' - lib\features\transactions\presentation\pages\transactions_page.dart:482:19 - undefined_getter
-  error - The getter 'category' isn't defined for the type '_TransactionsPageState' - lib\features\transactions\presentation\pages\transactions_page.dart:483:10 - undefined_getter
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\transactions\presentation\pages\transactions_page.dart:484:5 - deprecated_member_use
-  error - Expected to find ',' - lib\features\transactions\presentation\pages\transactions_page.dart:484:14 - expected_token
-  error - The getter 'currency' isn't defined for the type '_TransactionsPageState' - lib\features\transactions\presentation\pages\transactions_page.dart:484:19 - undefined_getter
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\transactions\presentation\pages\transactions_page.dart:485:5 - deprecated_member_use
-  error - Expected to find ',' - lib\features\transactions\presentation\pages\transactions_page.dart:485:14 - expected_token
-  error - The getter 'onEdit' isn't defined for the type '_TransactionsPageState' - lib\features\transactions\presentation\pages\transactions_page.dart:485:19 - undefined_getter
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\transactions\presentation\pages\transactions_page.dart:486:5 - deprecated_member_use
-  error - Expected to find ',' - lib\features\transactions\presentation\pages\transactions_page.dart:486:14 - expected_token
-  error - The getter 'onDuplicate' isn't defined for the type '_TransactionsPageState' - lib\features\transactions\presentation\pages\transactions_page.dart:486:19 - undefined_getter
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\transactions\presentation\pages\transactions_page.dart:487:5 - deprecated_member_use
-  error - Expected to find ',' - lib\features\transactions\presentation\pages\transactions_page.dart:487:14 - expected_token
-  error - The getter 'onDelete' isn't defined for the type '_TransactionsPageState' - lib\features\transactions\presentation\pages\transactions_page.dart:487:19 - undefined_getter
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\transactions\presentation\pages\transactions_page.dart:488:5 - deprecated_member_use
-  error - Expected to find ',' - lib\features\transactions\presentation\pages\transactions_page.dart:488:14 - expected_token
-  error - The getter 'onTap' isn't defined for the type '_TransactionsPageState' - lib\features\transactions\presentation\pages\transactions_page.dart:488:19 - undefined_getter
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\transactions\presentation\pages\transactions_page.dart:489:5 - deprecated_member_use
-  error - Expected to find ',' - lib\features\transactions\presentation\pages\transactions_page.dart:489:14 - expected_token
-  error - The getter 'isTapMode' isn't defined for the type '_TransactionsPageState' - lib\features\transactions\presentation\pages\transactions_page.dart:489:19 - undefined_getter
-warning - The declaration 'build' isn't referenced - lib\features\transactions\presentation\pages\transactions_page.dart:493:10 - unused_element
-  error - The final variable 'transaction' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:496:22 - read_potentially_unassigned_final
-warning - The operand must be 'null', so the condition is always 'false' - lib\features\transactions\presentation\pages\transactions_page.dart:499:22 - unnecessary_null_comparison
-  error - The final variable 'category' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:499:22 - read_potentially_unassigned_final
-  error - The final variable 'category' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:500:17 - read_potentially_unassigned_final
-warning - The '!' will have no effect because the receiver can't be null - lib\features\transactions\presentation\pages\transactions_page.dart:500:25 - unnecessary_non_null_assertion
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:501:24 - deprecated_member_use
-  error - Local variable '_buildTileContent' can't be referenced before it is declared - lib\features\transactions\presentation\pages\transactions_page.dart:509:20 - referenced_before_declaration
-  error - The method '_ActionButton' isn't defined for the type '_TransactionsPageState' - lib\features\transactions\presentation\pages\transactions_page.dart:513:11 - undefined_method
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:515:31 - deprecated_member_use
-  error - The final variable 'onDuplicate' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:516:20 - read_potentially_unassigned_final
-  error - The final variable 'isTapMode' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:518:15 - read_potentially_unassigned_final
-  error - The method '_ActionButton' isn't defined for the type '_TransactionsPageState' - lib\features\transactions\presentation\pages\transactions_page.dart:520:13 - undefined_method
-  error - The final variable 'onEdit' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:523:22 - read_potentially_unassigned_final
-  error - The method '_ActionButton' isn't defined for the type '_TransactionsPageState' - lib\features\transactions\presentation\pages\transactions_page.dart:526:13 - undefined_method
-  error - The final variable 'onDelete' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:529:22 - read_potentially_unassigned_final
-  error - The final variable 'isTapMode' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:536:9 - read_potentially_unassigned_final
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:543:38 - deprecated_member_use
-  error - The final variable 'onTap' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:547:18 - read_potentially_unassigned_final
-  error - The final variable 'transaction' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:558:23 - read_potentially_unassigned_final
-  error - The final variable 'onDelete' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:564:33 - read_potentially_unassigned_final
-  error - The final variable 'onEdit' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:578:33 - read_potentially_unassigned_final
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:592:40 - deprecated_member_use
-   info - The local variable '_buildTileContent' starts with an underscore - lib\features\transactions\presentation\pages\transactions_page.dart:601:10 - no_leading_underscores_for_local_identifiers
-  error - The final variable 'transaction' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:604:21 - read_potentially_unassigned_final
-  error - The final variable 'transaction' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:604:49 - read_potentially_unassigned_final
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:613:29 - deprecated_member_use
-  error - The final variable 'transaction' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:618:15 - read_potentially_unassigned_final
-  error - The final variable 'transaction' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:619:21 - read_potentially_unassigned_final
-  error - The final variable 'transaction' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:633:17 - read_potentially_unassigned_final
-  error - The final variable 'category' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:643:20 - read_potentially_unassigned_final
-warning - Dead code - lib\features\transactions\presentation\pages\transactions_page.dart:643:28 - dead_code
-  error - The final variable 'transaction' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:643:59 - read_potentially_unassigned_final
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:645:55 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:655:55 - deprecated_member_use
-  error - The final variable 'transaction' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:659:25 - read_potentially_unassigned_final
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:662:49 - deprecated_member_use
-  error - The final variable 'transaction' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:677:37 - read_potentially_unassigned_final
-  error - The final variable 'currency' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:677:67 - read_potentially_unassigned_final
-  error - Classes can't be declared inside other classes - lib\features\transactions\presentation\pages\transactions_page.dart:688:1 - class_in_class
-  error - Expected a class member - lib\features\transactions\presentation\pages\transactions_page.dart:688:19 - expected_class_member
-   info - The variable name 'StatelessWidget' isn't a lowerCamelCase identifier - lib\features\transactions\presentation\pages\transactions_page.dart:688:27 - non_constant_identifier_names
-  error - Methods must have an explicit list of parameters - lib\features\transactions\presentation\pages\transactions_page.dart:688:27 - missing_method_parameters
-  error - The name 'StatelessWidget' is already defined - lib\features\transactions\presentation\pages\transactions_page.dart:688:27 - duplicate_definition
-  error - The name '_EmptyState' isn't a class - lib\features\transactions\presentation\pages\transactions_page.dart:690:9 - creation_with_non_type
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\transactions\presentation\pages\transactions_page.dart:690:22 - deprecated_member_use
-  error - Expected to find ',' - lib\features\transactions\presentation\pages\transactions_page.dart:690:31 - expected_token
-  error - The getter 'onAdd' isn't defined for the type '_TransactionsPageState' - lib\features\transactions\presentation\pages\transactions_page.dart:690:36 - undefined_getter
-warning - The declaration 'build' isn't referenced - lib\features\transactions\presentation\pages\transactions_page.dart:693:10 - unused_element
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:700:45 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:704:39 - deprecated_member_use
-  error - The final variable 'onAdd' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:707:24 - read_potentially_unassigned_final
-  error - Classes can't be declared inside other classes - lib\features\transactions\presentation\pages\transactions_page.dart:717:1 - class_in_class
-  error - Expected a class member - lib\features\transactions\presentation\pages\transactions_page.dart:717:21 - expected_class_member
-   info - The variable name 'StatelessWidget' isn't a lowerCamelCase identifier - lib\features\transactions\presentation\pages\transactions_page.dart:717:29 - non_constant_identifier_names
-  error - Methods must have an explicit list of parameters - lib\features\transactions\presentation\pages\transactions_page.dart:717:29 - missing_method_parameters
-  error - The name 'StatelessWidget' is already defined - lib\features\transactions\presentation\pages\transactions_page.dart:717:29 - duplicate_definition
-  error - The name '_ActionButton' isn't a class - lib\features\transactions\presentation\pages\transactions_page.dart:722:9 - creation_with_non_type
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\transactions\presentation\pages\transactions_page.dart:723:5 - deprecated_member_use
-  error - Expected to find ',' - lib\features\transactions\presentation\pages\transactions_page.dart:723:14 - expected_token
-  error - The getter 'icon' isn't defined for the type '_TransactionsPageState' - lib\features\transactions\presentation\pages\transactions_page.dart:723:19 - undefined_getter
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\transactions\presentation\pages\transactions_page.dart:724:5 - deprecated_member_use
-  error - Expected to find ',' - lib\features\transactions\presentation\pages\transactions_page.dart:724:14 - expected_token
-  error - The getter 'color' isn't defined for the type '_TransactionsPageState' - lib\features\transactions\presentation\pages\transactions_page.dart:724:19 - undefined_getter
-   info - 'required' is deprecated and shouldn't be used. In Dart 2.12 and later, use the built-in `required` keyword to mark a named parameter as required - lib\features\transactions\presentation\pages\transactions_page.dart:725:5 - deprecated_member_use
-  error - Expected to find ',' - lib\features\transactions\presentation\pages\transactions_page.dart:725:14 - expected_token
-  error - The getter 'onTap' isn't defined for the type '_TransactionsPageState' - lib\features\transactions\presentation\pages\transactions_page.dart:725:19 - undefined_getter
-warning - The declaration 'build' isn't referenced - lib\features\transactions\presentation\pages\transactions_page.dart:729:10 - unused_element
-  error - The final variable 'color' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:731:14 - read_potentially_unassigned_final
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:731:20 - deprecated_member_use
-  error - The final variable 'onTap' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:734:16 - read_potentially_unassigned_final
-  error - The final variable 'icon' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:738:23 - read_potentially_unassigned_final
-  error - The final variable 'color' can't be read because it's potentially unassigned at this point - lib\features\transactions\presentation\pages\transactions_page.dart:738:46 - read_potentially_unassigned_final
-  error - Expected to find '}' - lib\features\transactions\presentation\pages\transactions_page.dart:744:1 - expected_token
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\category_dropdown_field.dart:125:55 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\category_dropdown_field.dart:132:60 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\category_dropdown_field.dart:136:60 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\category_dropdown_field.dart:140:61 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\category_dropdown_field.dart:144:39 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\category_dropdown_field.dart:169:36 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\category_dropdown_field.dart:398:43 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\category_dropdown_field.dart:426:42 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\category_dropdown_field.dart:431:52 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\category_dropdown_field.dart:442:54 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\category_dropdown_field.dart:455:57 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\category_dropdown_field.dart:472:51 - deprecated_member_use
-warning - Unused import: 'package:trust_tracker_flutter/core/theme/app_theme.dart' - lib\features\transactions\presentation\widgets\export_bottom_sheet.dart:4:8 - unused_import
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\export_bottom_sheet.dart:124:76 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\export_bottom_sheet.dart:129:55 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\export_bottom_sheet.dart:130:69 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\export_bottom_sheet.dart:140:29 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\export_bottom_sheet.dart:206:70 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\export_bottom_sheet.dart:261:45 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\export_bottom_sheet.dart:261:78 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\export_bottom_sheet.dart:271:73 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\export_bottom_sheet.dart:275:92 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\export_bottom_sheet.dart:303:66 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\export_bottom_sheet.dart:308:137 - deprecated_member_use
-warning - A value for optional parameter 'val' isn't ever given - lib\features\transactions\presentation\widgets\export_bottom_sheet.dart:321:37 - unused_element_parameter
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\export_bottom_sheet.dart:330:31 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\export_bottom_sheet.dart:332:55 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\export_bottom_sheet.dart:345:77 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\onboarding\presentation\pages\onboarding_page.dart:142:63 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\onboarding\presentation\pages\onboarding_page.dart:160:31 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\onboarding\presentation\pages\onboarding_page.dart:168:64 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\onboarding\presentation\pages\onboarding_page.dart:187:65 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\onboarding\presentation\pages\onboarding_page.dart:229:68 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\onboarding\presentation\pages\onboarding_page.dart:248:71 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\onboarding\presentation\pages\onboarding_page.dart:272:57 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\onboarding\presentation\pages\onboarding_page.dart:282:92 - deprecated_member_use
+warning - Unused import: 'package:trust_tracker_flutter/core/theme/app_theme.dart' - lib\features\security\presentation\pages\lock_screen_page.dart:5:8 - unused_import
+warning - The value of the local variable 'isDark' isn't used - lib\features\security\presentation\pages\lock_screen_page.dart:114:11 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\security\presentation\pages\lock_screen_page.dart:134:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\security\presentation\pages\lock_screen_page.dart:158:60 - deprecated_member_use
+   info - 'surfaceVariant' is deprecated and shouldn't be used. Use surfaceContainerHighest instead. This feature was deprecated after v3.18.0-0.1.pre - lib\features\security\presentation\pages\lock_screen_page.dart:186:80 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\security\presentation\pages\lock_screen_page.dart:188:60 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\security\presentation\pages\lock_screen_page.dart:190:72 - deprecated_member_use
+   info - The 'child' argument should be last in widget constructor invocations - lib\features\security\presentation\pages\lock_screen_page.dart:212:31 - sort_child_properties_last
+   info - The 'child' argument should be last in widget constructor invocations - lib\features\security\presentation\pages\lock_screen_page.dart:219:37 - sort_child_properties_last
+   info - 'surfaceVariant' is deprecated and shouldn't be used. Use surfaceContainerHighest instead. This feature was deprecated after v3.18.0-0.1.pre - lib\features\security\presentation\pages\lock_screen_page.dart:263:27 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\security\presentation\pages\lock_screen_page.dart:267:41 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps - lib\features\security\presentation\pages\set_pin_page.dart:157:46 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\security\presentation\pages\set_pin_page.dart:183:35 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\security\presentation\pages\set_pin_page.dart:184:35 - use_build_context_synchronously
+warning - The value of the local variable 'isDark' isn't used - lib\features\security\presentation\pages\set_pin_page.dart:243:11 - unused_local_variable
+warning - The value of the local variable 'spMicro' isn't used - lib\features\security\presentation\pages\set_pin_page.dart:246:18 - unused_local_variable
+warning - The value of the local variable 'spSmall' isn't used - lib\features\security\presentation\pages\set_pin_page.dart:248:18 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\security\presentation\pages\set_pin_page.dart:300:64 - deprecated_member_use
+   info - 'surfaceVariant' is deprecated and shouldn't be used. Use surfaceContainerHighest instead. This feature was deprecated after v3.18.0-0.1.pre - lib\features\security\presentation\pages\set_pin_page.dart:333:56 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\security\presentation\pages\set_pin_page.dart:333:71 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\security\presentation\pages\set_pin_page.dart:335:60 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\security\presentation\pages\set_pin_page.dart:337:72 - deprecated_member_use
+   info - The 'child' argument should be last in widget constructor invocations - lib\features\security\presentation\pages\set_pin_page.dart:359:31 - sort_child_properties_last
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\security\presentation\pages\set_pin_page.dart:400:55 - deprecated_member_use
+warning - The value of the local variable 'isDark' isn't used - lib\features\security\presentation\pages\set_pin_page.dart:420:11 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\security\presentation\pages\set_pin_page.dart:437:38 - deprecated_member_use
+warning - Unused import: 'package:permission_handler/permission_handler.dart' - lib\features\settings\presentation\pages\settings_page.dart:14:8 - unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:108:63 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:150:57 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:158:57 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\settings\presentation\pages\settings_page.dart:174:19 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:178:74 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:220:74 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\features\settings\presentation\pages\settings_page.dart:226:60 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:249:55 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\settings\presentation\pages\settings_page.dart:278:19 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:283:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:318:47 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\settings\presentation\pages\settings_page.dart:402:23 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\settings\presentation\pages\settings_page.dart:516:42 - use_build_context_synchronously
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:557:70 - deprecated_member_use
+   info - Don't invoke 'print' in production code - lib\features\settings\presentation\pages\settings_page.dart:578:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\settings\presentation\pages\settings_page.dart:603:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\settings\presentation\pages\settings_page.dart:606:20 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\settings\presentation\pages\settings_page.dart:609:9 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\settings\presentation\pages\settings_page.dart:615:30 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\settings\presentation\pages\settings_page.dart:618:39 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\settings\presentation\pages\settings_page.dart:624:30 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\settings\presentation\pages\settings_page.dart:627:39 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\settings\presentation\pages\settings_page.dart:634:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\settings\presentation\pages\settings_page.dart:635:33 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\settings\presentation\pages\settings_page.dart:637:30 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\settings\presentation\pages\settings_page.dart:640:39 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\settings\presentation\pages\settings_page.dart:647:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\settings\presentation\pages\settings_page.dart:679:9 - use_build_context_synchronously
+   info - Use 'const' with the constructor to improve performance - lib\features\settings\presentation\pages\settings_page.dart:681:25 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\settings\presentation\pages\settings_page.dart:682:20 - prefer_const_constructors
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\settings\presentation\pages\settings_page.dart:697:22 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\settings\presentation\pages\settings_page.dart:700:32 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\settings\presentation\pages\settings_page.dart:708:32 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\settings\presentation\pages\settings_page.dart:711:41 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\settings\presentation\pages\settings_page.dart:718:35 - use_build_context_synchronously
+warning - The value of the local variable 'isDark' isn't used - lib\features\settings\presentation\pages\settings_page.dart:741:11 - unused_local_variable
+   info - 'surfaceVariant' is deprecated and shouldn't be used. Use surfaceContainerHighest instead. This feature was deprecated after v3.18.0-0.1.pre - lib\features\settings\presentation\pages\settings_page.dart:747:19 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:747:34 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:749:46 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:766:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:833:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:842:53 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:865:46 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:890:75 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:918:50 - deprecated_member_use
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor or activeTrackColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\features\settings\presentation\pages\settings_page.dart:925:11 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:959:58 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\presentation\pages\settings_page.dart:966:35 - deprecated_member_use
+warning - Unused import: 'package:trust_tracker_flutter/core/theme/app_theme.dart' - lib\features\settings\presentation\providers\settings_provider.dart:4:8 - unused_import
+warning - Unused import: 'package:trust_tracker_flutter/core/utils/extensions.dart' - lib\features\transactions\presentation\pages\add_transaction_page.dart:4:8 - unused_import
+warning - The declaration '_categoriesByTypeProvider' isn't referenced - lib\features\transactions\presentation\pages\add_transaction_page.dart:14:7 - unused_element
+   info - Use 'const' for final variables initialized to a constant value - lib\features\transactions\presentation\pages\add_transaction_page.dart:215:5 - prefer_const_declarations
+warning - The value of the local variable 'activeBg' isn't used - lib\features\transactions\presentation\pages\add_transaction_page.dart:219:11 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:219:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:222:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:260:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:272:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:293:49 - deprecated_member_use
+   info - 'surfaceVariant' is deprecated and shouldn't be used. Use surfaceContainerHighest instead. This feature was deprecated after v3.18.0-0.1.pre - lib\features\transactions\presentation\pages\add_transaction_page.dart:315:27 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:315:42 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:322:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:326:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:333:50 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:341:70 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:351:70 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:385:77 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:414:84 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:443:88 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:468:75 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:518:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\add_transaction_page.dart:553:26 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:217:76 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:259:89 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:261:104 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:279:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:288:87 - deprecated_member_use
+  error - Expected to find ')' - lib\features\transactions\presentation\pages\transactions_page.dart:338:6 - expected_token
+   info - 'surfaceVariant' is deprecated and shouldn't be used. Use surfaceContainerHighest instead. This feature was deprecated after v3.18.0-0.1.pre - lib\features\transactions\presentation\pages\transactions_page.dart:356:59 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:356:74 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:359:56 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:363:56 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:377:78 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:380:73 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:390:94 - deprecated_member_use
+   info - 'surfaceVariant' is deprecated and shouldn't be used. Use surfaceContainerHighest instead. This feature was deprecated after v3.18.0-0.1.pre - lib\features\transactions\presentation\pages\transactions_page.dart:408:64 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:408:79 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:413:76 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:469:44 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:471:54 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:477:65 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:544:95 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:557:59 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:568:57 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:582:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:620:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:637:53 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:659:68 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:677:89 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:699:75 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\pages\transactions_page.dart:701:117 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\category_dropdown_field.dart:131:61 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\category_dropdown_field.dart:156:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\category_dropdown_field.dart:422:87 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\category_dropdown_field.dart:424:90 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\category_dropdown_field.dart:430:77 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\category_dropdown_field.dart:444:51 - deprecated_member_use
+warning - The value of the local variable 'isDark' isn't used - lib\features\transactions\presentation\widgets\export_bottom_sheet.dart:26:11 - unused_local_variable
+   info - 'surfaceVariant' is deprecated and shouldn't be used. Use surfaceContainerHighest instead. This feature was deprecated after v3.18.0-0.1.pre - lib\features\transactions\presentation\widgets\export_bottom_sheet.dart:135:59 - deprecated_member_use
+   info - 'surfaceVariant' is deprecated and shouldn't be used. Use surfaceContainerHighest instead. This feature was deprecated after v3.18.0-0.1.pre - lib\features\transactions\presentation\widgets\export_bottom_sheet.dart:145:19 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\export_bottom_sheet.dart:145:34 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\export_bottom_sheet.dart:270:45 - deprecated_member_use
+   info - 'surfaceVariant' is deprecated and shouldn't be used. Use surfaceContainerHighest instead. This feature was deprecated after v3.18.0-0.1.pre - lib\features\transactions\presentation\widgets\export_bottom_sheet.dart:270:67 - deprecated_member_use
+   info - 'surfaceVariant' is deprecated and shouldn't be used. Use surfaceContainerHighest instead. This feature was deprecated after v3.18.0-0.1.pre - lib\features\transactions\presentation\widgets\export_bottom_sheet.dart:311:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\export_bottom_sheet.dart:311:62 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\export_bottom_sheet.dart:313:63 - deprecated_member_use
+   info - 'surfaceVariant' is deprecated and shouldn't be used. Use surfaceContainerHighest instead. This feature was deprecated after v3.18.0-0.1.pre - lib\features\transactions\presentation\widgets\export_bottom_sheet.dart:342:21 - deprecated_member_use
+warning - Unused import: 'package:trust_tracker_flutter/core/theme/app_theme.dart' - lib\features\transactions\presentation\widgets\filter_bottom_sheet.dart:4:8 - unused_import
+warning - Unused import: 'package:trust_tracker_flutter/features/categories/data/models/category_model.dart' - lib\features\transactions\presentation\widgets\filter_bottom_sheet.dart:5:8 - unused_import
+warning - Unused import: 'package:trust_tracker_flutter/core/utils/extensions.dart' - lib\features\transactions\presentation\widgets\filter_bottom_sheet.dart:8:8 - unused_import
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\widgets\filter_bottom_sheet.dart:116:34 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\widgets\filter_bottom_sheet.dart:117:42 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\widgets\filter_bottom_sheet.dart:118:20 - curly_braces_in_flow_control_structures
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\filter_bottom_sheet.dart:147:54 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\filter_bottom_sheet.dart:159:80 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\filter_bottom_sheet.dart:166:78 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\filter_bottom_sheet.dart:189:126 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\widgets\filter_bottom_sheet.dart:202:46 - deprecated_member_use
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\main.dart:1:8 - unnecessary_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\main.dart:138:50 - deprecated_member_use
 warning - Unused import: 'package:flutter/material.dart' - test\widget_test.dart:1:8 - unused_import
 
-flutter : 651 issues found. (ran in 12.9s)
-At line:1 char:1
-+ flutter analyze > analyze_output.txt 2>&1
-+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    + CategoryInfo          : NotSpecified: (651 issues found. (ran in 12.9s):String) [], RemoteExc 
-   eption
-    + FullyQualifiedErrorId : NativeCommandError
- 

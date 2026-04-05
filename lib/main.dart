@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
 import 'package:trust_tracker_flutter/core/router/app_router.dart';
-import 'package:trust_tracker_flutter/core/storage/isar_service.dart';
+import 'package:trust_tracker_flutter/core/database/database_helper.dart';
 import 'package:trust_tracker_flutter/core/di/providers.dart';
 import 'package:trust_tracker_flutter/core/security/security_provider.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
@@ -21,9 +21,9 @@ Future<void> main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  // Initialize Isar
-  final isarService = IsarService();
-  await isarService.init();
+  // Initialize Database
+  final dbHelper = DatabaseHelper.instance;
+  await dbHelper.database; // Ensure it's initialized
 
   // Initialize SharedPreferences
   final prefs = await SharedPreferences.getInstance();
@@ -31,9 +31,12 @@ Future<void> main() async {
   runApp(
     ProviderScope(
       overrides: [
-        isarServiceProvider.overrideWithValue(isarService),
+        databaseHelperProvider.overrideWithValue(dbHelper),
         settingsProvider.overrideWith(
           (ref) => SettingsNotifier(prefs),
+        ),
+        securityProvider.overrideWith(
+          (ref) => SecurityNotifier(ref.watch(localAuthProvider), prefs),
         ),
       ],
       child: const TrustTrackerApp(),
@@ -54,14 +57,6 @@ class _TrustTrackerAppState extends ConsumerState<TrustTrackerApp>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _checkForUpdate();
-  }
-
-  Future<void> _checkForUpdate() async {
-    await Future.delayed(const Duration(seconds: 2));
-    if (mounted) {
-      await ref.read(updateServiceProvider).checkForUpdate();
-    }
   }
 
   @override
@@ -72,17 +67,12 @@ class _TrustTrackerAppState extends ConsumerState<TrustTrackerApp>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Feature 5 & 6: App Lock and Recents Security
     final securityNotifier = ref.read(securityProvider.notifier);
-    
-    // inactive = partially visible (like Recents list)
-    // paused = totally in background
     if (state == AppLifecycleState.inactive || state == AppLifecycleState.paused) {
       securityNotifier.lock();
       securityNotifier.setVisibility(false);
     } else if (state == AppLifecycleState.resumed) {
       securityNotifier.setVisibility(true);
-      _checkForUpdate();
     }
   }
 
@@ -91,17 +81,18 @@ class _TrustTrackerAppState extends ConsumerState<TrustTrackerApp>
     final settings = ref.watch(settingsProvider);
     final router = ref.watch(appRouterProvider);
 
+    final accentColor = AppAccentColors.fromHex(settings.accentColorHex).color;
+
     return MaterialApp.router(
       title: 'Trust Tracker',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
+      theme: AppTheme.getTheme(accentColor, Brightness.light),
+      darkTheme: AppTheme.getTheme(accentColor, Brightness.dark),
       themeMode: settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
       routerConfig: router,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       locale: Locale(settings.languageCode),
-      // --- Feature 5 Wrapper: Protect sensitive UI in recents tray ---
       builder: (context, child) {
         return Consumer(
           builder: (context, ref, _) {
