@@ -21,8 +21,6 @@ import 'package:trust_tracker_flutter/features/categories/presentation/providers
 
 // --- Providers & State ---
 
-final _txnFilterProvider = StateProvider.autoDispose<TransactionFilter>((ref) => const TransactionFilter());
-
 class _GroupedResult {
   final List<_DayGroup> groups;
   final Map<int?, CategoryModel> catMap;
@@ -36,23 +34,18 @@ class _DayGroup {
   _DayGroup(this.date, this.txns, this.dayTotal);
 }
 
-final _pagedLimitProvider = StateProvider.autoDispose<int>((ref) => 20);
-
 final _groupedFutureProvider = FutureProvider.autoDispose<_GroupedResult>((ref) async {
-  final filter = ref.watch(_txnFilterProvider);
   final txnsAsync = ref.watch(transactionListProvider);
-  final limit = ref.watch(_pagedLimitProvider);
   
-  if (txnsAsync.isLoading) return _GroupedResult([], {});
-  final txns = txnsAsync.valueOrNull ?? [];
-
-  final filtered = FilterUtils.applyFilter(txns, filter);
+  if (txnsAsync.isLoading && !txnsAsync.isRefreshing) return _GroupedResult([], {});
+  final listState = txnsAsync.valueOrNull;
+  if (listState == null) return _GroupedResult([], {});
   
-  // Apply pagination limit to the filtered list
-  final pagedTxns = filtered.take(limit).toList();
+  final txns = listState.transactions;
+  final filter = listState.filter;
 
   final groupsMap = <String, List<TransactionModel>>{};
-  for (final t in pagedTxns) {
+  for (final t in txns) {
     final key = t.date.toIso8601String().split('T')[0];
     groupsMap.putIfAbsent(key, () => []).add(t);
   }
@@ -98,36 +91,30 @@ class TransactionsPage extends ConsumerStatefulWidget {
 
 class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   final TextEditingController _searchController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
   final FocusNode _searchFocusNode = FocusNode();
   bool _isSearching = false;
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
     _searchFocusNode.addListener(() {
       setState(() => _isSearching = _searchFocusNode.hasFocus);
+    });
+    
+    // Set initial search text if any
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final currentFilter = ref.read(transactionListProvider).valueOrNull?.filter;
+      if (currentFilter != null && currentFilter.searchQuery.isNotEmpty) {
+        _searchController.text = currentFilter.searchQuery;
+      }
     });
   }
 
   @override
   void dispose() {
     _searchController.dispose();
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
-  }
-
-  void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
-      final currentLimit = ref.read(_pagedLimitProvider);
-      final totalFetched = ref.read(transactionListProvider).valueOrNull?.length ?? 0;
-      if (currentLimit < totalFetched) {
-        ref.read(_pagedLimitProvider.notifier).state = currentLimit + 20;
-      }
-    }
   }
 
   void _editTransaction(TransactionModel transaction) {
@@ -170,7 +157,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   }
 
   void _openFilterBottomSheet() {
-    final currentFilter = ref.read(_txnFilterProvider);
+    final currentFilter = ref.read(transactionListProvider).valueOrNull?.filter ?? const TransactionFilter();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -178,7 +165,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
       builder: (context) => FilterBottomSheet(
         initialFilter: currentFilter,
         onApply: (newFilter) {
-          ref.read(_txnFilterProvider.notifier).state = newFilter;
+          ref.read(transactionListProvider.notifier).applyFilter(newFilter);
           if (newFilter.searchQuery != _searchController.text) {
              _searchController.text = newFilter.searchQuery;
           }
@@ -188,8 +175,9 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   }
 
   void _openExportBottomSheet() {
-    final txns = ref.read(transactionListProvider).valueOrNull ?? [];
-    final filter = ref.read(_txnFilterProvider);
+    final listState = ref.read(transactionListProvider).valueOrNull;
+    final txns = listState?.transactions ?? [];
+    final filter = listState?.filter ?? const TransactionFilter();
 
     showModalBottomSheet(
       context: context,
@@ -205,7 +193,9 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   @override
   Widget build(BuildContext context) {
     final groupedAsync = ref.watch(_groupedFutureProvider);
-    final filter = ref.watch(_txnFilterProvider);
+    final listAsync = ref.watch(transactionListProvider);
+    final listState = listAsync.valueOrNull;
+    final filter = listState?.filter ?? const TransactionFilter();
     final settings = ref.watch(settingsProvider);
     final theme = Theme.of(context);
     final tt = theme.textTheme;
@@ -213,8 +203,6 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     final isDark = theme.brightness == Brightness.dark;
     final currency = settings.currency;
     final isTapMode = settings.transactionActionMode == TransactionActionMode.tap;
-
-    final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
@@ -235,13 +223,6 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
             const SizedBox(width: 8),
           ],
         ),
-        // floatingActionButton: isKeyboardOpen? null : FloatingActionButton.extended(
-        //   onPressed: () => context.push('/add-transaction'),
-        //   icon: const Icon(Icons.add_rounded),
-        //   label: const Text('Add Transaction', style: TextStyle(fontWeight: FontWeight.bold)),
-        //   backgroundColor: cs.primary,
-        //   foregroundColor: cs.onPrimary,
-        // ),
         body: Column(
           children: [
             _buildHeader(context, filter, cs, tt, theme, isDark),
@@ -275,14 +256,13 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                   }
 
                   return CustomScrollView(
-                    controller: _scrollController,
                     physics: const BouncingScrollPhysics(),
                     cacheExtent: 1000,
                     slivers: [
                       ...groups.map((g) => SliverMainAxisGroup(
                             slivers: [
                               SliverPadding(
-                                padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+                                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                                 sliver: SliverToBoxAdapter(
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -335,17 +315,6 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                               ),
                             ],
                           )),
-                      const SliverToBoxAdapter(child: SizedBox(height: 20)),
-                      if (ref.read(transactionListProvider).valueOrNull != null &&
-                          ref.read(_pagedLimitProvider) < (ref.read(transactionListProvider).valueOrNull?.length ?? 0))
-                        const SliverToBoxAdapter(
-                          child: Center(
-                            child: Padding(
-                              padding: EdgeInsets.all(16.0),
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                          ),
-                        ),
                       const SliverToBoxAdapter(child: SizedBox(height: 120)),
                     ],
                   );
@@ -357,6 +326,8 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
       ),
     );
   }
+
+
 
   Widget _buildHeader(BuildContext context, TransactionFilter filter, ColorScheme cs, TextTheme tt, ThemeData theme, bool isDark) {
     return Container(
@@ -387,8 +358,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                     controller: _searchController,
                     focusNode: _searchFocusNode,
                     onChanged: (v) {
-                       // Simple debounce logic could go here, but for now direct update
-                       ref.read(_txnFilterProvider.notifier).update((s) => s.copyWith(searchQuery: v.toLowerCase()));
+                       ref.read(transactionListProvider.notifier).applyFilter(filter.copyWith(searchQuery: v.toLowerCase()));
                     },
                     style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
                     textAlignVertical: TextAlignVertical.center,
@@ -410,7 +380,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                               icon: Icon(Icons.cancel_rounded, size: 18, color: cs.onSurface.withOpacity(0.4)),
                               onPressed: () {
                                 _searchController.clear();
-                                ref.read(_txnFilterProvider.notifier).update((s) => s.copyWith(searchQuery: ''));
+                                ref.read(transactionListProvider.notifier).applyFilter(filter.copyWith(searchQuery: ''));
                               },
                             )
                           : null,
@@ -494,7 +464,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                       _FilterChip(
                         label: filter.type.toUpperCase(),
                         icon: filter.type == 'income' ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
-                        onRemove: () => ref.read(_txnFilterProvider.notifier).update((s) => s.copyWith(type: 'all')),
+                        onRemove: () => ref.read(transactionListProvider.notifier).applyFilter(filter.copyWith(type: 'all')),
                       ).animate().scale(duration: 200.ms).fadeIn(),
 
                     // --- Date Chip ---
@@ -502,7 +472,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                       _FilterChip(
                         label: '${DateFormat('MMM d').format(filter.dateRange!.start)} - ${DateFormat('MMM d').format(filter.dateRange!.end)}',
                         icon: Icons.calendar_today_rounded,
-                        onRemove: () => ref.read(_txnFilterProvider.notifier).update((s) => s.copyWith(clearDateRange: true)),
+                        onRemove: () => ref.read(transactionListProvider.notifier).applyFilter(filter.copyWith(clearDateRange: true)),
                       ).animate().scale(duration: 200.ms).fadeIn(),
 
                     // --- Category Chips ---
@@ -516,7 +486,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                               label: cat.name,
                               onRemove: () {
                                 final newIds = List<int>.from(filter.categoryIds)..remove(id!);
-                                ref.read(_txnFilterProvider.notifier).update((s) => s.copyWith(categoryIds: newIds));
+                                ref.read(transactionListProvider.notifier).applyFilter(filter.copyWith(categoryIds: newIds));
                               },
                             ).animate().scale(duration: 200.ms).fadeIn();
                           });
@@ -530,7 +500,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                       _FilterChip(
                         label: '${filter.sortBy.name.toUpperCase()} ${filter.isAscending ? "↑" : "↓"}',
                         icon: Icons.sort_rounded,
-                        onRemove: () => ref.read(_txnFilterProvider.notifier).update((s) => s.copyWith(sortBy: TransactionSortBy.date, isAscending: false)),
+                        onRemove: () => ref.read(transactionListProvider.notifier).applyFilter(filter.copyWith(sortBy: TransactionSortBy.date, isAscending: false)),
                       ).animate().scale(duration: 200.ms).fadeIn(),
 
                     // --- Clear All Chip ---
@@ -539,7 +509,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                       icon: Icons.refresh_rounded,
                       onRemove: () {
                         _searchController.clear();
-                        ref.read(_txnFilterProvider.notifier).state = const TransactionFilter();
+                        ref.read(transactionListProvider.notifier).applyFilter(const TransactionFilter());
                       },
                     ).animate().scale(duration: 200.ms).fadeIn(),
                   ],

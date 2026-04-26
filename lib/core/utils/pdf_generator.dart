@@ -39,6 +39,12 @@ class PdfGenerator {
       logo = pw.MemoryImage(logoData.buffer.asUint8List());
     } catch (_) {}
 
+    // Split rows into chunks of 40 to prevent TooManyPagesException
+    final chunks = <List<ExportTransactionRow>>[];
+    for (var i = 0; i < rows.length; i += 40) {
+      chunks.add(rows.sublist(i, i + 40 > rows.length ? rows.length : i + 40));
+    }
+
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
@@ -47,96 +53,12 @@ class PdfGenerator {
           base: fontRegular,
           bold: fontBold,
         ),
+        header: (context) => _buildHeader(logo, now, dateRange, rows.length),
+        footer: (context) => _buildFooter(context),
         build: (context) => [
-          // Header
-          pw.Row(
-            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  pw.Text('Trust Tracker',
-                      style: pw.TextStyle(
-                          fontSize: 28,
-                          fontWeight: pw.FontWeight.bold,
-                          color: PdfColors.blue900)),
-                  pw.Text('Financial Activity Report',
-                      style:
-                          pw.TextStyle(fontSize: 14, color: PdfColors.grey700)),
-                ],
-              ),
-              if (logo != null)
-                pw.Container(
-                  width: 60,
-                  height: 60,
-                  child: pw.Image(logo),
-                ),
-            ],
-          ),
+          _buildSummarySection(currency, totalIncome, totalExpense, balance),
           pw.SizedBox(height: 32),
 
-          // Info bar
-          pw.Container(
-            padding: const pw.EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-            decoration: const pw.BoxDecoration(
-              color: PdfColors.grey100,
-              borderRadius: pw.BorderRadius.all(pw.Radius.circular(6)),
-            ),
-            child: pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: [
-                pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Text('PERIOD', style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600, fontWeight: pw.FontWeight.bold)),
-                    pw.Text(dateRange, style: const pw.TextStyle(fontSize: 10)),
-                  ],
-                ),
-                pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.center,
-                  children: [
-                    pw.Text('GENERATED ON', style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600, fontWeight: pw.FontWeight.bold)),
-                    pw.Text(now.toTimestamp(), style: const pw.TextStyle(fontSize: 10)),
-                  ],
-                ),
-                pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.end,
-                  children: [
-                    pw.Text('ENTRIES', style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600, fontWeight: pw.FontWeight.bold)),
-                    pw.Text('${rows.length} transactions', style: const pw.TextStyle(fontSize: 10)),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          pw.SizedBox(height: 24),
-
-          // Summary Section
-          pw.Row(
-            children: [
-              _buildSummaryCard(
-                  'Total Income',
-                  totalIncome.toCurrency(currency),
-                  PdfColors.green800,
-                  PdfColors.green50),
-              pw.SizedBox(width: 12),
-              _buildSummaryCard(
-                  'Total Expense',
-                  totalExpense.toCurrency(currency),
-                  PdfColors.red800,
-                  PdfColors.red50),
-              pw.SizedBox(width: 12),
-              _buildSummaryCard(
-                  'Net Balance',
-                  balance.toCurrency(currency),
-                  balance >= 0 ? PdfColors.blue800 : PdfColors.red800,
-                  balance >= 0 ? PdfColors.blue50 : PdfColors.red50),
-            ],
-          ),
-          pw.SizedBox(height: 32),
-
-          // Table Header
           pw.Text('TRANSACTION DETAILS',
               style: pw.TextStyle(
                   fontSize: 12,
@@ -144,69 +66,8 @@ class PdfGenerator {
                   color: PdfColors.blue900)),
           pw.SizedBox(height: 12),
 
-          // Table
-          pw.TableHelper.fromTextArray(
-            headerStyle: pw.TextStyle(
-              fontSize: 10,
-              fontWeight: pw.FontWeight.bold,
-              color: PdfColors.white,
-            ),
-            cellStyle: const pw.TextStyle(fontSize: 9),
-            headerDecoration: const pw.BoxDecoration(
-              color: PdfColors.blue800,
-              borderRadius: pw.BorderRadius.vertical(top: pw.Radius.circular(6)),
-            ),
-            rowDecoration: const pw.BoxDecoration(
-              border: pw.Border(
-                bottom: pw.BorderSide(color: PdfColors.grey300, width: 0.5),
-              ),
-            ),
-            oddRowDecoration: const pw.BoxDecoration(
-              color: PdfColors.white,
-            ),
-            cellPadding: const pw.EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 8,
-            ),
-            columnWidths: const {
-              0: pw.FlexColumnWidth(2.0), // Date
-              1: pw.FlexColumnWidth(2.0), // Transaction
-              2: pw.FlexColumnWidth(1.2), // Category
-              3: pw.FlexColumnWidth(1.5), // Notes
-              4: pw.FlexColumnWidth(1.5), // Amount
-            },
-            cellAlignments: {
-              0: pw.Alignment.centerLeft,
-              1: pw.Alignment.centerLeft,
-              2: pw.Alignment.centerLeft,
-              3: pw.Alignment.centerLeft,
-              4: pw.Alignment.centerRight,
-            },
-            headers: [
-              'Date & Time',
-              'Description',
-              'Category',
-              'Notes',
-              'Amount'
-            ],
-            data: rows.map((row) {
-              final amountStr = '${row.isIncome ? '+' : '-'}${row.amount.toCurrency(currency)}';
-              return [
-                row.timestampLabel,
-                row.title,
-                row.category,
-                row.notes.isEmpty ? '-' : row.notes,
-                pw.Text(
-                  amountStr,
-                  style: pw.TextStyle(
-                    color: row.isIncome ? PdfColors.green800 : PdfColors.red800,
-                    fontWeight: pw.FontWeight.bold,
-                    fontSize: 10,
-                  ),
-                ),
-              ];
-            }).toList(),
-          ),
+          // Render tables in chunks to avoid single massive table logic failures
+          ...chunks.map((chunk) => _buildTransactionTable(chunk, currency)),
 
           pw.SizedBox(height: 48),
           pw.Divider(color: PdfColors.grey200),
@@ -216,19 +77,9 @@ class PdfGenerator {
             children: [
               pw.Text('Trust Tracker - Privacy-first Finance Management',
                   style: pw.TextStyle(fontSize: 8, color: PdfColors.grey500)),
-              pw.Text('Page 1 of 1',
-                  style: pw.TextStyle(fontSize: 8, color: PdfColors.grey500)),
             ],
           ),
         ],
-        footer: (context) => pw.Container(
-          alignment: pw.Alignment.centerRight,
-          margin: const pw.EdgeInsets.only(top: 20),
-          child: pw.Text(
-            'Generated via Trust Tracker App',
-            style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey400),
-          ),
-        ),
       ),
     );
 
@@ -237,6 +88,175 @@ class PdfGenerator {
         '${dir.path}/trust_tracker_report_${now.millisecondsSinceEpoch}.pdf');
     await file.writeAsBytes(await pdf.save());
     return file;
+  }
+
+  static pw.Widget _buildHeader(pw.MemoryImage? logo, DateTime now, String dateRange, int count) {
+    return pw.Column(
+      children: [
+        pw.Row(
+          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text('Trust Tracker',
+                    style: pw.TextStyle(
+                        fontSize: 28,
+                        fontWeight: pw.FontWeight.bold,
+                        color: PdfColors.blue900)),
+                pw.Text('Financial Activity Report',
+                    style: pw.TextStyle(fontSize: 14, color: PdfColors.grey700)),
+              ],
+            ),
+            if (logo != null)
+              pw.Container(
+                width: 60,
+                height: 60,
+                child: pw.Image(logo),
+              ),
+          ],
+        ),
+        pw.SizedBox(height: 32),
+        pw.Container(
+          padding: const pw.EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          decoration: const pw.BoxDecoration(
+            color: PdfColors.grey100,
+            borderRadius: pw.BorderRadius.all(pw.Radius.circular(6)),
+          ),
+          child: pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text('PERIOD',
+                      style: pw.TextStyle(
+                          fontSize: 8,
+                          color: PdfColors.grey600,
+                          fontWeight: pw.FontWeight.bold)),
+                  pw.Text(dateRange, style: const pw.TextStyle(fontSize: 10)),
+                ],
+              ),
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.center,
+                children: [
+                  pw.Text('GENERATED ON',
+                      style: pw.TextStyle(
+                          fontSize: 8,
+                          color: PdfColors.grey600,
+                          fontWeight: pw.FontWeight.bold)),
+                  pw.Text(now.toTimestamp(),
+                      style: const pw.TextStyle(fontSize: 10)),
+                ],
+              ),
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.end,
+                children: [
+                  pw.Text('ENTRIES',
+                      style: pw.TextStyle(
+                          fontSize: 8,
+                          color: PdfColors.grey600,
+                          fontWeight: pw.FontWeight.bold)),
+                  pw.Text('$count transactions',
+                      style: const pw.TextStyle(fontSize: 10)),
+                ],
+              ),
+            ],
+          ),
+        ),
+        pw.SizedBox(height: 24),
+      ],
+    );
+  }
+
+  static pw.Widget _buildFooter(pw.Context context) {
+    return pw.Container(
+      alignment: pw.Alignment.centerRight,
+      margin: const pw.EdgeInsets.only(top: 20),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Text(
+            'Generated via Trust Tracker App',
+            style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey400),
+          ),
+          pw.Text(
+            'Page ${context.pageNumber} of ${context.pagesCount}',
+            style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey400),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static pw.Widget _buildSummarySection(
+      String currency, double income, double expense, double balance) {
+    return pw.Row(
+      children: [
+        _buildSummaryCard(
+            'Total Income',
+            income.toCurrency(currency),
+            PdfColors.green800,
+            PdfColors.green50),
+        pw.SizedBox(width: 12),
+        _buildSummaryCard(
+            'Total Expense',
+            expense.toCurrency(currency),
+            PdfColors.red800,
+            PdfColors.red50),
+        pw.SizedBox(width: 12),
+        _buildSummaryCard(
+            'Net Balance',
+            balance.toCurrency(currency),
+            balance >= 0 ? PdfColors.blue800 : PdfColors.red800,
+            balance >= 0 ? PdfColors.blue50 : PdfColors.red50),
+      ],
+    );
+  }
+
+  static pw.Widget _buildTransactionTable(
+      List<ExportTransactionRow> chunk, String currency) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 12),
+      child: pw.TableHelper.fromTextArray(
+        headerStyle: pw.TextStyle(
+          fontSize: 10,
+          fontWeight: pw.FontWeight.bold,
+          color: PdfColors.white,
+        ),
+        cellStyle: const pw.TextStyle(fontSize: 9),
+        headerDecoration: const pw.BoxDecoration(
+          color: PdfColors.blue800,
+          borderRadius: pw.BorderRadius.all(pw.Radius.circular(4)),
+        ),
+        rowDecoration: const pw.BoxDecoration(
+          border: pw.Border(
+            bottom: pw.BorderSide(color: PdfColors.grey300, width: 0.5),
+          ),
+        ),
+        cellPadding: const pw.EdgeInsets.all(6),
+        columnWidths: const {
+          0: pw.FlexColumnWidth(2.0), // Date
+          1: pw.FlexColumnWidth(2.0), // Transaction
+          2: pw.FlexColumnWidth(1.2), // Category
+          3: pw.FlexColumnWidth(1.5), // Notes
+          4: pw.FlexColumnWidth(1.5), // Amount
+        },
+        headers: ['Date & Time', 'Description', 'Category', 'Notes', 'Amount'],
+        data: chunk.map((row) {
+          final amountStr =
+              '${row.isIncome ? '+' : '-'}${row.amount.toCurrency(currency)}';
+          return [
+            row.timestampLabel,
+            row.title,
+            row.category,
+            row.notes.isEmpty ? '-' : row.notes,
+            amountStr,
+          ];
+        }).toList(),
+      ),
+    );
   }
 
   static pw.Widget _buildSummaryCard(
@@ -253,7 +273,10 @@ class PdfGenerator {
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
             pw.Text(title,
-                style: pw.TextStyle(fontSize: 9, color: PdfColors.grey700, fontWeight: pw.FontWeight.bold)),
+                style: pw.TextStyle(
+                    fontSize: 9,
+                    color: PdfColors.grey700,
+                    fontWeight: pw.FontWeight.bold)),
             pw.SizedBox(height: 8),
             pw.Text(value,
                 style: pw.TextStyle(

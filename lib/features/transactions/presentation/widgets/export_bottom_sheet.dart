@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
+import 'package:trust_tracker_flutter/features/transactions/data/repositories/transaction_repository.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/services/export_service.dart';
 import 'package:trust_tracker_flutter/generated/app_localizations.dart';
 
@@ -254,8 +255,9 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
         sortBy: TransactionSortBy.date,
       );
 
-      // 3. Apply the filter to the total transactions list
-      final filteredTxns = FilterUtils.applyFilter(widget.transactions, exportFilter);
+      // 3. Fetch all matching transactions from DB
+      final repo = ref.read(transactionRepositoryProvider);
+      final filteredTxns = await repo.getFilteredForExport(exportFilter);
 
       print("Filtered count for export: ${filteredTxns.length}");
 

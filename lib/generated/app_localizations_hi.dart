@@ -411,7 +411,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get fri => 'शुक्र';
 
   @override
-  String get sat => 'शनि';
+  String get sat => 'शनિ';
 
   @override
   String get sun => 'रवि';
@@ -455,7 +455,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get removeBudget => 'बजट हटाएं';
 
   @override
-  String get setBudget => 'बजट सेट करें';
+  String get setBudget => 'बजટ सेट करें';
 
   @override
   String get updateBudget => 'बजट अपडेट करें';
@@ -560,7 +560,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get shareMessage =>
-      'ट्रस्ट ट्रैकर के साथ अपने व्यक्तिगत वित्त का नियंत्रण लें।\n\nट्रस्ट ट्रैकर एक निजी, ऑफलाइन-प्रथम व्यय ट्रैकर है जिसे आपकी आय, व्यय और बजट को आसानी से प्रबंधित करने में मदद करने के लिए डिज़ाइन किया गया है।\n\nमुख्य विशेषताएं:\n• सरल व्यय और आय ट्रैकिंग\n• बजट प्रबंधन और वित्तीय अंतर्दृष्टि\n• सुरक्षित पिन और बायोमेट्रिक सुरक्षा\n• पूरी तरह से ऑफलाइन और गोपनीयता आधारित\n• साफ और उपयोग में आसान इंटरफेस\n\nGoogle Play Store से ऐप डाउनलोड करें:\nhttps://play.google.com/store/apps/details?id=com.trusttracker.trust_tracker_flutter\n\nआपकी प्रतिक्रिया और समर्थन बहुत मायने रखता है।';
+      'ट्रस्ट ट्रैकर के साथ अपने व्यक्तिगत वित्त का नियंत्रण लें।\n\nट्रस्ट ट्रैकर एक निजी, ऑफलाइन-प्रथम व्यय ट्रैकर है जिसे आपकी आय, व्यय और बजट को आसानी से प्रबंधित करने में मदद करने के लिए डिज़ाइन किया गया है।\n\nमुख्य विशेषताएं:\n• सरल व्यय और आय ट्रैकिंग\n• बजट प्रबंधन और वित्तीय अंतर्दष्टि\n• सुरक्षित पिन और बायोमेट्रिक सुरक्षा\n• पूरी तरह से ऑफलाइन और गोपनीयता आधारित\n• साफ और उपयोग में आसान इंटरफेस\n\nGoogle Play Store से ऐप डाउनलोड करें:\nhttps://play.google.com/store/apps/details?id=com.trusttracker.trust_tracker_flutter\n\nआपकी प्रतिक्रिया और समर्थन बहुत मायने रखता है।';
 
   @override
   String get appTheme => 'ऐप थीम';
@@ -621,4 +621,192 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get resetAvatar => 'अवतार रीसेट करें';
+
+  @override
+  String get monthStartDay => 'महीने की शुरुआत का दिन';
+
+  @override
+  String get carryForward => 'शेष राशि आगे बढ़ाएं';
+
+  @override
+  String get carryForwardEnabledDesc =>
+      'पिछली शेष राशि अगले महीने में जारी रहेगी';
+
+  @override
+  String get carryForwardDisabledDesc => 'हर महीने नई शुरुआत';
+
+  @override
+  String get customStartDateDesc =>
+      'अपनी ज़रूरत के अनुसार तारीख चुनें (जैसे: वेतन आने का दिन)';
+
+  @override
+  String get smartMonthlyTracking => 'स्मार्ट मासिक ट्रैकिंग';
+
+  @override
+  String get trackFinancesWay => 'अपने तरीके से खर्चों को ट्रैक करें';
+
+  @override
+  String get financialPreferences => 'वित्तीय प्राथमिकताएं';
+
+  @override
+  String get continueLabel => 'जारी रखें';
+
+  @override
+  String get startTracking => 'ट्रैकिंग शुरू करें 🚀';
+
+  @override
+  String get welcomeTagline => 'आपका निजी, केवल ऑफलाइन वाला\nवित्तीय साथी';
+
+  @override
+  String get lockPrivate =>
+      'पूरी तरह से गोपनीय - कोई क्लाउड नहीं, कोई सर्वर नहीं';
+
+  @override
+  String get smartAnalytics => 'स्मार्ट एनालिटिक्स और बजट ट्रैकिंग';
+
+  @override
+  String get blazingFast => 'अत्यधिक तेज - सारा डेटा आपके फोन पर रहता है';
+
+  @override
+  String get whatsYourName => 'आपका नाम क्या है?';
+
+  @override
+  String get personalizeExperience =>
+      'हम इसका उपयोग आपके अनुभव को व्यक्तिगत बनाने के लिए करेंगे।';
+
+  @override
+  String get alexHint => 'जैसे: राहुल';
+
+  @override
+  String get chooseCurrency => 'अपनी मुद्रा चुनें';
+
+  @override
+  String detectedChangeSettings(Object code) {
+    return 'मुद्रा $code पहचानी गई · सेटिंग्स में कभी भी बदलें';
+  }
+
+  @override
+  String get swipeEditDelete => 'बाएं/दाएं स्वाइप करें → संपादित करें / हटाएं';
+
+  @override
+  String get tapViewDetails => 'टैप करें → पूर्ण विवरण देखें';
+
+  @override
+  String get swipeLeftRightAction => 'बाएं या दाएं स्वाइप करें';
+
+  @override
+  String get readyTitle => 'आप तैयार हैं';
+
+  @override
+  String get readyDesc =>
+      'आपका व्यक्तिगत वित्तीय साथी तैयार है और विश्वास के साथ खर्चों को ट्रैक करने में आपकी मदद करने के लिए तैयार है।';
+
+  @override
+  String get personalizedProfile => 'व्यक्तिगत प्रोफाइल';
+
+  @override
+  String get globalCurrency => 'वैश्विक मुद्रा समर्थन';
+
+  @override
+  String get smartMonthlyControls => 'स्मार्ट मासिक नियंत्रण';
+
+  @override
+  String get quickEasyActions => 'तुरंत और आसान एक्शन';
+
+  @override
+  String get manageRecordsGestures =>
+      'सरल जेस्चर के साथ सेकंडों में अपने रिकॉर्ड को मैनेज करें';
+
+  @override
+  String get preferredLanguage => 'अपनी पसंदीदा भाषा का उपयोग करें';
+
+  @override
+  String get homeLanguage => 'ऐप को घर जैसा महसूस कराएं 🌍';
+
+  @override
+  String get languageSupportNote =>
+      'ऐप कई भाषाओं को सपोर्ट करता है। सेटिंग्स से कभी भी बदला जा सकता है।';
+
+  @override
+  String get autoBackup => 'ऑटो बैकअप';
+
+  @override
+  String get autoBackupDesc =>
+      'निश्चित अंतराल पर अपने डेटा का स्वचालित रूप से बैकअप लें';
+
+  @override
+  String get backupInterval => 'बैकअप अंतराल';
+
+  @override
+  String get hours6 => 'हर 6 घंटे';
+
+  @override
+  String get hours12 => 'हर 12 घंटे';
+
+  @override
+  String get daily => 'दैनिक';
+
+  @override
+  String get weekly => 'साप्ताहिक';
+
+  @override
+  String get lastBackup => 'पिछला बैकअप';
+
+  @override
+  String get nextBackup => 'अगला बैकअप';
+
+  @override
+  String get backupNow => 'अभी बैकअप लें';
+
+  @override
+  String get backupSuccess => 'बैकअप सफल';
+
+  @override
+  String get backupFailed => 'बैकअप विफल';
+
+  @override
+  String get backupPending => 'अपलोड लंबित';
+
+  @override
+  String get backupRunning => 'बैकअप प्रगति पर है...';
+
+  @override
+  String get never => 'कभी नहीं';
+
+  @override
+  String get backupSettings => 'बैकअप सेटिंग्स';
+
+  @override
+  String get summaryNotifications => 'सारांश सूचनाएं';
+
+  @override
+  String get summaryNotificationsDesc =>
+      'अपनी आय और खर्च के बारे में स्वचालित अंतर्दृष्टि प्राप्त करें';
+
+  @override
+  String get monthly => 'मासिक';
+
+  @override
+  String get preferredTime => 'पसंदीदा समय';
+
+  @override
+  String get previewNotification => 'सूचना का पूर्वावलोकन करें';
+
+  @override
+  String get noTransactionsToday => 'आज कोई लेनदेन दर्ज नहीं किया गया।';
+
+  @override
+  String get dailySummary => 'दैनिक सारांश';
+
+  @override
+  String get weeklyInsight => 'साप्ताहिक अंतर्दृष्टि';
+
+  @override
+  String get monthlyReport => 'मासिक रिपोर्ट';
+
+  @override
+  String get dayOfWeek => 'सप्ताह का दिन';
+
+  @override
+  String get frequency => 'आवृत्ति';
 }

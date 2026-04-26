@@ -12,6 +12,10 @@ import 'package:share_plus/share_plus.dart';
 import 'package:trust_tracker_flutter/core/services/update_service.dart';
 import 'package:trust_tracker_flutter/core/services/backup_service.dart';
 import 'package:trust_tracker_flutter/generated/app_localizations.dart';
+import 'package:trust_tracker_flutter/core/services/summary_service.dart';
+import 'package:trust_tracker_flutter/core/database/database_helper.dart';
+import 'package:trust_tracker_flutter/core/services/background_service.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:trust_tracker_flutter/core/constants/app_avatars.dart';
 import 'dart:math' as math;
@@ -366,7 +370,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                           child: Text('${c['code']} — ${c['name']}', style: tt.bodyMedium),
                         )).toList(),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
+                           padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
@@ -382,6 +386,79 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                     ),
                   ],
                 ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // ── Financial Preferences ────────────────────────────────
+          _SettingsSection(
+            title: l10n.financialPreferences,
+            children: [
+              _SettingsTile(
+                icon: Icons.calendar_month_outlined,
+                label: l10n.monthStartDay,
+                trailing: Text(
+                  '${settings.monthStartDay}',
+                  style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.primary),
+                ),
+                onTap: () async {
+                  final picked = await showDialog<int>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: Text(l10n.monthStartDay),
+                      backgroundColor: cs.surface,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      content: SizedBox(
+                        width: double.maxFinite,
+                        child: GridView.builder(
+                          shrinkWrap: true,
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 7,
+                            mainAxisSpacing: 8,
+                            crossAxisSpacing: 8,
+                          ),
+                          itemCount: 31,
+                          itemBuilder: (context, index) {
+                            final day = index + 1;
+                            final isSelected = settings.monthStartDay == day;
+                            return InkWell(
+                              onTap: () => Navigator.pop(ctx, day),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: isSelected ? cs.primary : cs.surfaceVariant.withOpacity(0.3),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    '$day',
+                                    style: tt.bodySmall?.copyWith(
+                                      color: isSelected ? cs.onPrimary : cs.onSurface,
+                                      fontWeight: isSelected ? FontWeight.bold : null,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  );
+                  if (picked != null) {
+                    ref.read(settingsProvider.notifier).setMonthStartDay(picked);
+                    HapticFeedback.mediumImpact();
+                  }
+                },
+              ),
+              _SettingsToggle(
+                icon: Icons.repeat_rounded,
+                label: l10n.carryForward,
+                value: settings.carryForwardEnabled,
+                onChanged: (v) {
+                   ref.read(settingsProvider.notifier).setCarryForwardEnabled(v);
+                   HapticFeedback.selectionClick();
+                },
               ),
             ],
           ),
@@ -568,6 +645,135 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
           ),
           const SizedBox(height: 16),
 
+          // ── Backup & Storage ──────────────────────────────────────
+          _SettingsSection(
+            title: l10n.backupSettings,
+            children: [
+              _SettingsToggle(
+                icon: Icons.backup_outlined,
+                label: l10n.autoBackup,
+                value: settings.autoBackupEnabled,
+                onChanged: (v) {
+                   ref.read(settingsProvider.notifier).setAutoBackupEnabled(v);
+                   HapticFeedback.selectionClick();
+                },
+              ),
+              if (settings.autoBackupEnabled) ...[
+                _SettingsTile(
+                  icon: Icons.history_rounded,
+                  label: l10n.backupInterval,
+                  trailing: Text(
+                    _getIntervalLabel(settings.backupInterval, settings, l10n),
+                    style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.primary),
+                  ),
+                  onTap: () => _showIntervalPicker(context, ref, settings, l10n),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(52, 0, 16, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${l10n.lastBackup}: ${settings.lastBackupTime != null ? _formatDateTime(settings.lastBackupTime!) : l10n.never}',
+                        style: tt.labelSmall?.copyWith(color: cs.onSurface.withOpacity(0.5)),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          _getStatusIcon(settings.lastBackupStatus, cs),
+                          const SizedBox(width: 6),
+                          Text(
+                            _getStatusLabel(settings.lastBackupStatus, l10n),
+                            style: tt.labelSmall?.copyWith(
+                              color: _getStatusColor(settings.lastBackupStatus, cs),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              _SettingsTile(
+                icon: Icons.sync_rounded,
+                label: l10n.backupNow,
+                onTap: () async {
+                  HapticFeedback.mediumImpact();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(l10n.backupRunning))
+                  );
+                  await ref.read(backupServiceProvider).performAutoBackup();
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // ── Summary Notifications ──────────────────────────────
+          _SettingsSection(
+            title: l10n.summaryNotifications,
+            children: [
+              _SettingsSwitchTile(
+                icon: Icons.insights_rounded,
+                label: l10n.summaryNotifications,
+                subtitle: l10n.summaryNotificationsDesc,
+                value: settings.summaryNotificationsEnabled,
+                onChanged: (v) async {
+                  if (v) {
+                    final status = await Permission.notification.request();
+                    if (!status.isGranted) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Notification permission is required for summaries"))
+                        );
+                      }
+                      return;
+                    }
+                  }
+                  ref.read(settingsProvider.notifier).setSummaryNotificationsEnabled(v);
+                  HapticFeedback.selectionClick();
+                },
+              ),
+              if (settings.summaryNotificationsEnabled) ...[
+                _SettingsTile(
+                  icon: Icons.repeat_rounded,
+                  label: l10n.frequency,
+                  trailing: Text(
+                    _getSummaryFrequencyLabel(settings.summaryFrequency, l10n),
+                    style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.primary),
+                  ),
+                  onTap: () => _showSummaryFrequencyPicker(context, ref, settings, l10n),
+                ),
+                if (settings.summaryFrequency == SummaryFrequency.weekly)
+                  _SettingsTile(
+                    icon: Icons.calendar_today_rounded,
+                    label: l10n.dayOfWeek,
+                    trailing: Text(
+                      _getDayOfWeekLabel(settings.summaryDayOfWeek, l10n),
+                      style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.primary),
+                    ),
+                    onTap: () => _showSummaryDayPicker(context, ref, settings, l10n),
+                  ),
+                _SettingsTile(
+                  icon: Icons.access_time_rounded,
+                  label: l10n.preferredTime,
+                  trailing: Text(
+                    '${settings.summaryTimeHour.toString().padLeft(2, '0')}:${settings.summaryTimeMinute.toString().padLeft(2, '0')}',
+                    style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.primary),
+                  ),
+                  onTap: () => _showSummaryTimePicker(context, ref, settings),
+                ),
+                _SettingsTile(
+                  icon: Icons.notification_important_outlined,
+                  label: l10n.previewNotification,
+                  onTap: () => _handlePreviewNotification(context, ref, settings, l10n),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 16),
+
           // ── Data Management ──────────────────────────────────────
           _SettingsSection(
             title: l10n.dataManagement,
@@ -750,24 +956,19 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
     );
 
     try {
-      final result = await backupService.exportData();
-      print("Settings: Export result path: $result");
+      final exportPath = await backupService.exportData();
+      print("Settings: Export result path: $exportPath");
       
       if (!mounted) return;
       Navigator.of(context, rootNavigator: true).pop(); // Safe close
 
-      if (result != null) {
-        print("Settings: Triggering auto-share...");
-        await Share.shareXFiles(
-          [XFile(result)], 
-          subject: 'Trust Tracker Backup File',
-        );
-        
+      if (exportPath != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Export complete! Save the file to your device.'),
+            content: Text('Export complete! Saved to: $exportPath'),
             backgroundColor: Theme.of(context).colorScheme.primary,
             behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 5),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
@@ -805,21 +1006,81 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
     final l10n = AppLocalizations.of(context)!;
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Import Data'),
-        content: const Text('This will overwrite your current data with the backup file. This action cannot be undone. Continue?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Theme.of(context).colorScheme.onError,
+      builder: (ctx) {
+        final theme = Theme.of(context);
+        final cs = theme.colorScheme;
+        final tt = theme.textTheme;
+        
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+          icon: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: cs.error.withOpacity(0.1),
+              shape: BoxShape.circle,
             ),
-            child: const Text('Import'),
+            child: Icon(Icons.warning_amber_rounded, size: 32, color: cs.error),
           ),
-        ],
-      ),
+          title: Text(
+            'Import Data',
+            textAlign: TextAlign.center,
+            style: tt.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.5,
+              fontSize: 20,
+            ),
+          ),
+          content: Text(
+            'This will overwrite your current data with the backup file. This action cannot be undone. Continue?',
+            textAlign: TextAlign.center,
+            style: tt.bodyMedium?.copyWith(
+              color: cs.onSurface.withOpacity(0.6),
+              height: 1.3,
+              fontSize: 14,
+            ),
+          ),
+          contentPadding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+          actions: [
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(ctx).pop(false),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      side: BorderSide(color: cs.outline.withOpacity(0.2)),
+                      foregroundColor: cs.onSurface,
+                    ),
+                    child: Text(
+                      l10n.cancel,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(ctx).pop(true),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                      backgroundColor: cs.error,
+                      foregroundColor: cs.onError,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: const Text(
+                      'Import',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+          actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+        );
+      },
     );
 
     if (confirm == true && mounted) {
@@ -850,7 +1111,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('Data restored successfully'),
+              content: const Text('Data restored successfully, Close the application and reopen it to see the changes'),
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
@@ -871,6 +1132,207 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
         if (mounted) setState(() => _isProcessing = false);
       }
     }
+  }
+
+  String _getIntervalLabel(BackupInterval interval, SettingsState settings, AppLocalizations l10n) {
+    switch (interval) {
+      case BackupInterval.hours6: return l10n.hours6;
+      case BackupInterval.hours12: return l10n.hours12;
+      case BackupInterval.daily: return l10n.daily;
+      case BackupInterval.weekly: return l10n.weekly;
+      case BackupInterval.custom: return "${l10n.custom} (${settings.customBackupHours}h)";
+    }
+  }
+
+  void _showIntervalPicker(BuildContext context, WidgetRef ref, SettingsState settings, AppLocalizations l10n) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: BackupInterval.values.map((interval) => ListTile(
+            title: Text(_getIntervalLabel(interval, settings, l10n)),
+            trailing: settings.backupInterval == interval ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary) : null,
+            onTap: () async {
+              if (interval == BackupInterval.custom) {
+                final hours = await _showCustomHoursDialog(context, l10n);
+                if (hours != null) {
+                  ref.read(settingsProvider.notifier).setBackupInterval(interval, customHours: hours);
+                  Navigator.pop(context);
+                }
+              } else {
+                ref.read(settingsProvider.notifier).setBackupInterval(interval);
+                Navigator.pop(context);
+              }
+            },
+          )).toList(),
+        ),
+      ),
+    );
+  }
+
+  Future<int?> _showCustomHoursDialog(BuildContext context, AppLocalizations l10n) async {
+    int hours = 24;
+    return showDialog<int>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.custom),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(l10n.backupInterval),
+            const SizedBox(height: 16),
+            TextField(
+              keyboardType: TextInputType.number,
+              autofocus: true,
+              decoration: InputDecoration(
+                suffixText: "hours",
+                hintText: "24",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ),
+              onChanged: (v) => hours = int.tryParse(v) ?? 24,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
+          TextButton(onPressed: () => Navigator.pop(context, hours), child: Text(l10n.save)),
+        ],
+      ),
+    );
+  }
+
+  String _formatDateTime(DateTime dt) {
+    return "${dt.day}/${dt.month}/${dt.year} ${dt.hour}:${dt.minute.toString().padLeft(2, '0')}";
+  }
+
+  Icon _getStatusIcon(BackupStatus status, ColorScheme cs) {
+    switch (status) {
+      case BackupStatus.success: return Icon(Icons.check_circle_outline, size: 14, color: cs.primary);
+      case BackupStatus.pending: return Icon(Icons.cloud_upload_outlined, size: 14, color: Colors.orange);
+      case BackupStatus.failed: return Icon(Icons.error_outline, size: 14, color: cs.error);
+      case BackupStatus.none: return const Icon(Icons.info_outline, size: 14);
+    }
+  }
+
+  String _getStatusLabel(BackupStatus status, AppLocalizations l10n) {
+    switch (status) {
+      case BackupStatus.success: return l10n.backupSuccess;
+      case BackupStatus.pending: return l10n.backupPending;
+      case BackupStatus.failed: return l10n.backupFailed;
+      case BackupStatus.none: return "";
+    }
+  }
+
+  Color _getStatusColor(BackupStatus status, ColorScheme cs) {
+    switch (status) {
+      case BackupStatus.success: return cs.primary;
+      case BackupStatus.pending: return Colors.orange;
+      case BackupStatus.failed: return cs.error;
+      case BackupStatus.none: return cs.onSurface;
+    }
+  }
+
+  String _getSummaryFrequencyLabel(SummaryFrequency freq, AppLocalizations l10n) {
+    switch (freq) {
+      case SummaryFrequency.daily: return l10n.daily;
+      case SummaryFrequency.weekly: return l10n.weekly;
+      case SummaryFrequency.monthly: return l10n.monthly;
+    }
+  }
+
+  String _getDayOfWeekLabel(int day, AppLocalizations l10n) {
+    final days = [l10n.mon, l10n.tue, l10n.wed, l10n.thu, l10n.fri, l10n.sat, l10n.sun];
+    if (day >= 1 && day <= 7) return days[day - 1];
+    return days[6];
+  }
+
+  void _showSummaryFrequencyPicker(BuildContext context, WidgetRef ref, SettingsState settings, AppLocalizations l10n) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: SummaryFrequency.values.map((f) => ListTile(
+            title: Text(_getSummaryFrequencyLabel(f, l10n)),
+            onTap: () {
+              ref.read(settingsProvider.notifier).setSummaryFrequency(f);
+              Navigator.pop(context);
+            },
+            trailing: settings.summaryFrequency == f ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary) : null,
+          )).toList(),
+        ),
+      ),
+    );
+  }
+
+  void _showSummaryDayPicker(BuildContext context, WidgetRef ref, SettingsState settings, AppLocalizations l10n) {
+    final days = [l10n.mon, l10n.tue, l10n.wed, l10n.thu, l10n.fri, l10n.sat, l10n.sun];
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(7, (i) => ListTile(
+            title: Text(days[i]),
+            onTap: () {
+              ref.read(settingsProvider.notifier).setSummaryDayOfWeek(i + 1);
+              Navigator.pop(context);
+            },
+            trailing: settings.summaryDayOfWeek == (i + 1) ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary) : null,
+          )),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showSummaryTimePicker(BuildContext context, WidgetRef ref, SettingsState settings) async {
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: settings.summaryTimeHour, minute: settings.summaryTimeMinute),
+    );
+    if (time != null) {
+      ref.read(settingsProvider.notifier).setSummaryTime(time.hour, time.minute);
+    }
+  }
+
+  Future<void> _handlePreviewNotification(BuildContext context, WidgetRef ref, SettingsState settings, AppLocalizations l10n) async {
+    final status = await Permission.notification.request();
+    if (!status.isGranted) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Notification permission is denied"))
+        );
+      }
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Previewing notification..."))
+    );
+    
+    // For preview, we use today's data
+    final summaryService = SummaryService(DatabaseHelper.instance);
+    final now = DateTime.now();
+    final start = DateTime(now.year, now.month, now.day);
+    final data = await summaryService.getSummaryData(start, now);
+    
+    final message = summaryService.generateDailyMessage(data, settings.currency);
+    
+    final notifications = FlutterLocalNotificationsPlugin();
+    const android = AndroidNotificationDetails(
+      'summary_channel', 'Financial Summaries',
+      importance: Importance.high, priority: Priority.high,
+      color: const Color(0xFF008B9C),
+      styleInformation: const BigTextStyleInformation(''),
+    );
+    await notifications.show(999, l10n.dailySummary, message, const NotificationDetails(android: android));
   }
 }
 
@@ -1021,6 +1483,8 @@ class _SectionCard extends StatelessWidget {
   }
 }
 
+
+
 class _SettingsSection extends StatelessWidget {
   final String title;
   final List<Widget> children;
@@ -1122,6 +1586,56 @@ class _SettingsTile extends StatelessWidget {
           Icon(Icons.chevron_right,
               color: cs.onSurface.withOpacity(0.3), size: 18),
         ]),
+      ),
+    );
+  }
+}
+
+class _SettingsSwitchTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _SettingsSwitchTile({
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tt = theme.textTheme;
+    final cs = theme.colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: cs.onSurface.withOpacity(0.55)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: tt.bodyMedium),
+                Text(
+                  subtitle,
+                  style: tt.labelSmall?.copyWith(color: cs.onSurface.withOpacity(0.5)),
+                ),
+              ],
+            ),
+          ),
+          Switch.adaptive(
+            value: value,
+            onChanged: onChanged,
+            activeColor: cs.primary,
+          ),
+        ],
       ),
     );
   }

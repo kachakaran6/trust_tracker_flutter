@@ -10,7 +10,10 @@ import 'package:trust_tracker_flutter/features/categories/data/repositories/cate
 import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/repositories/transaction_repository.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
+import 'package:trust_tracker_flutter/features/transactions/presentation/providers/transaction_provider.dart';
 import 'package:trust_tracker_flutter/generated/app_localizations.dart';
+import 'package:trust_tracker_flutter/core/utils/financial_utils.dart';
+import 'package:intl/intl.dart' as intl;
 
 final _expenseCategoriesProvider =
     FutureProvider.autoDispose<List<CategoryModel>>((ref) {
@@ -19,10 +22,12 @@ final _expenseCategoriesProvider =
 
 final _monthSpendingProvider =
     FutureProvider.autoDispose<Map<int, double>>((ref) async {
-  final monthKey = DateTime.now().toMonthKey();
+  ref.watch(transactionChangeProvider);
+  final settings = ref.watch(settingsProvider);
+  final range = FinancialUtils.getCurrentCycleRange(settings.monthStartDay);
   return ref
       .watch(transactionRepositoryProvider)
-      .getCategorySpendingForMonth(monthKey, TransactionType.expense);
+      .getCategorySpendingInRange(range.start, range.end, TransactionType.expense);
 });
 
 class BudgetPage extends ConsumerWidget {
@@ -38,8 +43,11 @@ class BudgetPage extends ConsumerWidget {
     final tt = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context)!;
 
+    final cycleRange = FinancialUtils.getCurrentCycleRange(settings.monthStartDay);
+    final rangeText = '${intl.DateFormat('MMM d').format(cycleRange.start)} – ${intl.DateFormat('MMM d').format(cycleRange.end)}';
+
     return Scaffold(
-      appBar: AppBar(title: Text('${l10n.budgetLabel} — ${now.toMonthYear()}', style: tt.headlineSmall)),
+      appBar: AppBar(title: Text('${l10n.budgetLabel} ($rangeText)', style: tt.headlineSmall)),
       body: catsAsync.when(
         data: (cats) => budgetState.budgets.when(
           data: (budgets) {

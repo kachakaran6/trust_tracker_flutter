@@ -1,19 +1,27 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
+import 'package:go_router/go_router.dart';
 import 'package:trust_tracker_flutter/core/router/app_router.dart';
 import 'package:trust_tracker_flutter/core/database/database_helper.dart';
 import 'package:trust_tracker_flutter/core/di/providers.dart';
 import 'package:trust_tracker_flutter/core/security/security_provider.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
 import 'package:trust_tracker_flutter/core/services/update_service.dart';
+import 'package:trust_tracker_flutter/core/services/background_service.dart';
 import 'package:trust_tracker_flutter/generated/app_localizations.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  tz.initializeTimeZones();
+  await Firebase.initializeApp();
 
   // Lock orientation to portrait
   await SystemChrome.setPreferredOrientations([
@@ -27,6 +35,34 @@ Future<void> main() async {
 
   // Initialize SharedPreferences
   final prefs = await SharedPreferences.getInstance();
+
+  // Initialize Background Tasks
+  await BackgroundService.init();
+
+  // Initialize Local Notifications
+  try {
+    final notifications = FlutterLocalNotificationsPlugin();
+    const androidInit = AndroidInitializationSettings('tt_stat_icon');
+    const initSettings = InitializationSettings(android: androidInit);
+    await notifications.initialize(
+      initSettings,
+      onDidReceiveNotificationResponse: (response) {
+        if (response.id == 100 || response.id == 999) {
+          rootNavigatorKey.currentState?.context.push('/summary');
+        }
+      },
+    );
+
+    // Create Notification Channel for Android
+    await notifications.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(const AndroidNotificationChannel(
+          'summary_channel', 'Financial Summaries',
+          description: 'Periodic financial activity summaries',
+          importance: Importance.high,
+        ));
+  } catch (e) {
+    debugPrint("Notification initialization failed: $e");
+  }
 
   runApp(
     ProviderScope(

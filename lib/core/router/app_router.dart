@@ -12,6 +12,7 @@ import 'package:trust_tracker_flutter/features/analytics/presentation/pages/anal
 import 'package:trust_tracker_flutter/features/budget/presentation/pages/budget_page.dart';
 import 'package:trust_tracker_flutter/features/categories/presentation/pages/categories_page.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/pages/settings_page.dart';
+import 'package:trust_tracker_flutter/features/analytics/presentation/pages/summary_detail_page.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
 import 'package:trust_tracker_flutter/features/security/presentation/pages/lock_screen_page.dart';
 import 'package:trust_tracker_flutter/features/security/presentation/pages/set_pin_page.dart';
@@ -191,6 +192,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/categories',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const CategoriesPage(),
+      ),
+      GoRoute(
+        path: '/summary',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const SummaryDetailPage(),
       ),
     ],
   );

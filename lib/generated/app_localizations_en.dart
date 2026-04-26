@@ -506,7 +506,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get descending => 'Descending';
 
   @override
-  String get selectDateRange => 'Select date range';
+  String get selectDateRange => 'Select Date Range';
 
   @override
   String get errorLoadingCategories => 'Error loading categories';
@@ -617,4 +617,192 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resetAvatar => 'Reset Avatar';
+
+  @override
+  String get monthStartDay => 'Month Start Day';
+
+  @override
+  String get carryForward => 'Carry Forward Balance';
+
+  @override
+  String get carryForwardEnabledDesc =>
+      'Previous balance continues to next month';
+
+  @override
+  String get carryForwardDisabledDesc => 'Fresh start every month';
+
+  @override
+  String get customStartDateDesc =>
+      'Define custom start date (e.g., salary cycle)';
+
+  @override
+  String get smartMonthlyTracking => 'Smart Monthly Tracking';
+
+  @override
+  String get trackFinancesWay => 'Track finances your way, not the default way';
+
+  @override
+  String get financialPreferences => 'Financial Preferences';
+
+  @override
+  String get continueLabel => 'Continue';
+
+  @override
+  String get startTracking => 'Start Tracking 🚀';
+
+  @override
+  String get welcomeTagline =>
+      'Your private, offline-first\nfinancial companion';
+
+  @override
+  String get lockPrivate => 'Completely Private — no cloud, no servers';
+
+  @override
+  String get smartAnalytics => 'Smart analytics & budget tracking';
+
+  @override
+  String get blazingFast => 'Blazing fast — all data lives on your phone';
+
+  @override
+  String get whatsYourName => 'What\'s your name?';
+
+  @override
+  String get personalizeExperience =>
+      'We\'ll use this to personalize your experience.';
+
+  @override
+  String get alexHint => 'e.g., Karan';
+
+  @override
+  String get chooseCurrency => 'Choose your currency';
+
+  @override
+  String detectedChangeSettings(Object code) {
+    return '$code detected · change anytime in Settings';
+  }
+
+  @override
+  String get swipeEditDelete => 'Swipe left/right → Edit / Delete';
+
+  @override
+  String get tapViewDetails => 'Tap → View full details';
+
+  @override
+  String get swipeLeftRightAction => 'Swipe Left or Right';
+
+  @override
+  String get readyTitle => 'You\'re Ready';
+
+  @override
+  String get readyDesc =>
+      'Your personalized financial companion is set up and ready to help you track with confidence.';
+
+  @override
+  String get personalizedProfile => 'Personalized Profile';
+
+  @override
+  String get globalCurrency => 'Global Currency Support';
+
+  @override
+  String get smartMonthlyControls => 'Smart Monthly Controls';
+
+  @override
+  String get quickEasyActions => 'Quick & Easy Actions';
+
+  @override
+  String get manageRecordsGestures =>
+      'Manage your records in seconds with simple gestures';
+
+  @override
+  String get preferredLanguage => 'Use Your Preferred Language';
+
+  @override
+  String get homeLanguage => 'Make the app feel like home 🌍';
+
+  @override
+  String get languageSupportNote =>
+      'App supports multiple languages. Can be changed anytime from settings.';
+
+  @override
+  String get autoBackup => 'Auto Backup';
+
+  @override
+  String get autoBackupDesc =>
+      'Automatically back up your data based on the interval';
+
+  @override
+  String get backupInterval => 'Backup Interval';
+
+  @override
+  String get hours6 => 'Every 6 hours';
+
+  @override
+  String get hours12 => 'Every 12 hours';
+
+  @override
+  String get daily => 'Daily';
+
+  @override
+  String get weekly => 'Weekly';
+
+  @override
+  String get lastBackup => 'Last Backup';
+
+  @override
+  String get nextBackup => 'Next Backup';
+
+  @override
+  String get backupNow => 'Backup Now';
+
+  @override
+  String get backupSuccess => 'Backup Successful';
+
+  @override
+  String get backupFailed => 'Backup Failed';
+
+  @override
+  String get backupPending => 'Pending Upload';
+
+  @override
+  String get backupRunning => 'Backup in progress...';
+
+  @override
+  String get never => 'Never';
+
+  @override
+  String get backupSettings => 'Backup Settings';
+
+  @override
+  String get summaryNotifications => 'Summary Notifications';
+
+  @override
+  String get summaryNotificationsDesc =>
+      'Get automated insights about your income and spending';
+
+  @override
+  String get monthly => 'Monthly';
+
+  @override
+  String get preferredTime => 'Preferred Time';
+
+  @override
+  String get previewNotification => 'Preview Notification';
+
+  @override
+  String get noTransactionsToday => 'No transactions recorded today.';
+
+  @override
+  String get dailySummary => 'Daily Summary';
+
+  @override
+  String get weeklyInsight => 'Weekly Insight';
+
+  @override
+  String get monthlyReport => 'Monthly Report';
+
+  @override
+  String get dayOfWeek => 'Day of Week';
+
+  @override
+  String get frequency => 'Frequency';
 }

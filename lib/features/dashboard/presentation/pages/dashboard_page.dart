@@ -11,45 +11,52 @@ import 'package:trust_tracker_flutter/core/utils/greeting_helper.dart';
 import 'package:trust_tracker_flutter/features/categories/data/repositories/category_repository.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
+import 'package:trust_tracker_flutter/features/transactions/data/repositories/transaction_repository.dart';
 import 'package:trust_tracker_flutter/features/transactions/presentation/providers/transaction_provider.dart';
 import 'package:trust_tracker_flutter/features/categories/data/models/category_model.dart';
 import 'package:trust_tracker_flutter/generated/app_localizations.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/widgets/avatar_selection_modal.dart';
 import 'package:trust_tracker_flutter/core/security/security_provider.dart';
+import 'package:trust_tracker_flutter/core/utils/financial_utils.dart';
+import 'package:intl/intl.dart' as intl;
 
 // --- Providers ---
 final dashboardSummaryProvider =
-    Provider.autoDispose<Map<String, double>>((ref) {
-  final txnsAsync = ref.watch(transactionListProvider);
-  final now = DateTime.now();
-  final monthKey = now.toMonthKey();
-  return txnsAsync.when(
-    data: (txns) {
-      final monthly = txns.where((t) => t.monthKey == monthKey).toList();
-      double income = 0, expense = 0;
-      for (final t in monthly) {
-        if (t.type == TransactionType.income) {
-          income += t.amount;
-        } else {
-          expense += t.amount;
-        }
-      }
-      return {
-        'income': income,
-        'expense': expense,
-        'balance': income - expense
-      };
-    },
-    loading: () => {},
-    error: (_, __) => {},
-  );
+    FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
+  ref.watch(transactionChangeProvider); // Re-run when database changes
+  final settings = ref.watch(settingsProvider);
+  final repo = ref.watch(transactionRepositoryProvider);
+  
+  final cycleRange = FinancialUtils.getCurrentCycleRange(settings.monthStartDay);
+  final rangeText = '${intl.DateFormat('MMM d').format(cycleRange.start)} – ${intl.DateFormat('MMM d').format(cycleRange.end)}';
+  
+  final rangeSummary = await repo.getRangeSummary(cycleRange.start, cycleRange.end);
+  
+  double income = rangeSummary['income'] ?? 0;
+  double expense = rangeSummary['expense'] ?? 0;
+  double balance = income - expense;
+  double openingBalance = 0;
+
+  if (settings.carryForwardEnabled) {
+    openingBalance = await repo.getNetBalanceBefore(cycleRange.start);
+    balance += openingBalance;
+  }
+  
+  return {
+    'income': income,
+    'expense': expense,
+    'balance': balance,
+    'openingBalance': openingBalance,
+    'startDate': cycleRange.start,
+    'endDate': cycleRange.end,
+  };
 });
 
 final recentTransactionsProvider =
-    Provider.autoDispose<AsyncValue<List<TransactionModel>>>((ref) {
-  return ref.watch(transactionListProvider).whenData(
-        (all) => all.take(5).toList(),
-      );
+    FutureProvider.autoDispose<List<TransactionModel>>((ref) async {
+  ref.watch(transactionChangeProvider); // Re-run when database changes
+  final repo = ref.watch(transactionRepositoryProvider);
+  return repo.getRecent(5);
 });
 
 final allCategoriesProvider =
@@ -86,14 +93,20 @@ class DashboardPage extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                summary.isEmpty
-                    ? _SummarySectionSkeleton()
-                    : _SummarySection(
-                        income: summary['income'] ?? 0,
-                        expense: summary['expense'] ?? 0,
-                        balance: summary['balance'] ?? 0,
-                        currency: settings.currency,
-                      ),
+                summary.when(
+                  data: (data) => _SummarySection(
+                    income: data['income'] ?? 0,
+                    expense: data['expense'] ?? 0,
+                    balance: data['balance'] ?? 0,
+                    openingBalance: (data['openingBalance'] as double?) ?? 0,
+                    startDate: data['startDate'] as DateTime,
+                    endDate: data['endDate'] as DateTime,
+                    currency: settings.currency,
+                    carryForwardEnabled: settings.carryForwardEnabled,
+                  ),
+                  loading: () => _SummarySectionSkeleton(),
+                  error: (_, __) => const SizedBox.shrink(),
+                ),
                 const SizedBox(height: 24),
 
                 Row(
@@ -543,19 +556,29 @@ class _DashboardTransactionTile extends StatelessWidget {
 }
 
 class _SummarySection extends StatelessWidget {
-  final double income, expense, balance;
+  final double income, expense, balance, openingBalance;
   final String currency;
-  const _SummarySection(
-      {required this.income,
-      required this.expense,
-      required this.balance,
-      required this.currency});
+  final DateTime startDate, endDate;
+  final bool carryForwardEnabled;
+
+  const _SummarySection({
+    required this.income,
+    required this.expense,
+    required this.balance,
+    required this.openingBalance,
+    required this.startDate,
+    required this.endDate,
+    required this.currency,
+    required this.carryForwardEnabled,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final tt = theme.textTheme;
+
+    final rangeText = '${intl.DateFormat('d MMM').format(startDate)} – ${intl.DateFormat('d MMM').format(endDate)}';
 
     return Column(children: [
       _BalanceCardAnimationWrapper(
@@ -583,7 +606,14 @@ class _SummarySection extends StatelessWidget {
                 letterSpacing: -1.0,
               ),
             ),
-            const SizedBox(height: 8),
+            if (carryForwardEnabled && openingBalance != 0) ...[
+              const SizedBox(height: 4),
+              Text(
+                'Opening: ${openingBalance.toCurrency(currency)}',
+                style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
+            ],
+            const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
@@ -595,7 +625,7 @@ class _SummarySection extends StatelessWidget {
                 children: [
                   Icon(Icons.calendar_today_rounded, size: 10, color: cs.primary.withOpacity(0.6)),
                   const SizedBox(width: 6),
-                  Text(AppLocalizations.of(context)!.thisMonth,
+                  Text(rangeText,
                       style: tt.labelSmall?.copyWith(color: cs.primary.withOpacity(0.6))),
                 ],
               ),

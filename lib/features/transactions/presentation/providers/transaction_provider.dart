@@ -1,98 +1,104 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
+import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_filter.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/repositories/transaction_repository.dart';
+import 'package:trust_tracker_flutter/features/categories/data/repositories/category_repository.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// TransactionListNotifier — optimistic in-memory list + background Isar writes
-// ─────────────────────────────────────────────────────────────────────────────
+// Provider to track database changes and trigger refreshes across different providers
+final transactionChangeProvider = StateProvider<int>((ref) => 0);
 
-class TransactionListNotifier
-    extends StateNotifier<AsyncValue<List<TransactionModel>>> {
-  TransactionListNotifier(this._repo) : super(const AsyncValue.loading()) {
-    _load();
+class TransactionListState {
+  final List<TransactionModel> transactions;
+  final TransactionFilter filter;
+
+  TransactionListState({
+    required this.transactions,
+    this.filter = const TransactionFilter(),
+  });
+
+  TransactionListState copyWith({
+    List<TransactionModel>? transactions,
+    TransactionFilter? filter,
+  }) {
+    return TransactionListState(
+      transactions: transactions ?? this.transactions,
+      filter: filter ?? this.filter,
+    );
+  }
+}
+
+class TransactionListNotifier extends StateNotifier<AsyncValue<TransactionListState>> {
+  TransactionListNotifier(this._repo, this.ref) : super(const AsyncValue.loading()) {
+    _loadInitial(const TransactionFilter());
   }
 
   final TransactionRepository _repo;
+  final Ref ref;
 
-  // ── Initial load ──────────────────────────────────────────────────────────
-  Future<void> _load() async {
+  Future<void> _loadInitial(TransactionFilter filter) async {
+    state = const AsyncValue.loading();
     try {
-      final txns = await _repo.getAll();
-      if (mounted) state = AsyncValue.data(txns);
+      // Fetch all transactions matching the filter (no pagination)
+      final txns = await _repo.getPaginated(
+        offset: 0,
+        limit: 10000, // High limit to effectively show all
+        filter: filter,
+      );
+      
+      if (mounted) {
+        state = AsyncValue.data(TransactionListState(
+          transactions: txns,
+          filter: filter,
+        ));
+      }
     } catch (e, st) {
       if (mounted) state = AsyncValue.error(e, st);
     }
   }
 
-  /// Force-refresh from database (e.g. after returning from AddTransaction)
-  Future<void> refresh() => _load();
+  Future<void> applyFilter(TransactionFilter filter) => _loadInitial(filter);
 
-  // ── Optimistic add ────────────────────────────────────────────────────────
-  /// 1. Inserts a temporary model into the in-memory list immediately (id = 0).
-  /// 2. Writes to Isar in the background.
-  /// 3. Replaces the temp entry with the real persisted model (with a real id).
+  Future<void> refresh() {
+    // Increment change counter to trigger other providers (dashboard, etc.)
+    ref.read(transactionChangeProvider.notifier).update((s) => s + 1);
+    final current = state.valueOrNull;
+    return _loadInitial(current?.filter ?? const TransactionFilter());
+  }
+
+  // ── DB writes ────────────────────────────────────────────────────────
+  
   Future<void> addTransaction(TransactionModel t) async {
-    // --- Step 1: Optimistic insert ---
-    final current = state.valueOrNull ?? [];
-    // Prepare a "pending" copy with id=0 as placeholder
-    final pending = t; // same object, id hasn't been assigned yet
-    final optimistic = [pending, ...current];
-    state = AsyncValue.data(optimistic);
-
-    // --- Step 2: Persist to Isar ---
     try {
       await _repo.addTransaction(t);
-      // t.id is now set by Isar (autoIncrement mutates the object)
-      // Re-read the list so the id is properly reflected
-      final updated = await _repo.getAll();
-      if (mounted) state = AsyncValue.data(updated);
+      await refresh();
     } catch (e) {
-      // Rollback on failure
-      if (mounted) state = AsyncValue.data(current);
       rethrow;
     }
   }
 
-  // ── Optimistic edit ───────────────────────────────────────────────────────
   Future<void> updateTransaction(TransactionModel t) async {
-    final current = state.valueOrNull ?? [];
-    // Optimistic replace in list
-    final optimistic =
-        current.map((item) => item.id == t.id ? t : item).toList();
-    state = AsyncValue.data(optimistic);
-
     try {
       await _repo.updateTransaction(t);
-      // Re-sort (date may have changed) by reloading
-      final updated = await _repo.getAll();
-      if (mounted) state = AsyncValue.data(updated);
+      await refresh();
     } catch (e) {
-      if (mounted) state = AsyncValue.data(current);
       rethrow;
     }
   }
 
-  // ── Optimistic delete ─────────────────────────────────────────────────────
   Future<void> deleteTransaction(int id) async {
-    final current = state.valueOrNull ?? [];
-    final optimistic = current.where((t) => t.id != id).toList();
-    state = AsyncValue.data(optimistic);
-
     try {
       await _repo.deleteTransaction(id);
+      await refresh();
     } catch (e) {
-      if (mounted) state = AsyncValue.data(current); // rollback
       rethrow;
     }
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Provider
-// ─────────────────────────────────────────────────────────────────────────────
-
 final transactionListProvider = StateNotifierProvider<TransactionListNotifier,
-    AsyncValue<List<TransactionModel>>>((ref) {
+    AsyncValue<TransactionListState>>((ref) {
   final repo = ref.watch(transactionRepositoryProvider);
-  return TransactionListNotifier(repo);
+  return TransactionListNotifier(repo, ref);
 });
+
+

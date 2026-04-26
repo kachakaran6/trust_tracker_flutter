@@ -22,13 +22,26 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 3,
       onCreate: _createDB,
+      onUpgrade: _onUpgrade,
       onOpen: (db) async {
         await _ensureDefaultCategories(db);
         await _ensureDefaultBudgets(db);
       },
     );
+  }
+
+  Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('CREATE INDEX idx_transactions_date ON transactions(date);');
+      await db.execute('CREATE INDEX idx_transactions_category ON transactions(categoryId);');
+      await db.execute('CREATE INDEX idx_transactions_monthKey ON transactions(monthKey);');
+      await db.execute('CREATE INDEX idx_categories_type ON categories(type);');
+    }
+    if (oldVersion < 3) {
+      await _createSettingsTable(db);
+    }
   }
 
   Future _createDB(Database db, int version) async {
@@ -67,6 +80,11 @@ class DatabaseHelper {
       )
     ''');
 
+    await db.execute('CREATE INDEX idx_transactions_date ON transactions(date);');
+    await db.execute('CREATE INDEX idx_transactions_category ON transactions(categoryId);');
+    await db.execute('CREATE INDEX idx_transactions_monthKey ON transactions(monthKey);');
+    await db.execute('CREATE INDEX idx_categories_type ON categories(type);');
+
     // Budgets Table
     await db.execute('''
       CREATE TABLE budgets (
@@ -77,6 +95,30 @@ class DatabaseHelper {
         createdAt $textType
       )
     ''');
+
+    // App Settings Table - Added in v3
+    await _createSettingsTable(db);
+  }
+
+  Future<void> _createSettingsTable(Database db) async {
+    const idType = 'INTEGER PRIMARY KEY AUTOINCREMENT';
+    const integerType = 'INTEGER NOT NULL';
+    const boolType = 'INTEGER NOT NULL';
+
+    await db.execute('''
+      CREATE TABLE app_settings (
+        id $idType,
+        monthStartDay $integerType,
+        carryForwardEnabled $boolType
+      )
+    ''');
+    
+    // Insert initial row
+    await db.insert('app_settings', {
+      'id': 1,
+      'monthStartDay': 1,
+      'carryForwardEnabled': 0
+    });
   }
 
   Future<void> _ensureDefaultCategories(Database db) async {
