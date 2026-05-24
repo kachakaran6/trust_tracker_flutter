@@ -12,6 +12,8 @@ import 'package:share_plus/share_plus.dart';
 import 'package:trust_tracker_flutter/core/services/update_service.dart';
 import 'package:trust_tracker_flutter/core/services/backup_service.dart';
 import 'package:trust_tracker_flutter/generated/app_localizations.dart';
+import 'package:trust_tracker_flutter/features/transactions/presentation/providers/transaction_provider.dart';
+import 'package:trust_tracker_flutter/features/budget/presentation/providers/budget_provider.dart';
 import 'package:trust_tracker_flutter/core/services/summary_service.dart';
 import 'package:trust_tracker_flutter/core/database/database_helper.dart';
 import 'package:trust_tracker_flutter/core/services/background_service.dart';
@@ -788,6 +790,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                 label: l10n.importDataJson,
                 onTap: () => _handleImport(context, ref),
               ),
+              _SettingsTile(
+                icon: Icons.delete_forever_rounded,
+                label: 'Reset all data',
+                iconColor: cs.error,
+                onTap: () => _handleResetAllData(context, ref, l10n),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -926,6 +934,47 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
         ],
       ),
     );
+  }
+
+  Future<void> _handleResetAllData(BuildContext context, WidgetRef ref, AppLocalizations l10n) async {
+    final cs = Theme.of(context).colorScheme;
+    
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Text('Reset All Data'),
+        content: const Text('Are you sure you want to reset all data? This action cannot be undone and will restart the application from the beginning.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx, true),
+            style: TextButton.styleFrom(foregroundColor: cs.error),
+            child: const Text('Reset'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && context.mounted) {
+      // 1. Disable security
+      await ref.read(securityProvider.notifier).disablePin();
+      
+      // 2. Clear database
+      await DatabaseHelper.instance.resetDatabase();
+      
+      // 3. Reset settings
+      await ref.read(settingsProvider.notifier).resetAll();
+      
+      // 4. Invalidate providers to clear in-memory state
+      ref.invalidate(transactionListProvider);
+      ref.invalidate(transactionChangeProvider);
+      ref.invalidate(budgetNotifierProvider);
+      
+      // The router will automatically detect `isFirstRun == true` and navigate to onboarding
+    }
   }
 
   bool _isProcessing = false;
@@ -1537,13 +1586,6 @@ class _SettingsToggle extends StatelessWidget {
         Switch.adaptive(
           value: value,
           onChanged: onChanged,
-          activeColor: cs.primary,
-          trackOutlineColor: WidgetStateProperty.resolveWith<Color?>((states) {
-            if (states.contains(WidgetState.selected)) {
-              return cs.primary.withAlpha(120);
-            }
-            return cs.outline.withOpacity(0.2);
-          }),
         ),
       ]),
     );
@@ -1633,7 +1675,6 @@ class _SettingsSwitchTile extends StatelessWidget {
           Switch.adaptive(
             value: value,
             onChanged: onChanged,
-            activeColor: cs.primary,
           ),
         ],
       ),

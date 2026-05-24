@@ -178,4 +178,14 @@ class DatabaseHelper {
     final db = await instance.database;
     db.close();
   }
+
+  Future<void> resetDatabase() async {
+    if (_database != null) {
+      await _database!.close();
+      _database = null;
+    }
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, AppConstants.dbName);
+    await deleteDatabase(path);
+  }
 }

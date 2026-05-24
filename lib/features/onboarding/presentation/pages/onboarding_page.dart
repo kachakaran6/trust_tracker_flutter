@@ -529,7 +529,6 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                     Text(l10n.carryForward, style: tt.titleMedium?.copyWith(color: const Color(0xFF212529), fontWeight: FontWeight.w800)),
                     Switch.adaptive(
                       value: _carryForward,
-                      activeColor: const Color(0xFF0D6EFD),
                       onChanged: (val) => setState(() => _carryForward = val),
                     ),
                   ],

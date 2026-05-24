@@ -398,6 +398,11 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       );
     }
   }
+
+  Future<void> resetAll() async {
+    await _prefs.clear();
+    state = const SettingsState();
+  }
 }
 
 final settingsProvider =
