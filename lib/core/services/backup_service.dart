@@ -17,6 +17,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:path/path.dart' as p;
 import 'package:trust_tracker_flutter/core/utils/pdf_generator.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/models/export_transaction_row.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class BackupService {
   final DatabaseHelper _dbHelper;
@@ -215,9 +216,28 @@ class BackupService {
   }
 
   Future<void> performAutoBackup() async {
-    print("BackupService: Running Auto Backup (Local Only)...");
+    print("BackupService: Running Smart Auto Backup...");
     
     try {
+      final db = await _dbHelper.database;
+      
+      // Smart Check 1: Skip if no transactions exist
+      final txnCountResult = await db.rawQuery('SELECT COUNT(*) as c FROM transactions');
+      final txnCount = (txnCountResult.first['c'] as int?) ?? 0;
+      if (txnCount == 0) {
+        print("BackupService: Skipping backup — no transactions exist.");
+        return;
+      }
+
+      // Smart Check 2: Skip if no changes since last backup
+      final prefs = await SharedPreferences.getInstance();
+      final lastModifiedMs = prefs.getInt('last_transaction_modification_time') ?? 0;
+      final lastBackupMs = _settingsNotifier.state.lastBackupTime?.millisecondsSinceEpoch ?? 0;
+      if (lastModifiedMs > 0 && lastBackupMs > 0 && lastModifiedMs <= lastBackupMs) {
+        print("BackupService: Skipping backup — no changes since last backup.");
+        return;
+      }
+
       final compressedFile = await createCompressedBackup();
       if (compressedFile == null) {
         await _settingsNotifier.setLastBackupInfo(DateTime.now(), BackupStatus.failed);

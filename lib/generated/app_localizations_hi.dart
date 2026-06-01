@@ -809,4 +809,22 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get frequency => 'आवृत्ति';
+
+  @override
+  String get createTransaction => 'लेनदेन बनाएँ';
+
+  @override
+  String get chooseCategoryPlaceholder => 'श्रेणी चुनें';
+
+  @override
+  String get saveTransaction => 'लेनदेन सहेजें';
+
+  @override
+  String get resetAllData => 'सभी डेटा रीसेट करें';
+
+  @override
+  String get activityPage => 'गतिविधि पृष्ठ';
+
+  @override
+  String get noTransactionsPlaceholder => 'कोई लेनदेन दर्ज नहीं';
 }

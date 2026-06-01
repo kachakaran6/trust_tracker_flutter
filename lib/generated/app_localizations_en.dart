@@ -805,4 +805,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get frequency => 'Frequency';
+
+  @override
+  String get createTransaction => 'Create Transaction';
+
+  @override
+  String get chooseCategoryPlaceholder => 'Choose Category';
+
+  @override
+  String get saveTransaction => 'Save Transaction';
+
+  @override
+  String get resetAllData => 'Reset All Data';
+
+  @override
+  String get activityPage => 'Activity Page';
+
+  @override
+  String get noTransactionsPlaceholder => 'No Transactions Recorded';
 }

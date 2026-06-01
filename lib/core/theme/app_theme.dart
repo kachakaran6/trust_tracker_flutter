@@ -128,7 +128,7 @@ class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: isDark ? AppColors.darkSurfaceVariant : const Color(0xFF111827),
+        backgroundColor: isDark ? AppColors.darkSurfaceElevated : const Color(0xFF111827),
         contentTextStyle: GoogleFonts.inter(color: Colors.white),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.rMd)),
       ),
@@ -191,7 +191,7 @@ class AppTheme {
         onSurface: AppColors.darkTextPrimary,
         secondary: seed,
         onSecondary: AppColors.darkBg,
-        surfaceVariant: AppColors.darkSurfaceVariant,
+        surfaceVariant: AppColors.darkSurfaceElevated,
         outline: AppColors.darkBorder,
         error: AppColors.error,
       );

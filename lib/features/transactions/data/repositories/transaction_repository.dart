@@ -4,6 +4,7 @@ import 'package:trust_tracker_flutter/core/database/database_helper.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_filter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TransactionRepository {
   final DatabaseHelper _dbHelper;
@@ -11,10 +12,18 @@ class TransactionRepository {
   TransactionRepository(this._dbHelper);
 
   // WRITE
+  static const String _lastModifiedKey = 'last_transaction_modification_time';
+
+  Future<void> _markModified() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_lastModifiedKey, DateTime.now().millisecondsSinceEpoch);
+  }
+
   Future<int> addTransaction(TransactionModel t) async {
     final db = await _dbHelper.database;
     final id = await db.insert('transactions', t.toMap());
     t.id = id;
+    await _markModified();
     return id;
   }
 
@@ -26,6 +35,7 @@ class TransactionRepository {
       where: 'id = ?',
       whereArgs: [t.id],
     );
+    await _markModified();
   }
 
   Future<void> deleteTransaction(int id) async {
@@ -35,6 +45,25 @@ class TransactionRepository {
       where: 'id = ?',
       whereArgs: [id],
     );
+    await _markModified();
+  }
+
+  // READ — By date range (for engagement notifications)
+  Future<List<TransactionModel>> getTransactionsByDateRange(DateTime start, DateTime end) async {
+    final db = await _dbHelper.database;
+    final result = await db.query(
+      'transactions',
+      where: 'date >= ? AND date < ?',
+      whereArgs: [start.toIso8601String(), end.toIso8601String()],
+    );
+    return result.map((e) => TransactionModel.fromMap(e)).toList();
+  }
+
+  // READ — Total count across all transactions (for smart backup)
+  Future<int> getTotalCount() async {
+    final db = await _dbHelper.database;
+    final result = await db.rawQuery('SELECT COUNT(*) as c FROM transactions');
+    return Sqflite.firstIntValue(result) ?? 0;
   }
 
   // READ — All for a given month key (e.g. "2025-03")

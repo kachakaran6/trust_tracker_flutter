@@ -9,7 +9,6 @@ import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:trust_tracker_flutter/core/services/update_service.dart';
 import 'package:trust_tracker_flutter/core/services/backup_service.dart';
 import 'package:trust_tracker_flutter/generated/app_localizations.dart';
 import 'package:trust_tracker_flutter/features/transactions/presentation/providers/transaction_provider.dart';
@@ -792,7 +791,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
               ),
               _SettingsTile(
                 icon: Icons.delete_forever_rounded,
-                label: 'Reset all data',
+                label: l10n.resetAllData,
                 iconColor: cs.error,
                 onTap: () => _handleResetAllData(context, ref, l10n),
               ),
@@ -844,6 +843,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                 label: l10n.setMonthlyBudgets,
                 onTap: () => context.push('/budget'),
               ),
+              _SettingsTile(
+                icon: Icons.subscriptions_outlined,
+                label: 'Manage Subscriptions',
+                onTap: () => context.push('/subscriptions'),
+              ),
+              _SettingsTile(
+                icon: Icons.apps_rounded,
+                label: 'Our Apps',
+                onTap: () => context.push('/our-apps'),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -851,52 +860,17 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
             title: l10n.about,
             children: [
               _SettingsTile(
-                icon: Icons.update_rounded,
-                label: l10n.checkForUpdates,
+                icon: Icons.info_outline_rounded,
+                label: l10n.termsPrivacy,
                 onTap: () async {
-                  final updateService = ref.read(updateServiceProvider);
-                  final hasUpdate = await updateService.manualCheck(context);
-
-                  if (!hasUpdate && mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content:
-                            Text(l10n.latestVersion),
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
-                    );
+                  final uri = Uri.parse('https://ap-kk-apps.vercel.app/trust-tracker/privacy');
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.inAppWebView);
                   }
                 },
               ),
-              _SettingsTile(
-                icon: Icons.info_outline_rounded,
-                label: l10n.termsPrivacy,
-                onTap: () {},
-              ),
             ],
           ),
-
-/*
-          if (!kReleaseMode) ...[
-             const SizedBox(height: 16),
-             _SettingsSection(
-               title: "Developer Testing",
-               children: [
-                 _SettingsTile(
-                   icon: Icons.bug_report_outlined,
-                   label: "Test Update Popup",
-                   iconColor: cs.secondary,
-                   onTap: () {
-                     HapticFeedback.lightImpact();
-                     ref.read(updateServiceProvider).testUpdateUI(context);
-                   },
-                 ),
-               ],
-             ),
-           ],
-*/
 
           const SizedBox(height: 24),
 
@@ -904,17 +878,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
           Center(
             child: Column(
               children: [
-                FutureBuilder<String>(
-                  future: ref.read(updateServiceProvider).getCurrentVersion(),
-                  builder: (context, snapshot) {
-                    final version = snapshot.data ?? '1.0.0';
-                    final versionOnly = version.split('+')[0];
-                    return Text(
-                      versionOnly,
-                      textAlign: TextAlign.center,
-                      style: tt.labelSmall?.copyWith(fontWeight: FontWeight.bold),
-                    );
-                  },
+                Text(
+                  'Trust Tracker',
+                  textAlign: TextAlign.center,
+                  style: tt.labelSmall?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -942,7 +909,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
     final confirm = await showDialog<bool>(
       context: context,
       builder: (dialogCtx) => AlertDialog(
-        title: const Text('Reset All Data'),
+        title: Text(l10n.resetAllData),
         content: const Text('Are you sure you want to reset all data? This action cannot be undone and will restart the application from the beginning.'),
         actions: [
           TextButton(

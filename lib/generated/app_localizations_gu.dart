@@ -809,5 +809,23 @@ class AppLocalizationsGu extends AppLocalizations {
   String get dayOfWeek => 'અઠવાડિયાનો દિવસ';
 
   @override
-  String get frequency => 'આવૃત્તિ';
+  String get frequency => 'આવર્તન';
+
+  @override
+  String get createTransaction => 'ટ્રાન્ઝેક્શન બનાવો';
+
+  @override
+  String get chooseCategoryPlaceholder => 'શ્રેણી પસંદ કરો';
+
+  @override
+  String get saveTransaction => 'ટ્રાન્ઝેક્શન સાચવો';
+
+  @override
+  String get resetAllData => 'બધો ડેટા રીસેટ કરો';
+
+  @override
+  String get activityPage => 'પ્રવૃત્તિ પૃષ્ઠ';
+
+  @override
+  String get noTransactionsPlaceholder => 'કોઈ ટ્રાન્ઝેક્શન નોંધાયેલ નથી';
 }

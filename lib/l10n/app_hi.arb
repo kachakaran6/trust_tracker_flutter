@@ -254,5 +254,11 @@
   "weeklyInsight": "साप्ताहिक अंतर्दृष्टि",
   "monthlyReport": "मासिक रिपोर्ट",
   "dayOfWeek": "सप्ताह का दिन",
-  "frequency": "आवृत्ति"
+  "frequency": "आवृत्ति",
+  "createTransaction": "लेनदेन बनाएँ",
+  "chooseCategoryPlaceholder": "श्रेणी चुनें",
+  "saveTransaction": "लेनदेन सहेजें",
+  "resetAllData": "सभी डेटा रीसेट करें",
+  "activityPage": "गतिविधि पृष्ठ",
+  "noTransactionsPlaceholder": "कोई लेनदेन दर्ज नहीं"
 }

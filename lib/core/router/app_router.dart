@@ -10,14 +10,18 @@ import 'package:trust_tracker_flutter/features/transactions/presentation/pages/t
 import 'package:trust_tracker_flutter/features/transactions/presentation/pages/add_transaction_page.dart';
 import 'package:trust_tracker_flutter/features/analytics/presentation/pages/analytics_page.dart';
 import 'package:trust_tracker_flutter/features/budget/presentation/pages/budget_page.dart';
+import 'package:trust_tracker_flutter/features/subscriptions/presentation/pages/subscription_dashboard_page.dart';
+import 'package:trust_tracker_flutter/features/subscriptions/presentation/pages/add_subscription_page.dart';
 import 'package:trust_tracker_flutter/features/categories/presentation/pages/categories_page.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/pages/settings_page.dart';
+import 'package:trust_tracker_flutter/features/settings/presentation/pages/our_apps_page.dart';
 import 'package:trust_tracker_flutter/features/analytics/presentation/pages/summary_detail_page.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
 import 'package:trust_tracker_flutter/features/security/presentation/pages/lock_screen_page.dart';
 import 'package:trust_tracker_flutter/features/security/presentation/pages/set_pin_page.dart';
 import 'package:trust_tracker_flutter/core/security/security_provider.dart';
 import 'package:trust_tracker_flutter/core/services/update_service.dart';
+import 'package:trust_tracker_flutter/core/services/review_service.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Router Notifier — bridges Riverpod state into GoRouter's refreshListenable.
@@ -189,6 +193,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const BudgetPage(),
       ),
       GoRoute(
+        path: '/our-apps',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const OurAppsPage(),
+      ),
+      GoRoute(
+        path: '/subscriptions',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const SubscriptionDashboardPage(),
+      ),
+      GoRoute(
+        path: '/add-subscription',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return AddSubscriptionPage(
+            subscription: extra?['edit'],
+          );
+        },
+      ),
+      GoRoute(
         path: '/categories',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const CategoriesPage(),
@@ -243,6 +267,7 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
     await Future.delayed(const Duration(seconds: 2));
     if (mounted) {
       await ref.read(updateServiceProvider).checkForUpdate(context);
+      await ref.read(reviewServiceProvider).logAppOpen(context);
     }
   }
 

@@ -523,7 +523,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
                           const Icon(Icons.done_rounded, size: 20),
                           const SizedBox(width: spSmall),
                           Text(
-                            _isEditMode ? 'Update Transaction' : 'Save Transaction',
+                            _isEditMode ? l10n.update : l10n.saveTransaction,
                             style: tt.titleMedium?.copyWith(
                               color: isExpense ? cs.onError : Colors.white,
                               fontWeight: FontWeight.w800,

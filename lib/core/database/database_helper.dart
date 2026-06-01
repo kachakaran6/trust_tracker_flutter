@@ -22,7 +22,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 3,
+      version: 5,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
       onOpen: (db) async {
@@ -41,6 +41,17 @@ class DatabaseHelper {
     }
     if (oldVersion < 3) {
       await _createSettingsTable(db);
+    }
+    if (oldVersion < 4) {
+      await _createSubscriptionsTable(db);
+    }
+    if (oldVersion < 5) {
+      // Add subscriptionType column safely (backward compatible)
+      try {
+        await db.execute('ALTER TABLE subscriptions ADD COLUMN subscriptionType TEXT;');
+      } catch (e) {
+        // Column may already exist in fresh installs
+      }
     }
   }
 
@@ -98,6 +109,9 @@ class DatabaseHelper {
 
     // App Settings Table - Added in v3
     await _createSettingsTable(db);
+
+    // Subscriptions Table - Added in v4
+    await _createSubscriptionsTable(db);
   }
 
   Future<void> _createSettingsTable(Database db) async {
@@ -119,6 +133,42 @@ class DatabaseHelper {
       'monthStartDay': 1,
       'carryForwardEnabled': 0
     });
+  }
+
+  Future<void> _createSubscriptionsTable(Database db) async {
+    const idType = 'INTEGER PRIMARY KEY AUTOINCREMENT';
+    const textType = 'TEXT NOT NULL';
+    const boolType = 'INTEGER NOT NULL';
+    const integerType = 'INTEGER NOT NULL';
+    const realType = 'REAL NOT NULL';
+    const textNullable = 'TEXT';
+    const integerNullable = 'INTEGER';
+
+    await db.execute('''
+      CREATE TABLE subscriptions (
+        id $idType,
+        name $textType,
+        amount $realType,
+        categoryId $integerNullable,
+        billingCycle $integerType,
+        customDays $integerNullable,
+        startDate $textType,
+        nextDueDate $textType,
+        autoDeduct $boolType,
+        autoAddExpense $boolType,
+        repeatEnabled $boolType,
+        notifyBeforeDays $integerType,
+        icon $textNullable,
+        notes $textNullable,
+        subscriptionType $textNullable,
+        isPaused $boolType,
+        lastProcessedDate $textNullable,
+        createdAt $textType,
+        updatedAt $textType
+      )
+    ''');
+    
+    await db.execute('CREATE INDEX idx_subscriptions_nextDueDate ON subscriptions(nextDueDate);');
   }
 
   Future<void> _ensureDefaultCategories(Database db) async {

@@ -1617,6 +1617,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Frequency'**
   String get frequency;
+
+  /// No description provided for @createTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Transaction'**
+  String get createTransaction;
+
+  /// No description provided for @chooseCategoryPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Category'**
+  String get chooseCategoryPlaceholder;
+
+  /// No description provided for @saveTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Transaction'**
+  String get saveTransaction;
+
+  /// No description provided for @resetAllData.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset All Data'**
+  String get resetAllData;
+
+  /// No description provided for @activityPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity Page'**
+  String get activityPage;
+
+  /// No description provided for @noTransactionsPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'No Transactions Recorded'**
+  String get noTransactionsPlaceholder;
 }
 
 class _AppLocalizationsDelegate

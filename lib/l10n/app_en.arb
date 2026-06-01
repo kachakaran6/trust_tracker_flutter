@@ -253,5 +253,11 @@
   "weeklyInsight": "Weekly Insight",
   "monthlyReport": "Monthly Report",
   "dayOfWeek": "Day of Week",
-  "frequency": "Frequency"
+  "frequency": "Frequency",
+  "createTransaction": "Create Transaction",
+  "chooseCategoryPlaceholder": "Choose Category",
+  "saveTransaction": "Save Transaction",
+  "resetAllData": "Reset All Data",
+  "activityPage": "Activity Page",
+  "noTransactionsPlaceholder": "No Transactions Recorded"
 }

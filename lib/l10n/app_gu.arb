@@ -254,5 +254,11 @@
   "weeklyInsight": "સાપ્તાહિક આંતરદૃષ્ટિ",
   "monthlyReport": "માસિક અહેવાલ",
   "dayOfWeek": "અઠવાડિયાનો દિવસ",
-  "frequency": "આવૃત્તિ"
+  "frequency": "આવર્તન",
+  "createTransaction": "ટ્રાન્ઝેક્શન બનાવો",
+  "chooseCategoryPlaceholder": "શ્રેણી પસંદ કરો",
+  "saveTransaction": "ટ્રાન્ઝેક્શન સાચવો",
+  "resetAllData": "બધો ડેટા રીસેટ કરો",
+  "activityPage": "પ્રવૃત્તિ પૃષ્ઠ",
+  "noTransactionsPlaceholder": "કોઈ ટ્રાન્ઝેક્શન નોંધાયેલ નથી"
 }
