@@ -19,6 +19,7 @@ class SettingsState {
   final String userName;
   final bool isDarkMode;
   final bool isFirstRun;
+  final bool hasSeenQuickFeaturesIntro;
   final TransactionActionMode transactionActionMode;
   final String languageCode;
   final String accentColorHex;
@@ -41,6 +42,7 @@ class SettingsState {
     this.userName = '',
     this.isDarkMode = false,
     this.isFirstRun = true,
+    this.hasSeenQuickFeaturesIntro = false,
     this.transactionActionMode = TransactionActionMode.swipe,
     this.languageCode = 'en',
     this.accentColorHex = '#3B82F6', // Default Blue
@@ -64,6 +66,7 @@ class SettingsState {
     String? userName,
     bool? isDarkMode,
     bool? isFirstRun,
+    bool? hasSeenQuickFeaturesIntro,
     TransactionActionMode? transactionActionMode,
     String? languageCode,
     String? accentColorHex,
@@ -86,6 +89,7 @@ class SettingsState {
       userName: userName ?? this.userName,
       isDarkMode: isDarkMode ?? this.isDarkMode,
       isFirstRun: isFirstRun ?? this.isFirstRun,
+      hasSeenQuickFeaturesIntro: hasSeenQuickFeaturesIntro ?? this.hasSeenQuickFeaturesIntro,
       transactionActionMode:
           transactionActionMode ?? this.transactionActionMode,
       languageCode: languageCode ?? this.languageCode,
@@ -111,6 +115,7 @@ class SettingsState {
         'userName': userName,
         'isDarkMode': isDarkMode,
         'isFirstRun': isFirstRun,
+        'hasSeenQuickFeaturesIntro': hasSeenQuickFeaturesIntro,
         'transactionActionMode': transactionActionMode.name,
         'languageCode': languageCode,
         'accentColorHex': accentColorHex,
@@ -134,6 +139,7 @@ class SettingsState {
         userName: json['userName'] ?? '',
         isDarkMode: json['isDarkMode'] ?? false,
         isFirstRun: json['isFirstRun'] ?? true,
+        hasSeenQuickFeaturesIntro: json['hasSeenQuickFeaturesIntro'] ?? false,
         transactionActionMode: json['transactionActionMode'] == 'tap'
             ? TransactionActionMode.tap
             : TransactionActionMode.swipe,
@@ -178,6 +184,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
           userName: _prefs.getString(AppConstants.prefUserName) ?? '',
           isDarkMode: _prefs.getBool(AppConstants.prefTheme) ?? false,
           isFirstRun: _prefs.getBool(AppConstants.prefIsFirstRun) ?? true,
+          hasSeenQuickFeaturesIntro: _prefs.getBool('has_seen_quick_features_intro') ?? false,
           transactionActionMode: _prefs.getString(_kTxnActionMode) == 'tap'
               ? TransactionActionMode.tap
               : TransactionActionMode.swipe,
@@ -326,6 +333,11 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       currency: currency,
       isFirstRun: false,
     );
+  }
+
+  Future<void> setHasSeenQuickFeaturesIntro(bool seen) async {
+    await _prefs.setBool('has_seen_quick_features_intro', seen);
+    state = state.copyWith(hasSeenQuickFeaturesIntro: seen);
   }
 
   Future<void> restoreSettings(SettingsState other) async {

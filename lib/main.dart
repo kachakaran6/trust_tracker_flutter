@@ -17,6 +17,9 @@ import 'package:trust_tracker_flutter/generated/app_localizations.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:quick_actions/quick_actions.dart';
+import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
+import 'package:trust_tracker_flutter/features/transactions/presentation/widgets/quick_add_bottom_sheet.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -89,10 +92,54 @@ class TrustTrackerApp extends ConsumerStatefulWidget {
 
 class _TrustTrackerAppState extends ConsumerState<TrustTrackerApp>
     with WidgetsBindingObserver {
+  
+  static const _channel = MethodChannel('com.trusttracker/quick_action');
+  final QuickActions quickActions = const QuickActions();
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _initQuickActions();
+    _initMethodChannel();
+  }
+
+  void _initQuickActions() {
+    quickActions.initialize((String shortcutType) {
+      _handleQuickAction(shortcutType);
+    });
+
+    quickActions.setShortcutItems(<ShortcutItem>[
+      const ShortcutItem(type: 'add_expense', localizedTitle: 'Add Expense'),
+      const ShortcutItem(type: 'add_income', localizedTitle: 'Add Income'),
+      const ShortcutItem(type: 'add_subscription', localizedTitle: 'Add Subscription'),
+      const ShortcutItem(type: 'open_analytics', localizedTitle: 'Open Analytics'),
+    ]);
+  }
+
+  void _initMethodChannel() {
+    _channel.setMethodCallHandler((call) async {
+      if (call.method == 'quickAddExpense') {
+        _handleQuickAction('add_expense');
+      }
+    });
+  }
+
+  void _handleQuickAction(String type) async {
+    // Wait for navigator to be available if app was just launched
+    await Future.delayed(const Duration(milliseconds: 600));
+    final context = rootNavigatorKey.currentState?.context;
+    if (context == null || !context.mounted) return;
+
+    if (type == 'add_expense') {
+      QuickAddBottomSheet.show(context, TransactionType.expense);
+    } else if (type == 'add_income') {
+      QuickAddBottomSheet.show(context, TransactionType.income);
+    } else if (type == 'add_subscription') {
+      context.push('/add-subscription');
+    } else if (type == 'open_analytics') {
+      context.push('/analytics');
+    }
   }
 
   @override

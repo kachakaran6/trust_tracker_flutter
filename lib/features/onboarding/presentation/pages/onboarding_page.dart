@@ -353,37 +353,31 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Colors.white.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
+                    border: Border.all(color: Colors.white.withOpacity(0.2)),
                   ),
                   child: Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
+                          color: Colors.white.withOpacity(0.2),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.shopping_bag_rounded, color: Color(0xFF0D6EFD)),
+                        child: const Icon(Icons.shopping_bag_rounded, color: Colors.white),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text("Groceries", style: tt.titleMedium?.copyWith(color: const Color(0xFF212529))),
-                            Text("Apple Store", style: tt.bodySmall),
+                            Text("Groceries", style: tt.titleMedium?.copyWith(color: Colors.white)),
+                            Text("Apple Store", style: tt.bodySmall?.copyWith(color: Colors.white70)),
                           ],
                         ),
                       ),
-                      Text("-\$42.00", style: tt.titleMedium?.copyWith(color: Colors.red, fontWeight: FontWeight.w800)),
+                      Text("-\$42.00", style: tt.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
                     ],
                   ),
                 ),
@@ -499,6 +493,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   }
 
   Widget _buildMonthlyControlPage(TextTheme tt) {
+    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.all(32),
       child: Column(
@@ -517,8 +512,9 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Colors.white.withOpacity(0.1),
               borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white.withOpacity(0.2)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -526,10 +522,11 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(l10n.carryForward, style: tt.titleMedium?.copyWith(color: const Color(0xFF212529), fontWeight: FontWeight.w800)),
+                    Text(l10n.carryForward, style: tt.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
                     Switch.adaptive(
                       value: _carryForward,
                       onChanged: (val) => setState(() => _carryForward = val),
+                      activeColor: Colors.white,
                     ),
                   ],
                 ),
@@ -537,7 +534,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                   _carryForward 
                     ? l10n.carryForwardEnabledDesc 
                     : l10n.carryForwardDisabledDesc,
-                  style: tt.bodySmall?.copyWith(color: Colors.blueGrey),
+                  style: tt.bodySmall?.copyWith(color: Colors.white70),
                 ),
               ],
             ),
@@ -548,13 +545,14 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Colors.white.withOpacity(0.1),
               borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white.withOpacity(0.2)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(l10n.monthStartDay, style: tt.titleMedium?.copyWith(color: const Color(0xFF212529), fontWeight: FontWeight.w800)),
+                Text(l10n.monthStartDay, style: tt.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 16),
                 SizedBox(
                   height: 50,
@@ -571,14 +569,14 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                           width: 50,
                           margin: const EdgeInsets.only(right: 8),
                           decoration: BoxDecoration(
-                            color: isSelected ? const Color(0xFF0D6EFD) : Colors.blue.shade50,
+                            color: isSelected ? Colors.white : Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           alignment: Alignment.center,
                           child: Text(
                             "$day",
                             style: tt.titleMedium?.copyWith(
-                              color: isSelected ? Colors.white : const Color(0xFF0D6EFD),
+                              color: isSelected ? cs.primary : Colors.white,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -590,7 +588,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                 const SizedBox(height: 12),
                 Text(
                   l10n.customStartDateDesc,
-                  style: tt.bodySmall?.copyWith(color: Colors.blueGrey),
+                  style: tt.bodySmall?.copyWith(color: Colors.white70),
                 ),
               ],
             ),

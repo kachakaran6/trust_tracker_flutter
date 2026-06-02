@@ -188,8 +188,8 @@ class DashboardPage extends ConsumerWidget {
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: theme.colorScheme.error,
-              foregroundColor: theme.colorScheme.onError,
+              backgroundColor: theme.colorScheme.primary,
+              foregroundColor: theme.colorScheme.onPrimary,
             ),
             child: Text(AppLocalizations.of(context)!.delete),
           ),
@@ -1085,19 +1085,36 @@ class _UpcomingRenewalsWidget extends ConsumerWidget {
                 border: Border.all(color: cs.outline.withOpacity(0.1)),
               ),
               child: topSubs.isEmpty
-                  ? Center(
-                      child: Column(
-                        children: [
-                          Icon(Icons.event_repeat, color: cs.onSurfaceVariant.withOpacity(0.5), size: 32),
-                          const SizedBox(height: 8),
-                          Text('No upcoming payments', style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
-                          const SizedBox(height: 8),
-                          FilledButton.tonal(
-                            onPressed: () => context.push('/add-subscription'),
-                            child: const Text('Add Subscription'),
+                  ? Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: cs.surfaceContainerHighest,
+                            shape: BoxShape.circle,
                           ),
-                        ],
-                      ),
+                          child: Icon(Icons.event_repeat, color: cs.onSurfaceVariant.withOpacity(0.7), size: 22),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('No upcoming payments', style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                              Text('Add one to track it', style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
+                            ],
+                          ),
+                        ),
+                        FilledButton.tonal(
+                          onPressed: () => context.push('/add-subscription'),
+                          style: FilledButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            minimumSize: const Size(0, 36),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          child: const Text('Add'),
+                        ),
+                      ],
                     )
                   : Column(
                 children: [

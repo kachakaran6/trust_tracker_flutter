@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trust_tracker_flutter/generated/app_localizations.dart';
 import 'package:trust_tracker_flutter/features/onboarding/presentation/pages/onboarding_page.dart';
 import 'package:trust_tracker_flutter/features/dashboard/presentation/pages/dashboard_page.dart';
+import 'package:trust_tracker_flutter/features/onboarding/presentation/pages/quick_features_intro_page.dart';
 import 'package:trust_tracker_flutter/features/transactions/presentation/pages/transactions_page.dart';
 import 'package:trust_tracker_flutter/features/transactions/presentation/pages/add_transaction_page.dart';
 import 'package:trust_tracker_flutter/features/analytics/presentation/pages/analytics_page.dart';
@@ -92,6 +93,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return null;
       }
 
+      if (!settings.hasSeenQuickFeaturesIntro) {
+        if (path != '/quick-features-intro') return '/quick-features-intro';
+        return null;
+      }
+
       // FIX Issue 4: Only lock when PIN is actually enabled AND locked.
       // When disablePin() is called, both isPinEnabled=false AND isLocked=false
       // are set atomically. The old code only checked isLocked, which meant
@@ -106,6 +112,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       // Coming from onboarding but first run is done
       if (!settings.isFirstRun && path == '/onboarding') return '/dashboard';
+      if (settings.hasSeenQuickFeaturesIntro && path == '/quick-features-intro') return '/dashboard';
 
       return null;
     },
@@ -114,6 +121,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/onboarding',
         builder: (context, state) => const OnboardingPage(),
+      ),
+      GoRoute(
+        path: '/quick-features-intro',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const QuickFeaturesIntroPage(),
       ),
       GoRoute(
         path: '/lock',
@@ -413,12 +425,12 @@ Future<bool?> showExitConfirmationDialog(BuildContext context) {
                         width: 64,
                         height: 64,
                         decoration: BoxDecoration(
-                          color: cs.error.withValues(alpha: 0.1),
+                          color: cs.primary.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
                           Icons.power_settings_new_rounded,
-                          color: cs.error,
+                          color: cs.primary,
                           size: 32,
                         ),
                       ),
@@ -469,8 +481,8 @@ Future<bool?> showExitConfirmationDialog(BuildContext context) {
                                   Navigator.of(dialogContext).pop(true),
                               style: FilledButton.styleFrom(
                                 minimumSize: const Size.fromHeight(56),
-                                backgroundColor: cs.error,
-                                foregroundColor: cs.onError,
+                                backgroundColor: cs.primary,
+                                foregroundColor: cs.onPrimary,
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),

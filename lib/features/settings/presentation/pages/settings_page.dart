@@ -548,10 +548,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                         icon: Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: cs.error.withOpacity(0.1),
+                            color: cs.primary.withOpacity(0.1),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(Icons.warning_amber_rounded, size: 32, color: cs.error),
+                          child: Icon(Icons.warning_amber_rounded, size: 32, color: cs.primary),
                         ),
                         title: Text(l10n.disablePinConfirm, 
                           textAlign: TextAlign.center,
@@ -596,8 +596,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                                   onPressed: () => Navigator.of(dialogCtx).pop(true),
                                   style: ElevatedButton.styleFrom(
                                     minimumSize: const Size.fromHeight(48),
-                                    backgroundColor: cs.error,
-                                    foregroundColor: cs.onError,
+                                    backgroundColor: cs.primary,
+                                    foregroundColor: cs.onPrimary,
                                     elevation: 0,
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                                     padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -918,7 +918,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx, true),
-            style: TextButton.styleFrom(foregroundColor: cs.error),
+            style: TextButton.styleFrom(foregroundColor: cs.primary),
             child: const Text('Reset'),
           ),
         ],
@@ -1032,10 +1032,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
           icon: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: cs.error.withOpacity(0.1),
+              color: cs.primary.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.warning_amber_rounded, size: 32, color: cs.error),
+            child: Icon(Icons.warning_amber_rounded, size: 32, color: cs.primary),
           ),
           title: Text(
             'Import Data',
@@ -1080,8 +1080,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                     onPressed: () => Navigator.of(ctx).pop(true),
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size.fromHeight(48),
-                      backgroundColor: cs.error,
-                      foregroundColor: cs.onError,
+                      backgroundColor: cs.primary,
+                      foregroundColor: cs.onPrimary,
                       elevation: 0,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),

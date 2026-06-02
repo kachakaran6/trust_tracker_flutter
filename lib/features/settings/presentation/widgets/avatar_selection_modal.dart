@@ -30,7 +30,7 @@ void showAvatarSelectionModal({
         return Container(
           height: MediaQuery.of(context).size.height * 0.7,
           decoration: BoxDecoration(
-            color: cs.surface,
+            color: theme.bottomSheetTheme.backgroundColor ?? cs.surface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),

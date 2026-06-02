@@ -122,9 +122,16 @@ class AppTheme {
         ),
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        backgroundColor: Color.alphaBlend(colorScheme.primary.withOpacity(isDark ? 0.08 : 0.05), isDark ? AppColors.darkSurface : AppColors.lightSurface),
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.r3Xl)),
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: Color.alphaBlend(colorScheme.primary.withOpacity(isDark ? 0.08 : 0.05), isDark ? AppColors.darkSurface : AppColors.lightSurface),
+        elevation: 0,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(AppDimensions.r3Xl)),
+        ),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
