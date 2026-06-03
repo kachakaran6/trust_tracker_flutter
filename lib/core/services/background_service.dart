@@ -112,39 +112,49 @@ void callbackDispatcher() {
         styleInformation: BigTextStyleInformation(''),
       );
 
-      if (txns.isEmpty) {
+      final todayStr = "${today.year}-${today.month}-${today.day}";
+      final lastReminder = prefs.getString('last_daily_reminder_date');
+
+      if (txns.isEmpty && lastReminder != todayStr) {
+        final usedMsgs = prefs.getStringList('used_motivation_msgs') ?? [];
+        final msgs = MotivationMessages.messages;
+        
+        var availableMsgs = msgs.where((m) => !usedMsgs.contains(m)).toList();
+        if (availableMsgs.isEmpty) {
+          usedMsgs.clear();
+          availableMsgs = List.from(msgs);
+        }
+        
+        availableMsgs.shuffle(Random());
+        final selectedMsg = availableMsgs.first;
+        
+        usedMsgs.add(selectedMsg);
+        // Avoid repeating the same message within the last 7 times/days
+        if (usedMsgs.length > 7) {
+          usedMsgs.removeAt(0);
+        }
+        await prefs.setStringList('used_motivation_msgs', usedMsgs);
+        
+        final titles = [
+          'Daily Check-In',
+          'Trust Reminder',
+          'Quick Finance Check',
+          'Keep Your Records Updated',
+          'Don\'t Forget Today',
+          'Stay On Track'
+        ];
+        titles.shuffle(Random());
+        final selectedTitle = titles.first;
+
         await notifications.show(
           200, 
-          'Friendly Reminder', 
-          "You haven't recorded any expense today. Keep your records accurate by adding today's transactions.",
+          selectedTitle, 
+          selectedMsg,
           const NotificationDetails(android: android),
         );
-      }
 
-      final usedMsgs = prefs.getStringList('used_motivation_msgs') ?? [];
-      final msgs = MotivationMessages.messages;
-      
-      var availableMsgs = msgs.where((m) => !usedMsgs.contains(m)).toList();
-      if (availableMsgs.isEmpty) {
-        usedMsgs.clear();
-        availableMsgs = List.from(msgs);
+        await prefs.setString('last_daily_reminder_date', todayStr);
       }
-      
-      availableMsgs.shuffle(Random());
-      final selectedMsg = availableMsgs.first;
-      
-      usedMsgs.add(selectedMsg);
-      if (usedMsgs.length > 30) {
-        usedMsgs.removeAt(0);
-      }
-      await prefs.setStringList('used_motivation_msgs', usedMsgs);
-      
-      await notifications.show(
-        201, 
-        'Daily Insight', 
-        selectedMsg,
-        const NotificationDetails(android: android),
-      );
 
       await BackgroundService.scheduleEngagementTask();
     }

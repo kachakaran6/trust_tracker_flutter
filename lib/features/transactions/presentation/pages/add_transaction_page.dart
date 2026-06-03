@@ -516,7 +516,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
                 child: _isLoading
-                    ? SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: isExpense ? cs.onError : Colors.white, strokeWidth: 2))
+                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                     : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -525,7 +525,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
                           Text(
                             _isEditMode ? l10n.update : l10n.saveTransaction,
                             style: tt.titleMedium?.copyWith(
-                              color: isExpense ? cs.onError : Colors.white,
+                              color: Colors.white,
                               fontWeight: FontWeight.w800,
                               fontSize: 16,
                             ),

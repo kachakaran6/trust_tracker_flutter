@@ -5,6 +5,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class UpdateService {
   final Ref ref;
@@ -30,6 +31,8 @@ class UpdateService {
           'available_version_code': info.availableVersionCode as Object,
         });
 
+        _showUpdateNotification();
+
         // Priority >= 4 is considered a critical update (can be adjusted)
         if (info.updatePriority >= 4) {
           await _performImmediateUpdate(context);
@@ -43,6 +46,33 @@ class UpdateService {
         return;
       }
       debugPrint('Update check failed: $e');
+    }
+  }
+
+  Future<void> _showUpdateNotification() async {
+    try {
+      final notifications = FlutterLocalNotificationsPlugin();
+      const androidInit = AndroidInitializationSettings('tt_stat_icon');
+      await notifications.initialize(const InitializationSettings(android: androidInit));
+
+      const androidDetails = AndroidNotificationDetails(
+        'update_channel', 'App Updates',
+        channelDescription: 'Notifications for app updates',
+        importance: Importance.max, 
+        priority: Priority.high,
+        color: Color(0xFF008B9C),
+        icon: 'tt_stat_icon',
+        styleInformation: BigTextStyleInformation('A new version of Trust Tracker is ready with improvements, fixes, and new features.'),
+      );
+
+      await notifications.show(
+        300,
+        'New Update Available! \uD83C\uDF89',
+        'A new version of Trust Tracker is ready with improvements, fixes, and new features.',
+        const NotificationDetails(android: androidDetails),
+      );
+    } catch (e) {
+      debugPrint('Failed to show update notification: $e');
     }
   }
 
@@ -83,6 +113,8 @@ class UpdateService {
 
       if (updateAvailable) {
         if (!context.mounted) return true;
+        
+        _showUpdateNotification();
         
         if (info.updatePriority >= 4) {
            await _performImmediateUpdate(context);

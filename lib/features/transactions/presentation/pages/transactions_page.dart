@@ -27,8 +27,11 @@ class _GroupedResult {
   final Map<int?, CategoryModel> catMap;
   final double monthlyTotal;
   final String topCategory;
+  final double filteredTotal;
+  final int filteredCount;
+  final String summaryTitle;
 
-  _GroupedResult(this.groups, this.catMap, this.monthlyTotal, this.topCategory);
+  _GroupedResult(this.groups, this.catMap, this.monthlyTotal, this.topCategory, this.filteredTotal, this.filteredCount, this.summaryTitle);
 }
 
 class _DayGroup {
@@ -41,9 +44,9 @@ class _DayGroup {
 final _groupedFutureProvider = FutureProvider.autoDispose<_GroupedResult>((ref) async {
   final txnsAsync = ref.watch(transactionListProvider);
   
-  if (txnsAsync.isLoading && !txnsAsync.isRefreshing) return _GroupedResult([], {}, 0, '');
+  if (txnsAsync.isLoading && !txnsAsync.isRefreshing) return _GroupedResult([], {}, 0, '', 0, 0, 'Overall');
   final listState = txnsAsync.valueOrNull;
-  if (listState == null) return _GroupedResult([], {}, 0, '');
+  if (listState == null) return _GroupedResult([], {}, 0, '', 0, 0, 'Overall');
   
   final txns = listState.transactions;
   final filter = listState.filter;
@@ -102,7 +105,28 @@ final _groupedFutureProvider = FutureProvider.autoDispose<_GroupedResult>((ref) 
     topCat = catMap[topCatId]?.name ?? '';
   }
 
-  return _GroupedResult(groups, catMap, monthlyTotal, topCat);
+  double filteredIncome = 0;
+  double filteredExpense = 0;
+  for (final t in txns) {
+    if (t.type == TransactionType.income) {
+      filteredIncome += t.amount;
+    } else {
+      filteredExpense += t.amount;
+    }
+  }
+  double filteredTotal = (filteredIncome - filteredExpense).abs();
+  int filteredCount = txns.length;
+
+  String summaryTitle = 'Overall';
+  if (filter.categoryIds.length == 1) {
+    final catId = filter.categoryIds.first;
+    final catName = catMap[catId]?.name ?? 'Category';
+    summaryTitle = catName;
+  } else if (!filter.isDefault) {
+    summaryTitle = 'Filtered';
+  }
+
+  return _GroupedResult(groups, catMap, monthlyTotal, topCat, filteredTotal, filteredCount, summaryTitle);
 });
 
 // --- Main Page ---
@@ -268,6 +292,15 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                           child: _SummaryStrip(
                             monthlyTotal: result.monthlyTotal,
                             topCategory: result.topCategory,
+                            currency: currency,
+                          ).animate().fadeIn().slideY(begin: -0.1, duration: 400.ms),
+                        )
+                      else
+                        SliverToBoxAdapter(
+                          child: _FilteredSummaryCard(
+                            total: result.filteredTotal,
+                            count: result.filteredCount,
+                            title: result.summaryTitle,
                             currency: currency,
                           ).animate().fadeIn().slideY(begin: -0.1, duration: 400.ms),
                         ),
@@ -474,6 +507,98 @@ class _SummaryStrip extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   topCategory.isEmpty ? 'N/A' : topCategory,
+                  style: tt.titleMedium?.copyWith(
+                    color: cs.onPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FilteredSummaryCard extends StatelessWidget {
+  final double total;
+  final int count;
+  final String title;
+  final String currency;
+
+  const _FilteredSummaryCard({
+    required this.total,
+    required this.count,
+    required this.title,
+    required this.currency,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final tt = theme.textTheme;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [cs.primary, cs.primary.withBlue(200)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: cs.primary.withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$title Total',
+                  style: tt.labelMedium?.copyWith(color: cs.onPrimary.withOpacity(0.7)),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  total.toCurrency(currency),
+                  style: tt.headlineSmall?.copyWith(
+                    color: cs.onPrimary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 22,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            height: 40,
+            width: 1,
+            color: cs.onPrimary.withOpacity(0.2),
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Transactions',
+                  style: tt.labelMedium?.copyWith(color: cs.onPrimary.withOpacity(0.7)),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  count.toString(),
                   style: tt.titleMedium?.copyWith(
                     color: cs.onPrimary,
                     fontWeight: FontWeight.w700,
