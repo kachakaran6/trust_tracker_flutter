@@ -122,12 +122,12 @@ class AppTheme {
         ),
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: Color.alphaBlend(colorScheme.primary.withOpacity(isDark ? 0.08 : 0.05), isDark ? AppColors.darkSurface : AppColors.lightSurface),
+        backgroundColor: Color.alphaBlend(colorScheme.primary.withOpacity(isDark ? 0.03 : 0.05), isDark ? AppColors.darkSurfaceElevated : AppColors.lightSurface),
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.r3Xl)),
       ),
       bottomSheetTheme: BottomSheetThemeData(
-        backgroundColor: Color.alphaBlend(colorScheme.primary.withOpacity(isDark ? 0.08 : 0.05), isDark ? AppColors.darkSurface : AppColors.lightSurface),
+        backgroundColor: Color.alphaBlend(colorScheme.primary.withOpacity(isDark ? 0.03 : 0.05), isDark ? AppColors.darkSurfaceElevated : AppColors.lightSurface),
         elevation: 0,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(AppDimensions.r3Xl)),
@@ -191,13 +191,13 @@ class AppTheme {
     } else {
       return baseScheme.copyWith(
         primary: seed,
-        onPrimary: AppColors.darkBg,
+        onPrimary: Colors.white,
         primaryContainer: seed.withOpacity(0.12),
         onPrimaryContainer: seed,
         surface: AppColors.darkSurface,
         onSurface: AppColors.darkTextPrimary,
         secondary: seed,
-        onSecondary: AppColors.darkBg,
+        onSecondary: Colors.white,
         surfaceVariant: AppColors.darkSurfaceElevated,
         outline: AppColors.darkBorder,
         error: AppColors.error,

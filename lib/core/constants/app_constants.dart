@@ -104,6 +104,12 @@ class AppConstants {
       'color': '#6B7280',
       'icon': '📦'
     },
+    {
+      'name': 'EMI Payments',
+      'type': 'expense',
+      'color': '#EF4444', // Red for debt/liabilities
+      'icon': '💸'
+    },
   ];
 
   // SharedPreferences Keys

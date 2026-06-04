@@ -316,7 +316,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
                 controller: _tabController,
                 dividerColor: Colors.transparent,
                 indicator: BoxDecoration(
-                  color: isDark ? activeAccent.withOpacity(0.1) : Colors.white,
+                  color: isDark ? activeAccent.withOpacity(0.1) : cs.surface,
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
@@ -506,28 +506,26 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
             SizedBox(
               width: double.infinity,
               height: 56,
-              child: ElevatedButton(
+              child: FilledButton(
                 onPressed: _isLoading ? null : _save,
-                style: ElevatedButton.styleFrom(
+                style: FilledButton.styleFrom(
                   backgroundColor: activeAccent,
-                  foregroundColor: Colors.white,
-                  elevation: 4,
-                  shadowColor: activeAccent.withOpacity(0.3),
+                  foregroundColor: cs.onPrimary,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
                 child: _isLoading
-                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    ? SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: cs.onPrimary, strokeWidth: 2))
                     : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.done_rounded, size: 20),
-                          const SizedBox(width: spSmall),
+                          Icon(widget.editTransaction != null ? Icons.save_rounded : Icons.check_circle_rounded),
+                          const SizedBox(width: 8),
                           Text(
-                            _isEditMode ? l10n.update : l10n.saveTransaction,
+                            widget.editTransaction != null ? l10n.update : l10n.addTransaction,
                             style: tt.titleMedium?.copyWith(
-                              color: Colors.white,
                               fontWeight: FontWeight.w800,
-                              fontSize: 16,
+                              color: cs.onPrimary,
                             ),
                           ),
                         ],

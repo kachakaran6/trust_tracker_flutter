@@ -17,6 +17,7 @@ const String autoBackupTask = "com.trusttracker.auto_backup";
 const String summaryNotificationTask = "com.trusttracker.summary_notification";
 const String subscriptionProcessTask = "com.trusttracker.subscription_process";
 const String engagementTask = "com.trusttracker.engagement_task";
+const String emiNotificationTask = "com.trusttracker.emi_notification";
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
@@ -157,6 +158,73 @@ void callbackDispatcher() {
       }
 
       await BackgroundService.scheduleEngagementTask();
+    } else if (task == emiNotificationTask) {
+      // Check active loans for upcoming EMIs
+      final db = await dbHelper.database;
+      final loans = await db.query('bank_loans', where: 'status = ?', whereArgs: ['active']);
+      final today = DateTime.now();
+      
+      final notifications = FlutterLocalNotificationsPlugin();
+      const androidInit = AndroidInitializationSettings('tt_stat_icon');
+      await notifications.initialize(const InitializationSettings(android: androidInit));
+      
+      const android = AndroidNotificationDetails(
+        'emi_channel', 'EMI Reminders',
+        importance: Importance.high, priority: Priority.high,
+        color: Color(0xFF008B9C),
+        icon: 'tt_stat_icon',
+      );
+
+      for (var loanMap in loans) {
+        final emiDueDay = loanMap['emiDueDay'] as int;
+        final name = loanMap['name'] as String;
+        final amount = loanMap['emiAmount'] as double;
+        final loanId = loanMap['id'] as int;
+        
+        // Check if paid this month
+        final payments = await db.query('loan_payments', where: 'loanId = ?', whereArgs: [loanId]);
+        bool paidThisMonth = payments.any((p) {
+          final d = DateTime.parse(p['date'] as String);
+          return d.year == today.year && d.month == today.month;
+        });
+
+        var nextDueDate = DateTime(today.year, today.month, emiDueDay);
+        int diff = nextDueDate.difference(DateTime(today.year, today.month, today.day)).inDays;
+
+        if (paidThisMonth && diff <= 0) {
+          nextDueDate = DateTime(today.year, today.month + 1, emiDueDay);
+          diff = nextDueDate.difference(DateTime(today.year, today.month, today.day)).inDays;
+        }
+
+        String? title;
+        String? body;
+
+        if (!paidThisMonth && diff < 0) {
+          title = 'EMI Overdue';
+          body = 'Your EMI payment is overdue by ${diff.abs()} days.';
+        } else if (diff == 7) {
+          title = 'EMI Due in 7 Days';
+          body = 'Your $name EMI of ₹${amount.toStringAsFixed(0)} is due in 7 days.';
+        } else if (diff == 3) {
+          title = 'Reminder: EMI due in 3 days';
+          body = 'Reminder: EMI due in 3 days.';
+        } else if (diff == 1) {
+          title = 'Tomorrow is your EMI due date';
+          body = 'Tomorrow is your EMI due date.';
+        } else if (diff == 0 && !paidThisMonth) {
+          title = 'EMI Due Today';
+          body = 'Your EMI payment is due today.';
+        }
+
+        if (title != null && body != null) {
+          await notifications.show(
+            loanId + 300, 
+            title, 
+            body,
+            const NotificationDetails(android: android),
+          );
+        }
+      }
     }
     
     return Future.value(true);
@@ -178,6 +246,14 @@ class BackgroundService {
     
     // Always attempt to schedule the engagement task on init so it runs daily
     await scheduleEngagementTask();
+    
+    // Register EMI Notification task
+    await Workmanager().registerPeriodicTask(
+      "emi_periodic",
+      emiNotificationTask,
+      frequency: const Duration(hours: 24),
+      existingWorkPolicy: ExistingPeriodicWorkPolicy.keep,
+    );
   }
 
   static Future<void> scheduleEngagementTask() async {

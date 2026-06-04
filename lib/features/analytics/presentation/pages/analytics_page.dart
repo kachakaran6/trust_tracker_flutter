@@ -393,7 +393,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
       if (mounted) Navigator.of(context, rootNavigator: true).pop();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to generate report: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Failed to generate report: $e'), backgroundColor: Theme.of(context).colorScheme.error),
         );
       }
     }

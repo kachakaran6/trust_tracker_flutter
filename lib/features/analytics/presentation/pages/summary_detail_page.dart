@@ -4,6 +4,7 @@ import 'package:trust_tracker_flutter/core/database/database_helper.dart';
 import 'package:trust_tracker_flutter/core/services/summary_service.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
 import 'package:trust_tracker_flutter/core/utils/extensions.dart';
+import 'package:trust_tracker_flutter/core/theme/app_colors.dart';
 
 class SummaryDetailPage extends ConsumerStatefulWidget {
   const SummaryDetailPage({super.key});
@@ -151,7 +152,7 @@ class _SummaryDetailPageState extends ConsumerState<SummaryDetailPage> {
                 bal.toCurrency(cur),
                 style: tt.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: bal >= 0 ? Colors.green : cs.error,
+                  color: bal >= 0 ? AppColors.success : cs.error,
                 ),
               ),
             ],
@@ -198,7 +199,7 @@ class _SummaryDetailPageState extends ConsumerState<SummaryDetailPage> {
           bal >= 0 
             ? "Your balance is positive. Keep maintaining this streak!"
             : "You spent more than you earned. Try to cut back on $topCat.",
-          bal >= 0 ? Colors.green : Colors.orange,
+          bal >= 0 ? AppColors.success : AppColors.warning,
         ),
       ],
     );
@@ -224,7 +225,7 @@ class _SummaryDetailPageState extends ConsumerState<SummaryDetailPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text(desc, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                Text(desc, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
               ],
             ),
           ),

@@ -301,8 +301,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: AppAccentColors.all.map((accent) {
-                        final accentHex = '#${accent.color.value.toRadixString(16).substring(2).toUpperCase()}';
+                        final accentHex = '#${accent.lightColor.value.toRadixString(16).substring(2).toUpperCase()}';
                         final isSelected = settings.accentColorHex.toUpperCase() == accentHex;
+                        final displayColor = theme.brightness == Brightness.dark ? accent.darkColor : accent.lightColor;
                         
                         return GestureDetector(
                           onTap: () {
@@ -317,7 +318,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                             width: 48,
                             height: 48,
                             decoration: BoxDecoration(
-                              color: accent.color,
+                              color: displayColor,
                               shape: BoxShape.circle,
                               // Multi-layer border for premium look
                               border: Border.all(
@@ -328,7 +329,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                               ),
                             ),
                             child: isSelected 
-                                ? Icon(Icons.check, color: theme.brightness == Brightness.dark ? Colors.black : Colors.white, size: 24) 
+                                ? const Icon(Icons.check, color: Colors.white, size: 24) 
                                 : null,
                           ),
                         );
@@ -847,6 +848,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                 icon: Icons.subscriptions_outlined,
                 label: 'Manage Subscriptions',
                 onTap: () => context.push('/subscriptions'),
+              ),
+              _SettingsTile(
+                icon: Icons.account_balance_outlined,
+                label: 'Banking Management',
+                onTap: () => context.push('/banking-dashboard'),
               ),
               _SettingsTile(
                 icon: Icons.apps_rounded,

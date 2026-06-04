@@ -763,7 +763,7 @@ class _CompactIncomeExpenseRow extends StatelessWidget {
         border: Border.all(color: cs.outline.withOpacity(0.1)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: cs.shadow.withOpacity(0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),

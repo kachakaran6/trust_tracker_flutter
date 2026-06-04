@@ -23,6 +23,12 @@ import 'package:trust_tracker_flutter/features/security/presentation/pages/set_p
 import 'package:trust_tracker_flutter/core/security/security_provider.dart';
 import 'package:trust_tracker_flutter/core/services/update_service.dart';
 import 'package:trust_tracker_flutter/core/services/review_service.dart';
+import 'package:trust_tracker_flutter/features/banking/presentation/pages/banking_dashboard_page.dart';
+import 'package:trust_tracker_flutter/features/banking/presentation/pages/add_loan_page.dart';
+import 'package:trust_tracker_flutter/features/banking/presentation/pages/loan_detail_page.dart';
+import 'package:trust_tracker_flutter/features/banking/presentation/pages/loan_calculator_page.dart';
+import 'package:trust_tracker_flutter/features/banking/presentation/pages/emi_calendar_page.dart';
+import 'package:trust_tracker_flutter/features/banking/data/models/loan_model.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Router Notifier — bridges Riverpod state into GoRouter's refreshListenable.
@@ -233,6 +239,34 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/summary',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const SummaryDetailPage(),
+      ),
+      GoRoute(
+        path: '/banking-dashboard',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const BankingDashboardPage(),
+      ),
+      GoRoute(
+        path: '/add-loan',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const AddLoanPage(),
+      ),
+      GoRoute(
+        path: '/loan-details',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) {
+          final loan = state.extra as LoanModel;
+          return LoanDetailPage(loan: loan);
+        },
+      ),
+      GoRoute(
+        path: '/loan-calculator',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const LoanCalculatorPage(),
+      ),
+      GoRoute(
+        path: '/emi-calendar',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const EmiCalendarPage(),
       ),
     ],
   );
