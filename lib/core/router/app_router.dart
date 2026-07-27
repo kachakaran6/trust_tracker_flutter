@@ -29,6 +29,7 @@ import 'package:trust_tracker_flutter/features/banking/presentation/pages/loan_d
 import 'package:trust_tracker_flutter/features/banking/presentation/pages/loan_calculator_page.dart';
 import 'package:trust_tracker_flutter/features/banking/presentation/pages/emi_calendar_page.dart';
 import 'package:trust_tracker_flutter/features/banking/data/models/loan_model.dart';
+import 'package:trust_tracker_flutter/features/transactions/presentation/pages/debt_manager_page.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Router Notifier — bridges Riverpod state into GoRouter's refreshListenable.
@@ -209,6 +210,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/budget',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const BudgetPage(),
+      ),
+      GoRoute(
+        path: '/debt-manager',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const DebtManagerPage(),
       ),
       GoRoute(
         path: '/our-apps',

@@ -26,8 +26,19 @@ extension CurrencyFormat on double {
         return c['symbol']!;
       }
     }
+    if (code == 'INR') return '₹';
     return code;
   }
+}
+
+String getCurrencySymbol(String code) {
+  for (final c in AppConstants.currencies) {
+    if (c['code'] == code) {
+      return c['symbol']!;
+    }
+  }
+  if (code == 'INR') return '₹';
+  return code;
 }
 
 extension DateFormatExt on DateTime {

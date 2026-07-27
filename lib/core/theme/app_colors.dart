@@ -109,6 +109,20 @@ class AppColors {
   static const Color error = Color(0xFFEF4444);
   static const Color warning = Color(0xFFF59E0B);
   static const Color info = Color(0xFF3B82F6);
+
+  // Convenient Aliases
+  static const Color primary = Color(0xFF8B5CF6);
+  static const Color cardDark = darkSurface;
+  static const Color cardLight = lightSurface;
+  static const Color backgroundDark = darkBg;
+  static const Color backgroundLight = lightBg;
+  static const Color surfaceDark = darkSurface;
+  static const Color borderDark = darkBorder;
+  static const Color borderLight = lightBorder;
+  static const Color textPrimaryDark = darkTextPrimary;
+  static const Color textPrimaryLight = lightTextPrimary;
+  static const Color textSecondaryDark = darkTextSecondary;
+  static const Color textSecondaryLight = lightTextSecondary;
 }
 
 

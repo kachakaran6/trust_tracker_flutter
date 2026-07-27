@@ -264,6 +264,11 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
           title: Text(AppLocalizations.of(context)!.transactions, style: tt.headlineMedium),
           actions: [
             IconButton(
+              icon: const Icon(Icons.handshake_outlined, color: Color(0xFF8B5CF6)),
+              tooltip: 'Debt & Udhar Manager',
+              onPressed: () => context.push('/debt-manager'),
+            ),
+            IconButton(
               icon: Icon(Icons.file_download_outlined, color: cs.onSurface.withOpacity(0.6)),
               onPressed: _openExportBottomSheet,
             ),
@@ -845,19 +850,43 @@ class _SwipeableTransactionTile extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        transaction.description,
-                        style: tt.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: cs.onSurface,
-                          fontSize: 15,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              transaction.description,
+                              style: tt.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: cs.onSurface,
+                                fontSize: 15,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (transaction.isDebt) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF8B5CF6).withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                transaction.isSettled ? '✓ Settled' : '⚡ Udhar',
+                                style: const TextStyle(
+                                  color: Color(0xFF8B5CF6),
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${category?.name ?? "Uncategorized"} · ${transaction.date.toTimeOnly()}',
+                        '${category?.name ?? "Uncategorized"} · ${transaction.date.toTimeOnly()}${transaction.isDebt && transaction.personName != null ? " · ${transaction.personName}" : ""}',
                         style: tt.labelSmall?.copyWith(
                           color: cs.onSurface.withOpacity(0.4),
                           fontWeight: FontWeight.w500,

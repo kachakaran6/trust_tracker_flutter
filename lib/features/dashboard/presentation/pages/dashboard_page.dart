@@ -23,6 +23,13 @@ import 'package:trust_tracker_flutter/core/utils/financial_utils.dart';
 import 'package:intl/intl.dart' as intl;
 
 // --- Providers ---
+final debtSummaryProvider =
+    FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
+  ref.watch(transactionChangeProvider);
+  final repo = ref.watch(transactionRepositoryProvider);
+  return repo.getDebtSummary();
+});
+
 final dashboardSummaryProvider =
     FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
   ref.watch(transactionChangeProvider); // Re-run when database changes
@@ -114,6 +121,8 @@ class DashboardPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 20),
                 const _UpcomingRenewalsWidget(),
+                const SizedBox(height: 16),
+                const _DebtSummaryWidget(),
                 const SizedBox(height: 24),
 
                 Row(
@@ -1153,6 +1162,143 @@ class _UpcomingRenewalsWidget extends ConsumerWidget {
               ),
             ),
           ],
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+}
+
+class _DebtSummaryWidget extends ConsumerWidget {
+  const _DebtSummaryWidget();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final debtAsync = ref.watch(debtSummaryProvider);
+    final currencyCode = ref.watch(settingsProvider).currency;
+    final currency = getCurrencySymbol(currencyCode);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return debtAsync.when(
+      data: (summary) {
+        final double totalGiven = summary['totalGiven'] ?? 0.0;
+        final double totalTaken = summary['totalTaken'] ?? 0.0;
+        final int activeCount = summary['activeCount'] ?? 0;
+        final int overdueCount = summary['overdueCount'] ?? 0;
+
+        if (activeCount == 0) return const SizedBox.shrink();
+
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.cardDark : Colors.purple.withOpacity(0.04),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: overdueCount > 0 ? AppColors.error.withOpacity(0.3) : const Color(0xFF8B5CF6).withOpacity(0.2),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF8B5CF6).withOpacity(0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.handshake_outlined, color: Color(0xFF8B5CF6), size: 18),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Active Debt & Lent',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                    ],
+                  ),
+                  InkWell(
+                    onTap: () => context.push('/debt-manager'),
+                    child: Row(
+                      children: const [
+                        Text(
+                          'View All',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF8B5CF6)),
+                        ),
+                        SizedBox(width: 2),
+                        Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFF8B5CF6)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: Row(
+                      children: [
+                        const Icon(Icons.arrow_upward_rounded, color: Color(0xFF10B981), size: 16),
+                        const SizedBox(width: 4),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Lent (Receivable)', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                            Text(
+                              '$currency${totalGiven.toStringAsFixed(0)}',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF10B981)),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        const Icon(Icons.arrow_downward_rounded, color: Color(0xFFEF4444), size: 16),
+                        const SizedBox(width: 4),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Borrowed (Payable)', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                            Text(
+                              '$currency${totalTaken.toStringAsFixed(0)}',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFFEF4444)),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (overdueCount > 0) ...[
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.warning_amber_rounded, size: 14, color: AppColors.error),
+                      const SizedBox(width: 6),
+                      Text(
+                        '$overdueCount debt reminder(s) are overdue today!',
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.error),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
         );
       },
       loading: () => const SizedBox.shrink(),

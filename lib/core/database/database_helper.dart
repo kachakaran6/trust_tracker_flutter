@@ -22,7 +22,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 8,
+      version: 9,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
       onOpen: (db) async {
@@ -83,6 +83,24 @@ class DatabaseHelper {
         // May already exist
       }
     }
+    if (oldVersion < 9) {
+      // Debt & Udhar tracking fields for transactions table
+      final debtColumns = [
+        'ALTER TABLE transactions ADD COLUMN isDebt INTEGER DEFAULT 0;',
+        'ALTER TABLE transactions ADD COLUMN debtType TEXT;',
+        'ALTER TABLE transactions ADD COLUMN personName TEXT;',
+        'ALTER TABLE transactions ADD COLUMN dueDate TEXT;',
+        'ALTER TABLE transactions ADD COLUMN isSettled INTEGER DEFAULT 0;',
+        'ALTER TABLE transactions ADD COLUMN settledAt TEXT;',
+      ];
+      for (final sql in debtColumns) {
+        try {
+          await db.execute(sql);
+        } catch (e) {
+          // Column may already exist
+        }
+      }
+    }
   }
 
   Future _createDB(Database db, int version) async {
@@ -117,7 +135,13 @@ class DatabaseHelper {
         categoryId $integerNullable,
         note $textNullable,
         monthKey $textType,
-        createdAt $textType
+        createdAt $textType,
+        isDebt INTEGER DEFAULT 0,
+        debtType $textNullable,
+        personName $textNullable,
+        dueDate $textNullable,
+        isSettled INTEGER DEFAULT 0,
+        settledAt $textNullable
       )
     ''');
 

@@ -36,11 +36,18 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
   final _amountController = TextEditingController();
   final _descController = TextEditingController();
   final _noteController = TextEditingController();
+  final _personNameController = TextEditingController();
 
   late DateTime _selectedDate;
   TimeOfDay _selectedTime = TimeOfDay.now();
   CategoryModel? _selectedCategory;
   bool _isLoading = false;
+
+  // Debt & Udhar state
+  bool _isDebt = false;
+  String _debtType = 'given'; // 'given' or 'taken'
+  DateTime? _dueDate;
+  int _selectedDurationDays = 7;
 
   bool get _isEditMode => widget.editTransaction != null;
   bool get _isDuplicateMode => widget.duplicateTransaction != null;
@@ -74,6 +81,11 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
       _descController.text = source.description;
       _noteController.text = source.note ?? '';
 
+      _isDebt = source.isDebt;
+      _debtType = source.debtType ?? (source.type == TransactionType.expense ? 'given' : 'taken');
+      _personNameController.text = source.personName ?? '';
+      _dueDate = source.dueDate;
+
       if (edit != null) {
         _selectedDate = edit.date;
         _selectedTime = TimeOfDay.fromDateTime(edit.date);
@@ -84,6 +96,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
     } else {
       _selectedDate = DateTime.now();
       _selectedTime = TimeOfDay.now();
+      _dueDate = _selectedDate.add(const Duration(days: 7));
     }
   }
 
@@ -94,6 +107,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
     _amountController.dispose();
     _descController.dispose();
     _noteController.dispose();
+    _personNameController.dispose();
     super.dispose();
   }
 
@@ -111,9 +125,31 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    if (picked != null) setState(() => _selectedDate = picked);
+    if (picked != null) {
+      setState(() {
+        _selectedDate = picked;
+        if (_isDebt && (_dueDate == null || _dueDate!.isBefore(picked))) {
+          _dueDate = picked.add(Duration(days: _selectedDurationDays));
+        }
+      });
+    }
+  }
+
+  Future<void> _pickDueDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _dueDate ?? _selectedDate.add(const Duration(days: 7)),
+      firstDate: _selectedDate,
+      lastDate: DateTime.now().add(const Duration(days: 1095)),
+    );
+    if (picked != null) {
+      setState(() {
+        _dueDate = picked;
+        _selectedDurationDays = picked.difference(_selectedDate).inDays;
+      });
+    }
   }
 
   Future<void> _pickTime() async {
@@ -167,6 +203,12 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
             : _noteController.text.trim();
         edit.monthKey =
             '${_fullDateTime.year}-${_fullDateTime.month.toString().padLeft(2, '0')}';
+        
+        edit.isDebt = _isDebt;
+        edit.debtType = _isDebt ? _debtType : null;
+        edit.personName = _isDebt ? _personNameController.text.trim() : null;
+        edit.dueDate = _isDebt ? _dueDate : null;
+
         await notifier.updateTransaction(edit);
       } else {
         final t = TransactionModel.create(
@@ -178,6 +220,10 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
           note: _noteController.text.trim().isEmpty
               ? null
               : _noteController.text.trim(),
+          isDebt: _isDebt,
+          debtType: _isDebt ? _debtType : null,
+          personName: _isDebt ? _personNameController.text.trim() : null,
+          dueDate: _isDebt ? _dueDate : null,
         );
         await notifier.addTransaction(t);
       }
@@ -191,6 +237,46 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _applyDebtDefaults() async {
+    if (!_isDebt) return;
+
+    final currentDesc = _descController.text.trim();
+    final defaultDesc = _debtType == 'given'
+        ? 'Lent Money'
+        : 'Borrowed Money';
+
+    if (currentDesc.isEmpty ||
+        currentDesc.contains('Lent Money') ||
+        currentDesc.contains('Borrowed Money')) {
+      _descController.text = defaultDesc;
+    }
+
+    final targetType = _debtType == 'given' ? CategoryType.expense : CategoryType.income;
+    try {
+      final catRepo = ref.read(categoryRepositoryProvider);
+      final categories = await catRepo.getAll();
+      final matchingCategories = categories.where((c) => c.type == targetType).toList();
+
+      if (matchingCategories.isNotEmpty) {
+        final debtCat = matchingCategories.firstWhere(
+          (c) {
+            final name = c.name.toLowerCase();
+            return name.contains('debt') ||
+                   name.contains('lent') ||
+                   name.contains('loan') ||
+                   name.contains('bills') ||
+                   name.contains('general') ||
+                   name.contains('other');
+          },
+          orElse: () => matchingCategories.first,
+        );
+        setState(() {
+          _selectedCategory = debtCat;
+        });
+      }
+    } catch (_) {}
   }
 
   @override
@@ -454,6 +540,10 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
             ),
             const SizedBox(height: spSect),
 
+            // --- Debt / Udhar (ઉધારી) Tracking Card ---
+            _buildDebtTrackingCard(isDark, cs, tt, activeAccent, labelColor, inputBorderColor),
+            const SizedBox(height: spSect),
+
             // --- Notes ---
             _buildSectionLabel('NOTES (OPTIONAL)', labelColor),
             const SizedBox(height: spMicro),
@@ -548,6 +638,243 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
             color: color.withOpacity(0.5),
             fontSize: 10,
           ),
+    );
+  }
+
+  Widget _buildDebtTrackingCard(
+    bool isDark,
+    ColorScheme cs,
+    TextTheme tt,
+    Color activeAccent,
+    Color labelColor,
+    Color inputBorderColor,
+  ) {
+    final durations = [
+      {'label': '3 Days', 'days': 3},
+      {'label': '1 Week', 'days': 7},
+      {'label': '15 Days', 'days': 15},
+      {'label': '1 Month', 'days': 30},
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.cardDark : Colors.purple.withOpacity(0.04),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: _isDebt ? const Color(0xFF8B5CF6).withOpacity(0.4) : (isDark ? AppColors.borderDark : AppColors.borderLight),
+          width: _isDebt ? 1.5 : 1.0,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF8B5CF6).withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.handshake_outlined, color: Color(0xFF8B5CF6), size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Debt / Lent',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                    Text(
+                      'Track lent & borrowed money with auto-reminders',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: labelColor.withOpacity(0.6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: _isDebt,
+                activeColor: Colors.white,
+                activeTrackColor: const Color(0xFF8B5CF6),
+                inactiveThumbColor: isDark ? Colors.grey[400] : Colors.grey[400],
+                inactiveTrackColor: isDark ? Colors.grey[800] : Colors.grey[300],
+                trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
+                onChanged: (val) {
+                  setState(() {
+                    _isDebt = val;
+                    if (val && _dueDate == null) {
+                      _dueDate = _selectedDate.add(const Duration(days: 7));
+                    }
+                  });
+                  if (val) {
+                    _applyDebtDefaults();
+                  }
+                },
+              ),
+            ],
+          ),
+          if (_isDebt) ...[
+            const SizedBox(height: 16),
+            const Divider(height: 1),
+            const SizedBox(height: 16),
+
+            // Debt Direction Selection
+            _buildSectionLabel('TYPE (પ્રકાર)', labelColor),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: ChoiceChip(
+                    showCheckmark: false,
+                    avatar: Icon(
+                      Icons.call_made_rounded,
+                      size: 16,
+                      color: _debtType == 'given' ? Colors.white : const Color(0xFF10B981),
+                    ),
+                    label: Text(
+                      'Given (Lent / આપેલ)',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: _debtType == 'given' ? FontWeight.bold : FontWeight.normal,
+                        color: _debtType == 'given' ? Colors.white : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
+                      ),
+                    ),
+                    selected: _debtType == 'given',
+                    selectedColor: const Color(0xFF10B981),
+                    onSelected: (val) {
+                      if (val) {
+                        setState(() => _debtType = 'given');
+                        _applyDebtDefaults();
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ChoiceChip(
+                    showCheckmark: false,
+                    avatar: Icon(
+                      Icons.call_received_rounded,
+                      size: 16,
+                      color: _debtType == 'taken' ? Colors.white : const Color(0xFFEF4444),
+                    ),
+                    label: Text(
+                      'Taken (Borrowed / લીધેલ)',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: _debtType == 'taken' ? FontWeight.bold : FontWeight.normal,
+                        color: _debtType == 'taken' ? Colors.white : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
+                      ),
+                    ),
+                    selected: _debtType == 'taken',
+                    selectedColor: const Color(0xFFEF4444),
+                    onSelected: (val) {
+                      if (val) {
+                        setState(() => _debtType = 'taken');
+                        _applyDebtDefaults();
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Person Name Field
+            _buildSectionLabel('PERSON / BORROWER NAME', labelColor),
+            const SizedBox(height: 4),
+            TextFormField(
+              controller: _personNameController,
+              style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+              decoration: InputDecoration(
+                hintText: 'e.g. Ramesh, Shopkeeper, Friend...',
+                prefixIcon: const Icon(Icons.person_outline_rounded, color: Color(0xFF8B5CF6), size: 20),
+                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: inputBorderColor)),
+                focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFF8B5CF6), width: 2)),
+                fillColor: Colors.transparent,
+                filled: false,
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Time Duration Quick Chips & Due Date Picker
+            _buildSectionLabel('REPAYMENT TIME DURATION / DUE DATE', labelColor),
+            const SizedBox(height: 8),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  ...durations.map((d) {
+                    final days = d['days'] as int;
+                    final isSel = _selectedDurationDays == days;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 6.0),
+                      child: ChoiceChip(
+                        showCheckmark: false,
+                        label: Text(
+                          d['label'] as String,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: isSel ? Colors.white : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
+                            fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ),
+                        selected: isSel,
+                        selectedColor: const Color(0xFF8B5CF6),
+                        onSelected: (val) {
+                          if (val) {
+                            setState(() {
+                              _selectedDurationDays = days;
+                              _dueDate = _selectedDate.add(Duration(days: days));
+                            });
+                          }
+                        },
+                      ),
+                    );
+                  }),
+                  ActionChip(
+                    avatar: const Icon(Icons.edit_calendar_rounded, size: 14, color: Color(0xFF8B5CF6)),
+                    label: Text(
+                      _dueDate != null ? DateFormat('MMM dd').format(_dueDate!) : 'Custom',
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF8B5CF6)),
+                    ),
+                    onPressed: _pickDueDate,
+                  ),
+                ],
+              ),
+            ),
+            if (_dueDate != null) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.notifications_active_rounded, color: Color(0xFF8B5CF6), size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Reminder will alert you on ${DateFormat('EEEE, MMM dd, yyyy').format(_dueDate!)}',
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF8B5CF6)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ],
+      ),
     );
   }
 }

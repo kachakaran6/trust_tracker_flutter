@@ -6,6 +6,8 @@ import 'package:trust_tracker_flutter/features/transactions/data/models/transact
 import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_filter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:trust_tracker_flutter/core/services/debt_notification_service.dart';
+
 class TransactionRepository {
   final DatabaseHelper _dbHelper;
 
@@ -24,6 +26,9 @@ class TransactionRepository {
     final id = await db.insert('transactions', t.toMap());
     t.id = id;
     await _markModified();
+    if (t.isDebt) {
+      await DebtNotificationService.scheduleDebtReminder(t);
+    }
     return id;
   }
 
@@ -36,6 +41,11 @@ class TransactionRepository {
       whereArgs: [t.id],
     );
     await _markModified();
+    if (t.isDebt && !t.isSettled) {
+      await DebtNotificationService.scheduleDebtReminder(t);
+    } else if (t.id != null && (t.isSettled || !t.isDebt)) {
+      await DebtNotificationService.cancelDebtReminder(t.id!);
+    }
   }
 
   Future<void> deleteTransaction(int id) async {
@@ -46,6 +56,7 @@ class TransactionRepository {
       whereArgs: [id],
     );
     await _markModified();
+    await DebtNotificationService.cancelDebtReminder(id);
   }
 
   // READ — By date range (for engagement notifications)
@@ -415,6 +426,117 @@ class TransactionRepository {
   String _shortMonth(int m) {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return months[m - 1];
+  }
+
+  // ── DEBT & UDHAR SPECIFIC METHODS ──────────────────────────────────────────
+
+  /// Get debts by status (active vs settled) and optional debtType ('given' | 'taken')
+  Future<List<TransactionModel>> getDebts({
+    required bool isSettled,
+    String? debtType,
+  }) async {
+    final db = await _dbHelper.database;
+    final List<String> conditions = ['isDebt = 1', 'isSettled = ?'];
+    final List<dynamic> args = [isSettled ? 1 : 0];
+
+    if (debtType != null && debtType.isNotEmpty) {
+      conditions.add('debtType = ?');
+      args.add(debtType);
+    }
+
+    final result = await db.query(
+      'transactions',
+      where: conditions.join(' AND '),
+      whereArgs: args,
+      orderBy: 'dueDate ASC, date DESC',
+    );
+    return result.map((e) => TransactionModel.fromMap(e)).toList();
+  }
+
+  /// Mark a debt transaction as settled (repaid/cleared)
+  Future<void> markDebtAsSettled(int transactionId, {bool createSettlementTxn = false}) async {
+    final db = await _dbHelper.database;
+    final result = await db.query(
+      'transactions',
+      where: 'id = ?',
+      whereArgs: [transactionId],
+      limit: 1,
+    );
+
+    if (result.isEmpty) return;
+    final txn = TransactionModel.fromMap(result.first);
+
+    txn.isSettled = true;
+    txn.settledAt = DateTime.now();
+
+    await db.update(
+      'transactions',
+      txn.toMap(),
+      where: 'id = ?',
+      whereArgs: [transactionId],
+    );
+
+    await DebtNotificationService.cancelDebtReminder(transactionId);
+    await _markModified();
+
+    // Optionally create a settlement transaction to record returned/paid cashflow
+    if (createSettlementTxn) {
+      final isGiven = (txn.debtType ?? 'given') == 'given';
+      final personStr = txn.personName?.isNotEmpty == true ? ' to/from ${txn.personName}' : '';
+      
+      final settlementTxn = TransactionModel.create(
+        amount: txn.amount,
+        description: isGiven
+            ? 'Udhar Settlement Received ($personStr)'
+            : 'Udhar Settlement Paid ($personStr)',
+        date: DateTime.now(),
+        type: isGiven ? TransactionType.income : TransactionType.expense,
+        note: 'Settlement for transaction #${txn.id}',
+      );
+      await db.insert('transactions', settlementTxn.toMap());
+    }
+  }
+
+  /// Remove debt flag completely from transaction
+  Future<void> clearDebtFlag(int transactionId) async {
+    final db = await _dbHelper.database;
+    await db.rawUpdate('''
+      UPDATE transactions
+      SET isDebt = 0, debtType = NULL, personName = NULL, dueDate = NULL, isSettled = 0, settledAt = NULL
+      WHERE id = ?
+    ''', [transactionId]);
+
+    await DebtNotificationService.cancelDebtReminder(transactionId);
+    await _markModified();
+  }
+
+  /// Calculate summary stats for debts (Total Given Active, Total Taken Active, Overdue count)
+  Future<Map<String, dynamic>> getDebtSummary() async {
+    final activeDebts = await getDebts(isSettled: false);
+    double totalGiven = 0.0;
+    double totalTaken = 0.0;
+    int overdueCount = 0;
+    final now = DateTime.now();
+
+    for (final d in activeDebts) {
+      if ((d.debtType ?? 'given') == 'given') {
+        totalGiven += d.amount;
+      } else {
+        totalTaken += d.amount;
+      }
+
+      if (d.dueDate != null && d.dueDate!.isBefore(now)) {
+        overdueCount++;
+      }
+    }
+
+    return {
+      'totalGiven': totalGiven,
+      'totalTaken': totalTaken,
+      'netBalance': totalGiven - totalTaken, // Positive means net receivable
+      'activeCount': activeDebts.length,
+      'overdueCount': overdueCount,
+    };
   }
 }
 

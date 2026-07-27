@@ -169,13 +169,18 @@ class BankingDashboardPage extends ConsumerWidget {
                   ),
                   const SizedBox(height: 24),
                 ],
-                Text('Active Loans', style: tt.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Active Loans', style: tt.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                  ],
+                ),
                 const SizedBox(height: 16),
                 if (activeLoans.isEmpty)
                   Center(
                     child: Padding(
                       padding: const EdgeInsets.all(32.0),
-                      child: Text('No active loans found.\nTap + to add a loan.', textAlign: TextAlign.center, style: tt.bodyLarge?.copyWith(color: cs.onSurface.withOpacity(0.5))),
+                      child: Text('No active loans found.\nTap + Add Loan to track loans.', textAlign: TextAlign.center, style: tt.bodyLarge?.copyWith(color: cs.onSurface.withOpacity(0.5))),
                     ),
                   )
                 else
@@ -189,6 +194,7 @@ class BankingDashboardPage extends ConsumerWidget {
                       return _buildLoanTile(context, loan, currencyFormat, cs, tt);
                     },
                   ),
+                const SizedBox(height: 80),
               ],
             ),
           );
@@ -198,8 +204,15 @@ class BankingDashboardPage extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/add-loan'),
-        icon: const Icon(Icons.add),
-        label: const Text('Add Loan'),
+        backgroundColor: const Color(0xFF8B5CF6),
+        foregroundColor: Colors.white,
+        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        icon: const Icon(Icons.add_rounded, size: 20),
+        label: const Text(
+          'Add Loan',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+        ),
       ),
     );
   }

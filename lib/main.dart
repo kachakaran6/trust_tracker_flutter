@@ -21,16 +21,28 @@ import 'package:quick_actions/quick_actions.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
 import 'package:trust_tracker_flutter/features/transactions/presentation/widgets/quick_add_bottom_sheet.dart';
 
+import 'package:flutter/foundation.dart';
+import 'package:trust_tracker_flutter/core/services/debt_notification_service.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   tz.initializeTimeZones();
-  await Firebase.initializeApp();
+  
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint("Firebase initialization skipped: $e");
+  }
 
-  // Lock orientation to portrait
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
+  if (!kIsWeb) {
+    // Lock orientation to portrait
+    try {
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
+    } catch (_) {}
+  }
 
   // Initialize Database
   final dbHelper = DatabaseHelper.instance;
@@ -40,7 +52,19 @@ Future<void> main() async {
   final prefs = await SharedPreferences.getInstance();
 
   // Initialize Background Tasks
-  await BackgroundService.init();
+  if (!kIsWeb) {
+    try {
+      await BackgroundService.init();
+    } catch (e) {
+      debugPrint("BackgroundService initialization skipped: $e");
+    }
+  }
+
+  try {
+    await DebtNotificationService.init();
+  } catch (e) {
+    debugPrint("DebtNotificationService init skipped: $e");
+  }
 
   // Initialize Local Notifications
   try {
@@ -50,7 +74,10 @@ Future<void> main() async {
     await notifications.initialize(
       initSettings,
       onDidReceiveNotificationResponse: (response) {
-        if (response.id == 100 || response.id == 999) {
+        final id = response.id;
+        if (id != null && id >= 50000) {
+          rootNavigatorKey.currentState?.context.push('/debt-manager');
+        } else if (id == 100 || id == 999) {
           rootNavigatorKey.currentState?.context.push('/summary');
         }
       },
