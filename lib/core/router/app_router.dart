@@ -30,6 +30,8 @@ import 'package:trust_tracker_flutter/features/banking/presentation/pages/loan_c
 import 'package:trust_tracker_flutter/features/banking/presentation/pages/emi_calendar_page.dart';
 import 'package:trust_tracker_flutter/features/banking/data/models/loan_model.dart';
 import 'package:trust_tracker_flutter/features/transactions/presentation/pages/debt_manager_page.dart';
+import 'package:trust_tracker_flutter/features/transactions/presentation/pages/person_debt_detail_page.dart';
+import 'package:trust_tracker_flutter/features/transactions/presentation/widgets/add_debt_bottom_sheet.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Router Notifier — bridges Riverpod state into GoRouter's refreshListenable.
@@ -67,14 +69,17 @@ final _shellNavigatorKeyDashboard =
     GlobalKey<NavigatorState>(debugLabel: 'dashboard');
 final _shellNavigatorKeyTransactions =
     GlobalKey<NavigatorState>(debugLabel: 'transactions');
-final _shellNavigatorKeyAnalytics =
-    GlobalKey<NavigatorState>(debugLabel: 'analytics');
+final _shellNavigatorKeyDebt =
+    GlobalKey<NavigatorState>(debugLabel: 'debt');
+final _shellNavigatorKeySubscriptions =
+    GlobalKey<NavigatorState>(debugLabel: 'subscriptions');
 final _shellNavigatorKeySettings =
     GlobalKey<NavigatorState>(debugLabel: 'settings');
 final _shellNavigatorKeys = <GlobalKey<NavigatorState>>[
   _shellNavigatorKeyDashboard,
   _shellNavigatorKeyTransactions,
-  _shellNavigatorKeyAnalytics,
+  _shellNavigatorKeyDebt,
+  _shellNavigatorKeySubscriptions,
   _shellNavigatorKeySettings,
 ];
 
@@ -175,11 +180,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
           StatefulShellBranch(
-            navigatorKey: _shellNavigatorKeyAnalytics,
+            navigatorKey: _shellNavigatorKeyDebt,
             routes: [
               GoRoute(
-                path: '/analytics',
-                builder: (context, state) => const AnalyticsPage(),
+                path: '/debt-manager',
+                builder: (context, state) => const DebtManagerPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: _shellNavigatorKeySubscriptions,
+            routes: [
+              GoRoute(
+                path: '/subscriptions',
+                builder: (context, state) => const SubscriptionDashboardPage(),
               ),
             ],
           ),
@@ -195,6 +209,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ],
       ),
       GoRoute(
+        path: '/analytics',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const AnalyticsPage(),
+      ),
+      GoRoute(
         path: '/add-transaction',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) {
@@ -207,24 +226,23 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
+        path: '/debt-person-detail',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          final personName = extra?['personName'] as String? ?? (state.uri.queryParameters['name'] ?? '');
+          return PersonDebtDetailPage(personName: personName);
+        },
+      ),
+      GoRoute(
         path: '/budget',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const BudgetPage(),
       ),
       GoRoute(
-        path: '/debt-manager',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const DebtManagerPage(),
-      ),
-      GoRoute(
         path: '/our-apps',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const OurAppsPage(),
-      ),
-      GoRoute(
-        path: '/subscriptions',
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const SubscriptionDashboardPage(),
       ),
       GoRoute(
         path: '/add-subscription',
@@ -319,6 +337,7 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
     await Future.delayed(const Duration(seconds: 2));
     if (mounted) {
       await ref.read(updateServiceProvider).checkForUpdate(context);
+      if (!mounted) return;
       await ref.read(reviewServiceProvider).logAppOpen(context);
     }
   }
@@ -383,16 +402,29 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
         _handleBackPressed();
       },
       child: Scaffold(
+        extendBody: true,
         body: widget.navigationShell,
-        floatingActionButton: FloatingActionButton(
-          onPressed: () => context.push('/add-transaction'),
-          backgroundColor: cs.primary,
-          elevation: 4,
-          shape: const CircleBorder(),
-          child: Icon(Icons.add, size: 28, color: Colors.white),
+        floatingActionButton: _FloatingCtaButton(
+          currentIndex: selectedIndex,
+          onTap: () {
+            HapticFeedback.mediumImpact();
+            if (selectedIndex == 2) {
+              // Debt & Lent Tab -> Open dedicated Add Debt Modal
+              AddDebtBottomSheet.show(context);
+            } else if (selectedIndex == 3) {
+              // Subscriptions Tab -> Open Add Subscription Page
+              context.push('/add-subscription');
+            } else {
+              // Home, Activity, Settings -> Open Add Transaction
+              context.push('/add-transaction');
+            }
+          },
+          onLongPress: () {
+            _showQuickAddActionSheet(context);
+          },
         ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-        bottomNavigationBar: _BottomNavBar(
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+        bottomNavigationBar: _FloatingBottomNavBar(
           selectedIndex: selectedIndex,
           onTap: _onTabTapped,
           cs: cs,
@@ -559,13 +591,13 @@ Future<bool?> showExitConfirmationDialog(BuildContext context) {
   );
 }
 
-class _BottomNavBar extends StatelessWidget {
+class _FloatingBottomNavBar extends StatelessWidget {
   final int selectedIndex;
   final void Function(int) onTap;
   final ColorScheme cs;
   final AppLocalizations l10n;
 
-  const _BottomNavBar({
+  const _FloatingBottomNavBar({
     required this.selectedIndex,
     required this.onTap,
     required this.cs,
@@ -574,58 +606,77 @@ class _BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 16,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _NavItem(
-                icon: Icons.dashboard_outlined,
-                activeIcon: Icons.dashboard_rounded,
-                label: l10n.home,
-                selected: selectedIndex == 0,
-                onTap: () => onTap(0),
-                cs: cs,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(12, 0, 12, bottomPadding > 0 ? bottomPadding : 12),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+            decoration: BoxDecoration(
+              color: cs.surface.withValues(alpha: isDark ? 0.88 : 0.94),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: cs.outlineVariant.withValues(alpha: isDark ? 0.25 : 0.45),
+                width: 1.2,
               ),
-              _NavItem(
-                icon: Icons.receipt_long_outlined,
-                activeIcon: Icons.receipt_long_rounded,
-                label: l10n.activity,
-                selected: selectedIndex == 1,
-                onTap: () => onTap(1),
-                cs: cs,
-              ),
-              // Center spacer for FAB
-              const SizedBox(width: 56),
-              _NavItem(
-                icon: Icons.bar_chart_outlined,
-                activeIcon: Icons.bar_chart_rounded,
-                label: l10n.analytics,
-                selected: selectedIndex == 2,
-                onTap: () => onTap(2),
-                cs: cs,
-              ),
-              _NavItem(
-                icon: Icons.settings_outlined,
-                activeIcon: Icons.settings_rounded,
-                label: l10n.settings,
-                selected: selectedIndex == 3,
-                onTap: () => onTap(3),
-                cs: cs,
-              ),
-            ],
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+                  blurRadius: 24,
+                  spreadRadius: -2,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                _FloatingNavItem(
+                  icon: Icons.dashboard_outlined,
+                  activeIcon: Icons.dashboard_rounded,
+                  label: l10n.home,
+                  selected: selectedIndex == 0,
+                  onTap: () => onTap(0),
+                  cs: cs,
+                ),
+                _FloatingNavItem(
+                  icon: Icons.receipt_long_outlined,
+                  activeIcon: Icons.receipt_long_rounded,
+                  label: l10n.activity,
+                  selected: selectedIndex == 1,
+                  onTap: () => onTap(1),
+                  cs: cs,
+                ),
+                _FloatingNavItem(
+                  icon: Icons.handshake_outlined,
+                  activeIcon: Icons.handshake_rounded,
+                  label: 'Debt / Lent',
+                  selected: selectedIndex == 2,
+                  onTap: () => onTap(2),
+                  cs: cs,
+                ),
+                _FloatingNavItem(
+                  icon: Icons.event_repeat_outlined,
+                  activeIcon: Icons.event_repeat_rounded,
+                  label: 'Subs',
+                  selected: selectedIndex == 3,
+                  onTap: () => onTap(3),
+                  cs: cs,
+                ),
+                _FloatingNavItem(
+                  icon: Icons.settings_outlined,
+                  activeIcon: Icons.settings_rounded,
+                  label: l10n.settings,
+                  selected: selectedIndex == 4,
+                  onTap: () => onTap(4),
+                  cs: cs,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -633,7 +684,7 @@ class _BottomNavBar extends StatelessWidget {
   }
 }
 
-class _NavItem extends StatelessWidget {
+class _FloatingNavItem extends StatelessWidget {
   final IconData icon;
   final IconData activeIcon;
   final String label;
@@ -641,7 +692,7 @@ class _NavItem extends StatelessWidget {
   final VoidCallback onTap;
   final ColorScheme cs;
 
-  const _NavItem({
+  const _FloatingNavItem({
     required this.icon,
     required this.activeIcon,
     required this.label,
@@ -652,41 +703,313 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 64,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeOutCubic,
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: selected
+                      ? cs.primary.withValues(alpha: 0.14)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: AnimatedScale(
+                  scale: selected ? 1.08 : 1.0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    selected ? activeIcon : icon,
+                    color: selected
+                        ? cs.primary
+                        : cs.onSurface.withValues(alpha: 0.55),
+                    size: 22,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  color: selected
+                      ? cs.primary
+                      : cs.onSurface.withValues(alpha: 0.6),
+                  letterSpacing: selected ? 0.1 : 0,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FloatingCtaButton extends StatelessWidget {
+  final int currentIndex;
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
+
+  const _FloatingCtaButton({
+    required this.currentIndex,
+    required this.onTap,
+    required this.onLongPress,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    final Color buttonColor = cs.primary;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Tooltip(
+        message: currentIndex == 2
+            ? 'Add Debt / Lent Record'
+            : (currentIndex == 3 ? 'Add Subscription' : 'Add Transaction'),
+        child: GestureDetector(
+          onLongPress: onLongPress,
+          child: Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  buttonColor,
+                  buttonColor.withValues(alpha: 0.88),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: buttonColor.withValues(alpha: 0.42),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onTap,
+                borderRadius: BorderRadius.circular(18),
+                child: Center(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    transitionBuilder: (child, animation) => ScaleTransition(
+                      scale: animation,
+                      child: RotationTransition(
+                        turns: animation.drive(Tween(begin: 0.75, end: 1.0)),
+                        child: child,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.add_rounded,
+                      key: ValueKey<int>(currentIndex),
+                      color: Colors.white,
+                      size: 30,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+void _showQuickAddActionSheet(BuildContext context) {
+  final cs = Theme.of(context).colorScheme;
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    builder: (ctx) => Container(
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        border: Border.all(
+          color: cs.outlineVariant.withValues(alpha: isDark ? 0.2 : 0.4),
+        ),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
               decoration: BoxDecoration(
-                color: selected
-                    ? cs.primary.withValues(alpha: 0.12)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Icon(
-                selected ? activeIcon : icon,
-                color:
-                    selected ? cs.primary : cs.onSurface.withValues(alpha: 0.5),
-                size: 22,
+                color: cs.onSurface.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                color:
-                    selected ? cs.primary : cs.onSurface.withValues(alpha: 0.5),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Quick Actions',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: cs.onSurface,
+                    ),
+                  ),
+                  Text(
+                    'Choose what you would like to record',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: cs.onSurface.withValues(alpha: 0.55),
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
+              IconButton(
+                icon: const Icon(Icons.close_rounded, size: 20),
+                onPressed: () => Navigator.pop(ctx),
+                style: IconButton.styleFrom(
+                  backgroundColor: cs.onSurface.withValues(alpha: 0.05),
+                  padding: const EdgeInsets.all(8),
+                  minimumSize: const Size(34, 34),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _QuickActionTile(
+            icon: Icons.receipt_long_rounded,
+            color: cs.primary,
+            title: 'Add Transaction',
+            subtitle: 'Record an income or expense',
+            onTap: () {
+              Navigator.pop(ctx);
+              context.push('/add-transaction');
+            },
+          ),
+          const SizedBox(height: 10),
+          _QuickActionTile(
+            icon: Icons.handshake_rounded,
+            color: cs.primary,
+            title: 'Add Debt & Lent',
+            subtitle: 'Record money lent out or borrowed',
+            onTap: () {
+              Navigator.pop(ctx);
+              AddDebtBottomSheet.show(context);
+            },
+          ),
+          const SizedBox(height: 10),
+          _QuickActionTile(
+            icon: Icons.event_repeat_rounded,
+            color: cs.primary,
+            title: 'Add Subscription',
+            subtitle: 'Track recurring bill or subscription',
+            onTap: () {
+              Navigator.pop(ctx);
+              context.push('/add-subscription');
+            },
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _QuickActionTile extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _QuickActionTile({
+    required this.icon,
+    required this.color,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
+    return Material(
+      color: cs.onSurface.withValues(alpha: 0.04),
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 22),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: cs.onSurface.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: cs.onSurface.withValues(alpha: 0.3),
+              ),
+            ],
+          ),
         ),
       ),
     );

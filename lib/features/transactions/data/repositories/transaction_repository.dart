@@ -27,6 +27,9 @@ class TransactionRepository {
     t.id = id;
     await _markModified();
     if (t.isDebt) {
+      if (t.personName != null && t.personName!.trim().isNotEmpty) {
+        await saveDebtPersonName(t.personName!.trim());
+      }
       await DebtNotificationService.scheduleDebtReminder(t);
     }
     return id;
@@ -41,8 +44,13 @@ class TransactionRepository {
       whereArgs: [t.id],
     );
     await _markModified();
-    if (t.isDebt && !t.isSettled) {
-      await DebtNotificationService.scheduleDebtReminder(t);
+    if (t.isDebt) {
+      if (t.personName != null && t.personName!.trim().isNotEmpty) {
+        await saveDebtPersonName(t.personName!.trim());
+      }
+      if (!t.isSettled) {
+        await DebtNotificationService.scheduleDebtReminder(t);
+      }
     } else if (t.id != null && (t.isSettled || !t.isDebt)) {
       await DebtNotificationService.cancelDebtReminder(t.id!);
     }
@@ -57,6 +65,13 @@ class TransactionRepository {
     );
     await _markModified();
     await DebtNotificationService.cancelDebtReminder(id);
+  }
+
+  Future<void> deleteAllTransactions() async {
+    final db = await _dbHelper.database;
+    await db.delete('transactions');
+    await _markModified();
+    await DebtNotificationService.cancelAllReminders();
   }
 
   // READ — By date range (for engagement notifications)
@@ -432,12 +447,17 @@ class TransactionRepository {
 
   /// Get debts by status (active vs settled) and optional debtType ('given' | 'taken')
   Future<List<TransactionModel>> getDebts({
-    required bool isSettled,
+    bool? isSettled,
     String? debtType,
   }) async {
     final db = await _dbHelper.database;
-    final List<String> conditions = ['isDebt = 1', 'isSettled = ?'];
-    final List<dynamic> args = [isSettled ? 1 : 0];
+    final List<String> conditions = ['isDebt = 1'];
+    final List<dynamic> args = [];
+
+    if (isSettled != null) {
+      conditions.add('isSettled = ?');
+      args.add(isSettled ? 1 : 0);
+    }
 
     if (debtType != null && debtType.isNotEmpty) {
       conditions.add('debtType = ?');
@@ -449,6 +469,35 @@ class TransactionRepository {
       where: conditions.join(' AND '),
       whereArgs: args,
       orderBy: 'dueDate ASC, date DESC',
+    );
+    return result.map((e) => TransactionModel.fromMap(e)).toList();
+  }
+
+  /// Get debts for a specific person with optional isSettled and debtType filters
+  Future<List<TransactionModel>> getDebtsForPerson(
+    String personName, {
+    bool? isSettled,
+    String? debtType,
+  }) async {
+    final db = await _dbHelper.database;
+    final List<String> conditions = ['isDebt = 1', 'LOWER(TRIM(personName)) = LOWER(TRIM(?))'];
+    final List<dynamic> args = [personName.trim()];
+
+    if (isSettled != null) {
+      conditions.add('isSettled = ?');
+      args.add(isSettled ? 1 : 0);
+    }
+
+    if (debtType != null && debtType.isNotEmpty) {
+      conditions.add('debtType = ?');
+      args.add(debtType);
+    }
+
+    final result = await db.query(
+      'transactions',
+      where: conditions.join(' AND '),
+      whereArgs: args,
+      orderBy: 'date DESC, id DESC',
     );
     return result.map((e) => TransactionModel.fromMap(e)).toList();
   }
@@ -497,6 +546,76 @@ class TransactionRepository {
     }
   }
 
+  /// Partially settle a debt transaction, reducing its remaining amount and creating a settled record
+  Future<void> settlePartialDebt({
+    required int transactionId,
+    required double settledAmount,
+    bool createSettlementTxn = false,
+  }) async {
+    final db = await _dbHelper.database;
+    final result = await db.query(
+      'transactions',
+      where: 'id = ?',
+      whereArgs: [transactionId],
+      limit: 1,
+    );
+
+    if (result.isEmpty) return;
+    final orig = TransactionModel.fromMap(result.first);
+
+    if (settledAmount >= orig.amount) {
+      await markDebtAsSettled(transactionId, createSettlementTxn: createSettlementTxn);
+      return;
+    }
+
+    final remainingAmount = orig.amount - settledAmount;
+
+    // 1. Update original transaction with remaining active debt amount
+    await db.update(
+      'transactions',
+      {'amount': remainingAmount},
+      where: 'id = ?',
+      whereArgs: [transactionId],
+    );
+
+    // 2. Insert the settled portion as a settled debt record
+    final isGiven = (orig.debtType ?? 'given') == 'given';
+    final personStr = orig.personName?.isNotEmpty == true ? orig.personName! : 'Person';
+
+    final settledTxn = TransactionModel.create(
+      amount: settledAmount,
+      description: isGiven ? 'Lent to $personStr (Settled)' : 'Borrowed from $personStr (Settled)',
+      date: DateTime.now(),
+      type: orig.type,
+      categoryId: orig.categoryId,
+      isDebt: true,
+      debtType: orig.debtType,
+      personName: orig.personName,
+      dueDate: orig.dueDate,
+      isSettled: true,
+      settledAt: DateTime.now(),
+      affectsBalance: orig.affectsBalance,
+      note: 'Partial recovery from #${orig.id}',
+    );
+    await db.insert('transactions', settledTxn.toMap());
+
+    // 3. Create cashflow entry if affects balance
+    if (createSettlementTxn) {
+      final settlementTxn = TransactionModel.create(
+        amount: settledAmount,
+        description: isGiven
+            ? 'Udhar Settlement Received ($personStr)'
+            : 'Udhar Settlement Paid ($personStr)',
+        date: DateTime.now(),
+        type: isGiven ? TransactionType.income : TransactionType.expense,
+        note: 'Partial settlement for transaction #${orig.id}',
+      );
+      await db.insert('transactions', settlementTxn.toMap());
+    }
+
+    await _markModified();
+  }
+
   /// Remove debt flag completely from transaction
   Future<void> clearDebtFlag(int transactionId) async {
     final db = await _dbHelper.database;
@@ -537,6 +656,53 @@ class TransactionRepository {
       'activeCount': activeDebts.length,
       'overdueCount': overdueCount,
     };
+  }
+
+  /// Get distinct person names previously entered for debts
+  Future<List<String>> getDistinctDebtPersonNames() async {
+    final prefs = await SharedPreferences.getInstance();
+    final prefNames = prefs.getStringList('saved_debt_person_names') ?? [];
+
+    try {
+      final db = await _dbHelper.database;
+      final result = await db.rawQuery('''
+        SELECT DISTINCT personName 
+        FROM transactions 
+        WHERE isDebt = 1 AND personName IS NOT NULL AND TRIM(personName) != ''
+        ORDER BY id DESC
+      ''');
+      final dbNames = result
+          .map((row) => (row['personName'] as String?)?.trim() ?? '')
+          .where((name) => name.isNotEmpty)
+          .toList();
+
+      final combinedSet = <String>{};
+      for (final n in prefNames) {
+        if (n.trim().isNotEmpty) combinedSet.add(n.trim());
+      }
+      for (final n in dbNames) {
+        if (n.trim().isNotEmpty) combinedSet.add(n.trim());
+      }
+      return combinedSet.toList();
+    } catch (_) {
+      return prefNames;
+    }
+  }
+
+  /// Explicitly save a person name to persistent storage
+  Future<void> saveDebtPersonName(String name) async {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final list = prefs.getStringList('saved_debt_person_names') ?? [];
+      list.removeWhere((item) => item.toLowerCase() == trimmed.toLowerCase());
+      list.insert(0, trimmed);
+      if (list.length > 100) {
+        list.removeRange(100, list.length);
+      }
+      await prefs.setStringList('saved_debt_person_names', list);
+    } catch (_) {}
   }
 }
 

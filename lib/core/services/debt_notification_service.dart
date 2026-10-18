@@ -107,4 +107,13 @@ class DebtNotificationService {
       debugPrint("Failed to cancel debt notification: $e");
     }
   }
+
+  /// Cancel all scheduled debt notifications
+  static Future<void> cancelAllReminders() async {
+    try {
+      await _notifications.cancelAll();
+    } catch (e) {
+      debugPrint("Failed to cancel all debt notifications: $e");
+    }
+  }
 }

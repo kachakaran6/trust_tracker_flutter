@@ -264,9 +264,9 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
           title: Text(AppLocalizations.of(context)!.transactions, style: tt.headlineMedium),
           actions: [
             IconButton(
-              icon: const Icon(Icons.handshake_outlined, color: Color(0xFF8B5CF6)),
-              tooltip: 'Debt & Udhar Manager',
-              onPressed: () => context.push('/debt-manager'),
+              icon: Icon(Icons.bar_chart_rounded, color: cs.primary),
+              tooltip: AppLocalizations.of(context)?.analytics ?? 'Analytics',
+              onPressed: () => context.push('/analytics'),
             ),
             IconButton(
               icon: Icon(Icons.file_download_outlined, color: cs.onSurface.withOpacity(0.6)),
@@ -801,8 +801,13 @@ class _SwipeableTransactionTile extends StatelessWidget {
     final cs = theme.colorScheme;
     final tt = theme.textTheme;
     final isIncome = transaction.type == TransactionType.income;
-    final catColor = category != null ? Color(category!.colorHex.toColorInt()) : cs.onSurface.withOpacity(0.3);
-    final l10n = AppLocalizations.of(context)!;
+    final isGiven = (transaction.debtType ?? 'given') == 'given';
+    final isDebtRecord = transaction.isDebt;
+    final catColor = category != null
+        ? Color(category!.colorHex.toColorInt())
+        : (isDebtRecord
+            ? (isGiven ? cs.primary : const Color(0xFFF59E0B))
+            : cs.onSurface.withValues(alpha: 0.3));
 
     final cardContent = Container(
       decoration: BoxDecoration(
@@ -810,21 +815,21 @@ class _SwipeableTransactionTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: cs.shadow.withOpacity(0.03),
+            color: cs.shadow.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
         border: Border.all(
-          color: transaction.amount > 1000 && !isIncome 
-            ? cs.error.withOpacity(0.3) 
-            : cs.outline.withOpacity(0.05),
-          width: transaction.amount > 1000 && !isIncome ? 1.5 : 1,
+          color: !isDebtRecord && transaction.amount > 1000 && !isIncome 
+            ? cs.error.withValues(alpha: 0.3) 
+            : cs.outline.withValues(alpha: 0.05),
+          width: !isDebtRecord && transaction.amount > 1000 && !isIncome ? 1.5 : 1,
         ),
       ),
       child: Stack(
         children: [
-          if (transaction.amount > 1000 && !isIncome)
+          if (!isDebtRecord && transaction.amount > 1000 && !isIncome)
             Positioned(
               top: 0,
               right: 20,
@@ -850,48 +855,91 @@ class _SwipeableTransactionTile extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              transaction.description,
-                              style: tt.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: cs.onSurface,
-                                fontSize: 15,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (transaction.isDebt) ...[
-                            const SizedBox(width: 6),
+                      Text(
+                        transaction.description,
+                        style: tt.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: cs.onSurface,
+                          fontSize: 15,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 5),
+                      if (transaction.isDebt)
+                        Row(
+                          children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF8B5CF6).withOpacity(0.15),
+                                color: transaction.isSettled
+                                    ? cs.onSurface.withValues(alpha: 0.08)
+                                    : (isGiven
+                                        ? cs.primary.withValues(alpha: 0.14)
+                                        : const Color(0xFFF59E0B).withValues(alpha: 0.16)),
                                 borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                transaction.isSettled ? '✓ Settled' : '⚡ Udhar',
-                                style: const TextStyle(
-                                  color: Color(0xFF8B5CF6),
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.bold,
+                                border: Border.all(
+                                  color: transaction.isSettled
+                                      ? cs.onSurface.withValues(alpha: 0.18)
+                                      : (isGiven
+                                          ? cs.primary.withValues(alpha: 0.35)
+                                          : const Color(0xFFF59E0B).withValues(alpha: 0.4)),
+                                  width: 0.8,
                                 ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    transaction.isSettled
+                                        ? Icons.check_circle_outline_rounded
+                                        : (isGiven ? Icons.arrow_outward_rounded : Icons.south_west_rounded),
+                                    size: 11,
+                                    color: transaction.isSettled
+                                        ? cs.onSurface.withValues(alpha: 0.7)
+                                        : (isGiven ? cs.primary : const Color(0xFFD97706)),
+                                  ),
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    transaction.isSettled
+                                        ? 'SETTLED'
+                                        : (isGiven ? 'LENT' : 'DEBT'),
+                                    style: TextStyle(
+                                      color: transaction.isSettled
+                                        ? cs.onSurface.withValues(alpha: 0.7)
+                                        : (isGiven ? cs.primary : const Color(0xFFB45309)),
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 0.3,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 7),
+                            Expanded(
+                              child: Text(
+                                '${transaction.date.toTimeOnly()}${transaction.personName != null ? " · ${transaction.personName}" : ""}',
+                                style: tt.labelSmall?.copyWith(
+                                  color: cs.onSurface.withValues(alpha: 0.55),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${category?.name ?? "Uncategorized"} · ${transaction.date.toTimeOnly()}${transaction.isDebt && transaction.personName != null ? " · ${transaction.personName}" : ""}',
-                        style: tt.labelSmall?.copyWith(
-                          color: cs.onSurface.withOpacity(0.4),
-                          fontWeight: FontWeight.w500,
+                        )
+                      else
+                        Text(
+                          '${category?.name ?? "General"} · ${transaction.date.toTimeOnly()}',
+                          style: tt.labelSmall?.copyWith(
+                            color: cs.onSurface.withValues(alpha: 0.55),
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
                     ],
                   ),
                 ),
@@ -978,18 +1026,67 @@ class _SwipeableTransactionTile extends StatelessWidget {
 
 
   Widget _buildCategoryIcon(ColorScheme cs, Color catColor) {
-    final iconEmoji = category != null ? CategoryUtils.getEmoji(category!.iconName) : '❓';
+    if (transaction.isDebt) {
+      final isGiven = (transaction.debtType ?? 'given') == 'given';
+      final letter = isGiven ? 'L' : 'D';
+      final badgeColor = isGiven ? cs.primary : const Color(0xFFF59E0B);
+      final textColor = isGiven ? cs.primary : const Color(0xFFD97706);
+
+      return Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: badgeColor.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: badgeColor.withValues(alpha: 0.25),
+            width: 1,
+          ),
+        ),
+        child: Center(
+          child: Text(
+            letter,
+            style: TextStyle(
+              fontSize: 21,
+              fontWeight: FontWeight.w900,
+              color: textColor,
+              letterSpacing: -0.5,
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (category != null) {
+      final iconEmoji = CategoryUtils.getEmoji(category!.iconName);
+      return Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: catColor.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Center(
+          child: Text(
+            iconEmoji,
+            style: const TextStyle(fontSize: 22),
+          ),
+        ),
+      );
+    }
+
     return Container(
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        color: catColor.withOpacity(0.12),
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Center(
-        child: Text(
-          iconEmoji,
-          style: const TextStyle(fontSize: 22),
+        child: Icon(
+          Icons.receipt_long_rounded,
+          size: 22,
+          color: cs.onSurfaceVariant.withValues(alpha: 0.7),
         ),
       ),
     );

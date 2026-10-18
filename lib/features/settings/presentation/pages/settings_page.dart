@@ -11,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:trust_tracker_flutter/core/services/backup_service.dart';
 import 'package:trust_tracker_flutter/generated/app_localizations.dart';
+import 'package:trust_tracker_flutter/features/transactions/data/repositories/transaction_repository.dart';
 import 'package:trust_tracker_flutter/features/transactions/presentation/providers/transaction_provider.dart';
 import 'package:trust_tracker_flutter/features/budget/presentation/providers/budget_provider.dart';
 import 'package:trust_tracker_flutter/core/services/summary_service.dart';
@@ -791,8 +792,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                 onTap: () => _handleImport(context, ref),
               ),
               _SettingsTile(
-                icon: Icons.delete_forever_rounded,
-                label: l10n.resetAllData,
+                icon: Icons.delete_sweep_rounded,
+                label: 'Clear All Transactions',
                 iconColor: cs.error,
                 onTap: () => _handleResetAllData(context, ref, l10n),
               ),
@@ -915,8 +916,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
     final confirm = await showDialog<bool>(
       context: context,
       builder: (dialogCtx) => AlertDialog(
-        title: Text(l10n.resetAllData),
-        content: const Text('Are you sure you want to reset all data? This action cannot be undone and will restart the application from the beginning.'),
+        title: const Text('Clear All Transactions'),
+        content: const Text('Are you sure you want to clear all transactions and debt records? Your settings, preferences, and categories will remain safe. This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx, false),
@@ -924,29 +925,43 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx, true),
-            style: TextButton.styleFrom(foregroundColor: cs.primary),
-            child: const Text('Reset'),
+            style: TextButton.styleFrom(foregroundColor: cs.error),
+            child: const Text('Clear All'),
           ),
         ],
       ),
     );
 
     if (confirm == true && context.mounted) {
-      // 1. Disable security
-      await ref.read(securityProvider.notifier).disablePin();
+      // 1. Delete all transactions only (preserves settings, preferences, and categories)
+      await ref.read(transactionRepositoryProvider).deleteAllTransactions();
       
-      // 2. Clear database
-      await DatabaseHelper.instance.resetDatabase();
-      
-      // 3. Reset settings
-      await ref.read(settingsProvider.notifier).resetAll();
-      
-      // 4. Invalidate providers to clear in-memory state
+      // 2. Invalidate providers to update in-memory state and UI immediately
       ref.invalidate(transactionListProvider);
-      ref.invalidate(transactionChangeProvider);
+      ref.read(transactionChangeProvider.notifier).update((v) => v + 1);
       ref.invalidate(budgetNotifierProvider);
       
-      // The router will automatically detect `isFirstRun == true` and navigate to onboarding
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'All transactions have been cleared successfully.',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: const Color(0xFF10B981),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
     }
   }
 

@@ -58,14 +58,6 @@ class SubscriptionDashboardPage extends ConsumerWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/add-subscription'),
-        backgroundColor: cs.primary,
-        foregroundColor: cs.onPrimary,
-        elevation: 6,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add_rounded, size: 30),
-      ),
       body: state.subscriptions.when(
         data: (subs) {
           if (subs.isEmpty) {
@@ -86,6 +78,16 @@ class SubscriptionDashboardPage extends ConsumerWidget {
                       'Track Netflix, Spotify, Gym, and more.',
                       textAlign: TextAlign.center,
                       style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                    ),
+                    const SizedBox(height: 18),
+                    FilledButton.icon(
+                      onPressed: () => context.push('/add-subscription'),
+                      icon: const Icon(Icons.add_rounded),
+                      label: const Text('Add Subscription', style: TextStyle(fontWeight: FontWeight.bold)),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
                     ),
                   ],
                 ),

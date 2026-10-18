@@ -525,18 +525,35 @@ class _DashboardTransactionTile extends StatelessWidget {
       Color bgColor, Color iconColor, ColorScheme cs3) {
     final theme = Theme.of(context);
     final tt = theme.textTheme;
+    final isDebt = transaction.isDebt;
+    final isGiven = (transaction.debtType ?? 'given') == 'given';
+    final avatarLetter = isDebt
+        ? (isGiven ? 'L' : 'D')
+        : (transaction.description.isNotEmpty
+            ? transaction.description[0].toUpperCase()
+            : '?');
+    final avatarColor = isDebt
+        ? (isGiven ? cs3.primary : const Color(0xFFD97706))
+        : iconColor;
+    final avatarBg = isDebt
+        ? (isGiven
+            ? cs3.primary.withValues(alpha: 0.12)
+            : const Color(0xFFF59E0B).withValues(alpha: 0.15))
+        : bgColor;
+
     return Row(children: [
       Container(
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-            color: bgColor, borderRadius: BorderRadius.circular(12)),
+            color: avatarBg, borderRadius: BorderRadius.circular(12)),
         child: Center(
           child: Text(
-            transaction.description.isNotEmpty
-                ? transaction.description[0].toUpperCase()
-                : '?',
-            style: tt.titleLarge?.copyWith(color: iconColor),
+            avatarLetter,
+            style: tt.titleLarge?.copyWith(
+              color: avatarColor,
+              fontWeight: isDebt ? FontWeight.w800 : FontWeight.w600,
+            ),
           ),
         ),
       ),
@@ -547,10 +564,73 @@ class _DashboardTransactionTile extends StatelessWidget {
               style: tt.titleMedium,
               maxLines: 1,
               overflow: TextOverflow.ellipsis),
-          Text(
-            '${category?.name ?? AppLocalizations.of(context)!.uncategorized} · ${transaction.date.toDisplayShort()}',
-            style: tt.bodySmall,
-          ),
+          const SizedBox(height: 3),
+          if (isDebt)
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                  decoration: BoxDecoration(
+                    color: transaction.isSettled
+                        ? cs3.onSurface.withValues(alpha: 0.08)
+                        : (isGiven
+                            ? cs3.primary.withValues(alpha: 0.14)
+                            : const Color(0xFFF59E0B).withValues(alpha: 0.16)),
+                    borderRadius: BorderRadius.circular(5),
+                    border: Border.all(
+                      color: transaction.isSettled
+                          ? cs3.onSurface.withValues(alpha: 0.18)
+                          : (isGiven
+                              ? cs3.primary.withValues(alpha: 0.35)
+                              : const Color(0xFFF59E0B).withValues(alpha: 0.4)),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        transaction.isSettled
+                            ? Icons.check_circle_outline_rounded
+                            : (isGiven ? Icons.arrow_outward_rounded : Icons.south_west_rounded),
+                        size: 10,
+                        color: transaction.isSettled
+                            ? cs3.onSurface.withValues(alpha: 0.7)
+                            : (isGiven ? cs3.primary : const Color(0xFFD97706)),
+                      ),
+                      const SizedBox(width: 2.5),
+                      Text(
+                        transaction.isSettled
+                            ? 'SETTLED'
+                            : (isGiven ? 'LENT' : 'DEBT'),
+                        style: TextStyle(
+                          color: transaction.isSettled
+                              ? cs3.onSurface.withValues(alpha: 0.7)
+                              : (isGiven ? cs3.primary : const Color(0xFFB45309)),
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    '${transaction.date.toDisplayShort()}${transaction.personName != null ? " · ${transaction.personName}" : ""}',
+                    style: tt.bodySmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            )
+          else
+            Text(
+              '${category?.name ?? AppLocalizations.of(context)!.uncategorized} · ${transaction.date.toDisplayShort()}',
+              style: tt.bodySmall,
+            ),
         ]),
       ),
       Text(
@@ -1080,7 +1160,7 @@ class _UpcomingRenewalsWidget extends ConsumerWidget {
               children: [
                 Text('Upcoming Payments', style: tt.headlineSmall),
                 TextButton(
-                  onPressed: () => context.push('/subscriptions'),
+                  onPressed: () => context.go('/subscriptions'),
                   child: Text('Manage', style: tt.labelLarge?.copyWith(color: cs.primary)),
                 ),
               ],
@@ -1233,7 +1313,7 @@ class _DebtSummaryWidget extends ConsumerWidget {
                     ],
                   ),
                   InkWell(
-                    onTap: () => context.push('/debt-manager'),
+                    onTap: () => context.go('/debt-manager'),
                     child: Row(
                       children: [
                         Text(
