@@ -659,275 +659,316 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
     final warningColor = AppColors.getWarning(context);
     final infoColor = AppColors.getInfo(context);
 
-    Widget statusBadge;
+    final hasNote = (debt.note != null && debt.note!.trim().isNotEmpty);
+    final hasCustomDesc = debt.description.isNotEmpty &&
+        debt.description.toLowerCase() != 'lent money' &&
+        debt.description.toLowerCase() != 'borrowed money' &&
+        !debt.description.startsWith('Transaction #');
+    final subtitleText = hasNote ? debt.note!.trim() : (hasCustomDesc ? debt.description : null);
+
+    String dueStatusText;
+    Color dueStatusColor;
     if (debt.isSettled) {
-      statusBadge = Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(
-          color: successColor.withOpacity(0.12),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          '✓ Settled',
-          style: TextStyle(color: successColor, fontSize: 11, fontWeight: FontWeight.bold),
-        ),
-      );
+      dueStatusText = 'Settled on ${debt.settledAt != null ? DateFormat('MMM dd').format(debt.settledAt!) : DateFormat('MMM dd').format(debt.date)}';
+      dueStatusColor = successColor;
     } else if (debt.dueDate != null) {
       final diffDays = debt.dueDate!.difference(DateTime(now.year, now.month, now.day)).inDays;
+      final dueFmt = DateFormat('MMM dd').format(debt.dueDate!);
       if (diffDays < 0) {
-        statusBadge = Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-          decoration: BoxDecoration(
-            color: errorColor.withOpacity(0.12),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            '⚠️ Overdue by ${diffDays.abs()} d',
-            style: TextStyle(color: errorColor, fontSize: 11, fontWeight: FontWeight.bold),
-          ),
-        );
+        dueStatusText = 'Due $dueFmt · ⚠️ ${diffDays.abs()}d overdue';
+        dueStatusColor = errorColor;
       } else if (diffDays == 0) {
-        statusBadge = Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-          decoration: BoxDecoration(
-            color: warningColor.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            '⏰ Due Today',
-            style: TextStyle(color: warningColor, fontSize: 11, fontWeight: FontWeight.bold),
-          ),
-        );
+        dueStatusText = 'Due $dueFmt · ⏰ Due today';
+        dueStatusColor = warningColor;
+      } else if (diffDays == 1) {
+        dueStatusText = 'Due $dueFmt · In 1 day';
+        dueStatusColor = infoColor;
       } else {
-        statusBadge = Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-          decoration: BoxDecoration(
-            color: infoColor.withOpacity(0.12),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            'In $diffDays day(s)',
-            style: TextStyle(color: infoColor, fontSize: 11, fontWeight: FontWeight.bold),
-          ),
-        );
+        dueStatusText = 'Due $dueFmt · In $diffDays days';
+        dueStatusColor = infoColor;
       }
     } else {
-      statusBadge = const SizedBox.shrink();
+      dueStatusText = DateFormat('MMM dd, yyyy').format(debt.date);
+      dueStatusColor = cs.onSurfaceVariant.withOpacity(0.75);
     }
 
     final typeColor = isGiven ? successColor : errorColor;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: cs.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: cs.outline.withOpacity(0.1),
+          color: cs.outline.withOpacity(isDark ? 0.12 : 0.08),
         ),
         boxShadow: [
           BoxShadow(
-            color: cs.shadow.withOpacity(0.015),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: isDark ? Colors.black.withOpacity(0.18) : cs.shadow.withOpacity(0.025),
+            blurRadius: 6,
+            offset: const Offset(0, 1.5),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: typeColor.withOpacity(0.12),
-                  shape: BoxShape.circle,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          onTap: !debt.isSettled ? () => _settleDebtDialog(debt) : null,
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // 1. Leading Direction Avatar
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: typeColor.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      isGiven ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+                      color: typeColor,
+                      size: 20,
+                    ),
+                  ),
                 ),
-                child: Icon(
-                  isGiven ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
-                  color: typeColor,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            person,
-                            style: tt.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: typeColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            isGiven ? 'Lent' : 'Borrowed',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: typeColor,
+                const SizedBox(width: 10),
+
+                // 2. Middle Content (Name, badges, due date)
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Top Line: Person + Badges
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              person,
+                              style: tt.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
+                                letterSpacing: -0.2,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                        ),
-                        if (!debt.affectsBalance) ...[
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 6),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
                             decoration: BoxDecoration(
-                              color: cs.onSurfaceVariant.withOpacity(0.08),
-                              borderRadius: BorderRadius.circular(6),
+                              color: typeColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(4),
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.bookmark_border_rounded, size: 10, color: cs.onSurfaceVariant),
-                                const SizedBox(width: 2),
-                                Text(
-                                  'Book Only',
-                                  style: TextStyle(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w600,
-                                    color: cs.onSurfaceVariant,
+                            child: Text(
+                              isGiven ? 'Lent' : 'Borrowed',
+                              style: TextStyle(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w700,
+                                color: typeColor,
+                              ),
+                            ),
+                          ),
+                          if (!debt.affectsBalance) ...[
+                            const SizedBox(width: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
+                              decoration: BoxDecoration(
+                                color: cs.onSurfaceVariant.withOpacity(0.08),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.bookmark_border_rounded, size: 9, color: cs.onSurfaceVariant),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    'Book',
+                                    style: TextStyle(
+                                      fontSize: 8.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: cs.onSurfaceVariant,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+
+                      if (subtitleText != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitleText,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: cs.onSurfaceVariant.withOpacity(0.75),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+
+                      const SizedBox(height: 4),
+
+                      // Bottom Line: Due date / Urgency
+                      Row(
+                        children: [
+                          Icon(
+                            debt.dueDate != null ? Icons.event_available_rounded : Icons.calendar_today_rounded,
+                            size: 11.5,
+                            color: dueStatusColor,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              dueStatusText,
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w500,
+                                color: dueStatusColor,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
-                      ],
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      debt.description.isNotEmpty ? debt.description : 'Transaction #${debt.id}',
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+
+                // 3. Right Column: Amount (Top) + Actions (Bottom)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '$currency${debt.amount.toStringAsFixed(2)}',
+                      style: tt.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                        color: typeColor,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (!debt.isSettled) ...[
+                          InkWell(
+                            onTap: () => _settleDebtDialog(debt),
+                            borderRadius: BorderRadius.circular(5),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                              decoration: BoxDecoration(
+                                color: successColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(5),
+                                border: Border.all(
+                                  color: successColor.withOpacity(0.25),
+                                  width: 0.8,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.check_rounded, size: 11, color: successColor),
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    'Mark Settled',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 10.5,
+                                      color: successColor,
+                                      letterSpacing: -0.1,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 2),
+                        ] else ...[
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.done_all_rounded, size: 11, color: successColor),
+                              const SizedBox(width: 3),
+                              Text(
+                                'Settled',
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  color: successColor,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(width: 2),
+                        ],
+                        SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: PopupMenuButton<String>(
+                            padding: EdgeInsets.zero,
+                            iconSize: 15,
+                            splashRadius: 12,
+                            icon: Icon(Icons.more_vert_rounded, size: 15, color: cs.onSurfaceVariant.withOpacity(0.55)),
+                            onSelected: (value) async {
+                              if (value == 'clear_flag') {
+                                _clearDebtFlagDialog(debt);
+                              } else if (value == 'delete' && debt.id != null) {
+                                await ref.read(transactionRepositoryProvider).deleteTransaction(debt.id!);
+                                ref.read(transactionListProvider.notifier).refresh();
+                                _loadData();
+                              }
+                            },
+                            itemBuilder: (context) => [
+                              if (!debt.isSettled)
+                                const PopupMenuItem(
+                                  value: 'clear_flag',
+                                  height: 36,
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.flag_outlined, size: 15),
+                                      SizedBox(width: 8),
+                                      Text('Remove Debt Flag', style: TextStyle(fontSize: 12)),
+                                    ],
+                                  ),
+                                ),
+                              PopupMenuItem(
+                                value: 'delete',
+                                height: 36,
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.delete_outline_rounded, color: errorColor, size: 15),
+                                    const SizedBox(width: 8),
+                                    Text('Delete Transaction', style: TextStyle(color: errorColor, fontSize: 12)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '$currency${debt.amount.toStringAsFixed(2)}',
-                    style: tt.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: typeColor,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  statusBadge,
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
-          Divider(height: 1, color: cs.outline.withOpacity(0.08)),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    debt.dueDate != null ? Icons.event_available_rounded : Icons.calendar_today_rounded,
-                    size: 13,
-                    color: cs.onSurfaceVariant.withOpacity(0.8),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    debt.dueDate != null
-                        ? 'Due: ${DateFormat('MMM dd, yyyy').format(debt.dueDate!)}'
-                        : 'Date: ${DateFormat('MMM dd, yyyy').format(debt.date)}',
-                    style: tt.bodySmall?.copyWith(
-                      fontSize: 11,
-                      color: cs.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  if (!debt.isSettled) ...[
-                    TextButton.icon(
-                      style: TextButton.styleFrom(
-                        foregroundColor: successColor,
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      onPressed: () => _settleDebtDialog(debt),
-                      icon: const Icon(Icons.check_circle_outline, size: 16),
-                      label: const Text('Mark Settled', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                    ),
-                    PopupMenuButton<String>(
-                      icon: Icon(Icons.more_vert_rounded, size: 18, color: cs.onSurfaceVariant),
-                      onSelected: (value) async {
-                        if (value == 'clear_flag') {
-                          _clearDebtFlagDialog(debt);
-                        } else if (value == 'delete' && debt.id != null) {
-                          await ref.read(transactionRepositoryProvider).deleteTransaction(debt.id!);
-                          ref.read(transactionListProvider.notifier).refresh();
-                          _loadData();
-                        }
-                      },
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(
-                          value: 'clear_flag',
-                          child: Row(
-                            children: [
-                              Icon(Icons.flag_outlined, size: 18),
-                              SizedBox(width: 8),
-                              Text('Remove Debt Flag'),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'delete',
-                          child: Row(
-                            children: [
-                              Icon(Icons.delete_outline, color: errorColor, size: 18),
-                              const SizedBox(width: 8),
-                              Text('Delete Transaction', style: TextStyle(color: errorColor)),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ] else ...[
-                    Text(
-                      'Settled on ${debt.settledAt != null ? DateFormat('MMM dd').format(debt.settledAt!) : ''}',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: successColor,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
-    ).animate().fadeIn(duration: 300.ms, delay: (index * 40).ms);
+    ).animate().fadeIn(duration: 250.ms, delay: (index * 30).ms);
   }
 }

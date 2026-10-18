@@ -588,7 +588,7 @@ class _AddLoanPageState extends ConsumerState<AddLoanPage> {
                     ),
                     Switch.adaptive(
                       value: _autoRecordExpense,
-                      activeColor: cs.primary,
+                      activeTrackColor: cs.primary,
                       onChanged: (val) => setState(() => _autoRecordExpense = val),
                     ),
                   ],

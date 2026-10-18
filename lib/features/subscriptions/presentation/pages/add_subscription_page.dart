@@ -374,10 +374,7 @@ class _AddSubscriptionPageState extends ConsumerState<AddSubscriptionPage> {
                   subtitle: const Text('Automatically deduct from balance on due date'),
                   value: _autoAddExpense,
                   onChanged: (val) => setState(() => _autoAddExpense = val),
-                  activeColor: cs.primary,
-                  activeTrackColor: cs.primary.withOpacity(0.38),
-                  inactiveThumbColor: cs.onSurfaceVariant,
-                  inactiveTrackColor: cs.surfaceVariant.withOpacity(0.95),
+                  activeTrackColor: cs.primary,
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                   shape: RoundedRectangleBorder(

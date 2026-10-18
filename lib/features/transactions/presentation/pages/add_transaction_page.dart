@@ -715,7 +715,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
               ),
               Switch.adaptive(
                 value: _isDebt,
-                activeColor: cs.primary,
+                activeTrackColor: cs.primary,
                 onChanged: (val) {
                   setState(() {
                     _isDebt = val;
@@ -907,7 +907,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
                   ),
                   Switch.adaptive(
                     value: _affectsBalance,
-                    activeColor: cs.primary,
+                    activeTrackColor: cs.primary,
                     onChanged: (val) {
                       setState(() {
                         _affectsBalance = val;
