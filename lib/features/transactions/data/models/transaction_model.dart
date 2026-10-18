@@ -18,6 +18,7 @@ class TransactionModel {
   DateTime? dueDate;
   bool isSettled = false;
   DateTime? settledAt;
+  bool affectsBalance = true;
 
   TransactionModel();
 
@@ -34,6 +35,7 @@ class TransactionModel {
     this.dueDate,
     this.isSettled = false,
     this.settledAt,
+    this.affectsBalance = true,
   }) {
     monthKey = '${date.year}-${date.month.toString().padLeft(2, '0')}';
     createdAt = date;
@@ -55,6 +57,7 @@ class TransactionModel {
         'dueDate': dueDate?.toIso8601String(),
         'isSettled': isSettled ? 1 : 0,
         'settledAt': settledAt?.toIso8601String(),
+        'affectsBalance': affectsBalance ? 1 : 0,
       };
 
   factory TransactionModel.fromMap(Map<String, dynamic> map) {
@@ -74,6 +77,7 @@ class TransactionModel {
     t.dueDate = map['dueDate'] != null ? DateTime.parse(map['dueDate']) : null;
     t.isSettled = (map['isSettled'] as int? ?? 0) == 1;
     t.settledAt = map['settledAt'] != null ? DateTime.parse(map['settledAt']) : null;
+    t.affectsBalance = (map['affectsBalance'] as int? ?? 1) == 1;
     return t;
   }
 

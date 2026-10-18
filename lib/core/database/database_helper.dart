@@ -22,10 +22,13 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 9,
+      version: 10,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
       onOpen: (db) async {
+        try {
+          await db.execute('ALTER TABLE transactions ADD COLUMN affectsBalance INTEGER DEFAULT 1;');
+        } catch (_) {}
         await _ensureDefaultCategories(db);
         await _ensureDefaultBudgets(db);
       },
@@ -101,6 +104,13 @@ class DatabaseHelper {
         }
       }
     }
+    if (oldVersion < 10) {
+      try {
+        await db.execute('ALTER TABLE transactions ADD COLUMN affectsBalance INTEGER DEFAULT 1;');
+      } catch (e) {
+        // Column may already exist
+      }
+    }
   }
 
   Future _createDB(Database db, int version) async {
@@ -141,7 +151,8 @@ class DatabaseHelper {
         personName $textNullable,
         dueDate $textNullable,
         isSettled INTEGER DEFAULT 0,
-        settledAt $textNullable
+        settledAt $textNullable,
+        affectsBalance INTEGER DEFAULT 1
       )
     ''');
 

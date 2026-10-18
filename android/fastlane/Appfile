@@ -1,0 +1,2 @@
+json_key_file(File.exist?(File.expand_path("../../app.json", __dir__)) ? File.expand_path("../../app.json", __dir__) : nil)
+package_name("com.trusttracker.trust_tracker_flutter")

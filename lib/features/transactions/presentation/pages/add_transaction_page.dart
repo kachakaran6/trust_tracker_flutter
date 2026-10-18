@@ -43,11 +43,12 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
   CategoryModel? _selectedCategory;
   bool _isLoading = false;
 
-  // Debt & Udhar state
+  // Debt & Lent state
   bool _isDebt = false;
   String _debtType = 'given'; // 'given' or 'taken'
   DateTime? _dueDate;
   int _selectedDurationDays = 7;
+  bool _affectsBalance = true;
 
   bool get _isEditMode => widget.editTransaction != null;
   bool get _isDuplicateMode => widget.duplicateTransaction != null;
@@ -85,6 +86,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
       _debtType = source.debtType ?? (source.type == TransactionType.expense ? 'given' : 'taken');
       _personNameController.text = source.personName ?? '';
       _dueDate = source.dueDate;
+      _affectsBalance = source.affectsBalance;
 
       if (edit != null) {
         _selectedDate = edit.date;
@@ -208,6 +210,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
         edit.debtType = _isDebt ? _debtType : null;
         edit.personName = _isDebt ? _personNameController.text.trim() : null;
         edit.dueDate = _isDebt ? _dueDate : null;
+        edit.affectsBalance = _isDebt ? _affectsBalance : true;
 
         await notifier.updateTransaction(edit);
       } else {
@@ -224,6 +227,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
           debtType: _isDebt ? _debtType : null,
           personName: _isDebt ? _personNameController.text.trim() : null,
           dueDate: _isDebt ? _dueDate : null,
+          affectsBalance: _isDebt ? _affectsBalance : true,
         );
         await notifier.addTransaction(t);
       }
@@ -540,7 +544,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
             ),
             const SizedBox(height: spSect),
 
-            // --- Debt / Udhar (ઉધારી) Tracking Card ---
+            // --- Debt / Lent Tracking Card ---
             _buildDebtTrackingCard(isDark, cs, tt, activeAccent, labelColor, inputBorderColor),
             const SizedBox(height: spSect),
 
@@ -659,12 +663,19 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.cardDark : Colors.purple.withOpacity(0.04),
+        color: cs.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: _isDebt ? const Color(0xFF8B5CF6).withOpacity(0.4) : (isDark ? AppColors.borderDark : AppColors.borderLight),
-          width: _isDebt ? 1.5 : 1.0,
+          color: cs.outline.withOpacity(0.12),
+          width: 1.0,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: cs.shadow.withOpacity(isDark ? 0.2 : 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -674,37 +685,37 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF8B5CF6).withOpacity(0.15),
+                  color: cs.primary.withOpacity(0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.handshake_outlined, color: Color(0xFF8B5CF6), size: 20),
+                child: Icon(Icons.handshake_outlined, color: cs.primary, size: 20),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Debt / Lent',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                    ),
                     Text(
-                      'Track lent & borrowed money with auto-reminders',
+                      'Debt / Lent Tracking',
+                      style: tt.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 1),
+                    Text(
+                      'Track lent & borrowed money with due reminders',
                       style: TextStyle(
                         fontSize: 11,
-                        color: labelColor.withOpacity(0.6),
+                        color: labelColor.withOpacity(0.7),
                       ),
                     ),
                   ],
                 ),
               ),
-              Switch(
+              Switch.adaptive(
                 value: _isDebt,
-                activeColor: Colors.white,
-                activeTrackColor: const Color(0xFF8B5CF6),
-                inactiveThumbColor: isDark ? Colors.grey[400] : Colors.grey[400],
-                inactiveTrackColor: isDark ? Colors.grey[800] : Colors.grey[300],
-                trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
+                activeColor: cs.primary,
                 onChanged: (val) {
                   setState(() {
                     _isDebt = val;
@@ -720,71 +731,109 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
             ],
           ),
           if (_isDebt) ...[
-            const SizedBox(height: 16),
-            const Divider(height: 1),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
+            Divider(height: 1, color: cs.outline.withOpacity(0.1)),
+            const SizedBox(height: 14),
 
             // Debt Direction Selection
-            _buildSectionLabel('TYPE (પ્રકાર)', labelColor),
+            _buildSectionLabel('TYPE', labelColor),
             const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
-                  child: ChoiceChip(
-                    showCheckmark: false,
-                    avatar: Icon(
-                      Icons.call_made_rounded,
-                      size: 16,
-                      color: _debtType == 'given' ? Colors.white : const Color(0xFF10B981),
-                    ),
-                    label: Text(
-                      'Given (Lent / આપેલ)',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: _debtType == 'given' ? FontWeight.bold : FontWeight.normal,
-                        color: _debtType == 'given' ? Colors.white : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
+                  child: InkWell(
+                    onTap: () {
+                      setState(() => _debtType = 'given');
+                      _applyDebtDefaults();
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: _debtType == 'given'
+                            ? const Color(0xFF10B981)
+                            : (isDark ? cs.surfaceVariant.withOpacity(0.25) : cs.surfaceVariant.withOpacity(0.4)),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: _debtType == 'given'
+                              ? const Color(0xFF10B981)
+                              : cs.outline.withOpacity(0.15),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.call_made_rounded,
+                            size: 16,
+                            color: _debtType == 'given' ? Colors.white : const Color(0xFF10B981),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Given (Lent)',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: _debtType == 'given'
+                                  ? Colors.white
+                                  : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    selected: _debtType == 'given',
-                    selectedColor: const Color(0xFF10B981),
-                    onSelected: (val) {
-                      if (val) {
-                        setState(() => _debtType = 'given');
-                        _applyDebtDefaults();
-                      }
-                    },
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: ChoiceChip(
-                    showCheckmark: false,
-                    avatar: Icon(
-                      Icons.call_received_rounded,
-                      size: 16,
-                      color: _debtType == 'taken' ? Colors.white : const Color(0xFFEF4444),
-                    ),
-                    label: Text(
-                      'Taken (Borrowed / લીધેલ)',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: _debtType == 'taken' ? FontWeight.bold : FontWeight.normal,
-                        color: _debtType == 'taken' ? Colors.white : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
+                  child: InkWell(
+                    onTap: () {
+                      setState(() => _debtType = 'taken');
+                      _applyDebtDefaults();
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: _debtType == 'taken'
+                            ? const Color(0xFFEF4444)
+                            : (isDark ? cs.surfaceVariant.withOpacity(0.25) : cs.surfaceVariant.withOpacity(0.4)),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: _debtType == 'taken'
+                              ? const Color(0xFFEF4444)
+                              : cs.outline.withOpacity(0.15),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.call_received_rounded,
+                            size: 16,
+                            color: _debtType == 'taken' ? Colors.white : const Color(0xFFEF4444),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Taken (Borrowed)',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: _debtType == 'taken'
+                                  ? Colors.white
+                                  : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    selected: _debtType == 'taken',
-                    selectedColor: const Color(0xFFEF4444),
-                    onSelected: (val) {
-                      if (val) {
-                        setState(() => _debtType = 'taken');
-                        _applyDebtDefaults();
-                      }
-                    },
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
 
             // Person Name Field
             _buildSectionLabel('PERSON / BORROWER NAME', labelColor),
@@ -794,12 +843,78 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
               style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
               decoration: InputDecoration(
                 hintText: 'e.g. Ramesh, Shopkeeper, Friend...',
-                prefixIcon: const Icon(Icons.person_outline_rounded, color: Color(0xFF8B5CF6), size: 20),
+                prefixIcon: Icon(Icons.person_outline_rounded, color: cs.primary, size: 20),
                 enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: inputBorderColor)),
-                focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFF8B5CF6), width: 2)),
+                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: cs.primary, width: 2)),
                 fillColor: Colors.transparent,
                 filled: false,
                 contentPadding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Affect Main Balance Option
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isDark ? cs.surfaceVariant.withOpacity(0.2) : cs.surfaceVariant.withOpacity(0.35),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: cs.outline.withOpacity(0.12),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(7),
+                    decoration: BoxDecoration(
+                      color: (_affectsBalance ? cs.primary : labelColor).withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      _affectsBalance ? Icons.account_balance_wallet_rounded : Icons.menu_book_rounded,
+                      size: 18,
+                      color: _affectsBalance ? cs.primary : labelColor.withOpacity(0.8),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Affect Main Balance',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _affectsBalance
+                              ? (_debtType == 'given'
+                                  ? 'Deducts as expense from wallet balance'
+                                  : 'Adds as income to wallet balance')
+                              : 'Kept in Debt book only (wallet balance unchanged)',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: labelColor.withOpacity(0.7),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Switch.adaptive(
+                    value: _affectsBalance,
+                    activeColor: cs.primary,
+                    onChanged: (val) {
+                      setState(() {
+                        _affectsBalance = val;
+                      });
+                    },
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 16),
@@ -822,12 +937,17 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
                           d['label'] as String,
                           style: TextStyle(
                             fontSize: 11,
-                            color: isSel ? Colors.white : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
-                            fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
+                            color: isSel ? cs.onPrimary : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
+                            fontWeight: isSel ? FontWeight.bold : FontWeight.w500,
                           ),
                         ),
                         selected: isSel,
-                        selectedColor: const Color(0xFF8B5CF6),
+                        selectedColor: cs.primary,
+                        backgroundColor: isDark ? cs.surfaceVariant.withOpacity(0.25) : cs.surfaceVariant.withOpacity(0.35),
+                        side: BorderSide(
+                          color: isSel ? cs.primary : cs.outline.withOpacity(0.12),
+                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         onSelected: (val) {
                           if (val) {
                             setState(() {
@@ -840,32 +960,36 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
                     );
                   }),
                   ActionChip(
-                    avatar: const Icon(Icons.edit_calendar_rounded, size: 14, color: Color(0xFF8B5CF6)),
+                    avatar: Icon(Icons.edit_calendar_rounded, size: 14, color: cs.primary),
                     label: Text(
                       _dueDate != null ? DateFormat('MMM dd').format(_dueDate!) : 'Custom',
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF8B5CF6)),
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: cs.primary),
                     ),
+                    backgroundColor: isDark ? cs.surfaceVariant.withOpacity(0.25) : cs.surfaceVariant.withOpacity(0.35),
+                    side: BorderSide(color: cs.primary.withOpacity(0.4)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     onPressed: _pickDueDate,
                   ),
                 ],
               ),
             ),
             if (_dueDate != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF8B5CF6).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  color: cs.primary.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: cs.primary.withOpacity(0.18)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.notifications_active_rounded, color: Color(0xFF8B5CF6), size: 16),
+                    Icon(Icons.notifications_active_rounded, color: cs.primary, size: 16),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'Reminder will alert you on ${DateFormat('EEEE, MMM dd, yyyy').format(_dueDate!)}',
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF8B5CF6)),
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: cs.primary),
                       ),
                     ),
                   ],

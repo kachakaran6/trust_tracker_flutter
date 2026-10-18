@@ -250,8 +250,8 @@ class TransactionRepository {
     final db = await _dbHelper.database;
     final result = await db.rawQuery('''
       SELECT 
-        SUM(CASE WHEN type = ? THEN amount ELSE 0 END) as income,
-        SUM(CASE WHEN type = ? THEN amount ELSE 0 END) as expense
+        SUM(CASE WHEN type = ? AND (affectsBalance IS NULL OR affectsBalance = 1) THEN amount ELSE 0 END) as income,
+        SUM(CASE WHEN type = ? AND (affectsBalance IS NULL OR affectsBalance = 1) THEN amount ELSE 0 END) as expense
       FROM transactions
       WHERE monthKey = ?
     ''', [TransactionType.income.index, TransactionType.expense.index, monthKey]);
@@ -266,8 +266,8 @@ class TransactionRepository {
     final db = await _dbHelper.database;
     final result = await db.rawQuery('''
       SELECT 
-        SUM(CASE WHEN type = ? THEN amount ELSE 0 END) as income,
-        SUM(CASE WHEN type = ? THEN amount ELSE 0 END) as expense
+        SUM(CASE WHEN type = ? AND (affectsBalance IS NULL OR affectsBalance = 1) THEN amount ELSE 0 END) as income,
+        SUM(CASE WHEN type = ? AND (affectsBalance IS NULL OR affectsBalance = 1) THEN amount ELSE 0 END) as expense
       FROM transactions
       WHERE date >= ? AND date <= ?
     ''', [
@@ -289,7 +289,7 @@ class TransactionRepository {
       SELECT 
         SUM(CASE WHEN type = ? THEN amount ELSE -amount END) as balance
       FROM transactions
-      WHERE date < ?
+      WHERE date < ? AND (affectsBalance IS NULL OR affectsBalance = 1)
     ''', [TransactionType.income.index, date.toIso8601String()]);
 
     if (result.isEmpty) return 0.0;
@@ -304,7 +304,7 @@ class TransactionRepository {
     final result = await db.rawQuery('''
       SELECT categoryId, SUM(amount) as total
       FROM transactions
-      WHERE date >= ? AND date <= ? AND type = ?
+      WHERE date >= ? AND date <= ? AND type = ? AND (affectsBalance IS NULL OR affectsBalance = 1)
       GROUP BY categoryId
     ''', [start.toIso8601String(), end.toIso8601String(), type.index]);
 
@@ -323,7 +323,7 @@ class TransactionRepository {
     final result = await db.rawQuery('''
       SELECT CAST(strftime('%d', date) AS INTEGER) as day, SUM(amount) as total
       FROM transactions
-      WHERE date >= ? AND date <= ? AND type = ?
+      WHERE date >= ? AND date <= ? AND type = ? AND (affectsBalance IS NULL OR affectsBalance = 1)
       GROUP BY day
     ''', [start.toIso8601String(), end.toIso8601String(), type.index]);
 
@@ -342,7 +342,7 @@ class TransactionRepository {
     final result = await db.rawQuery('''
       SELECT strftime('%w', date) as wday, SUM(amount) as total
       FROM transactions
-      WHERE date >= ? AND date <= ? AND type = ?
+      WHERE date >= ? AND date <= ? AND type = ? AND (affectsBalance IS NULL OR affectsBalance = 1)
       GROUP BY wday
     ''', [start.toIso8601String(), end.toIso8601String(), type.index]);
 
@@ -363,7 +363,7 @@ class TransactionRepository {
     final result = await db.rawQuery('''
       SELECT CAST(strftime('%H', date) AS INTEGER) as hour, SUM(amount) as total
       FROM transactions
-      WHERE date >= ? AND date <= ? AND type = ?
+      WHERE date >= ? AND date <= ? AND type = ? AND (affectsBalance IS NULL OR affectsBalance = 1)
       GROUP BY hour
     ''', [start.toIso8601String(), end.toIso8601String(), type.index]);
 
