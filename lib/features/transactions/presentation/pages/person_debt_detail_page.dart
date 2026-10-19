@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:trust_tracker_flutter/core/theme/app_colors.dart';
 import 'package:trust_tracker_flutter/core/utils/extensions.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
@@ -12,7 +10,6 @@ import 'package:trust_tracker_flutter/features/transactions/data/repositories/tr
 import 'package:trust_tracker_flutter/features/transactions/presentation/providers/transaction_provider.dart';
 import 'package:trust_tracker_flutter/features/transactions/presentation/widgets/add_debt_bottom_sheet.dart';
 import 'package:trust_tracker_flutter/features/transactions/presentation/widgets/debt_export_pdf_sheet.dart';
-import 'package:trust_tracker_flutter/features/transactions/presentation/pages/add_transaction_page.dart';
 
 class _SettleDialogResult {
   final double amount;
@@ -1164,7 +1161,7 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                               children: [
                                 Expanded(
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                                     decoration: BoxDecoration(
                                       color: isDark ? AppColors.cardDark : AppColors.backgroundLight,
                                       borderRadius: BorderRadius.circular(14),
@@ -1184,12 +1181,16 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                                               child: Icon(Icons.arrow_upward_rounded, size: 12, color: positiveColor),
                                             ),
                                             const SizedBox(width: 6),
-                                            Text(
-                                              'Lent (Given)',
-                                              style: TextStyle(
-                                                fontSize: 11.5,
-                                                fontWeight: FontWeight.w600,
-                                                color: cs.onSurfaceVariant,
+                                            Expanded(
+                                              child: Text(
+                                                'Lent (Given)',
+                                                style: TextStyle(
+                                                  fontSize: 11.5,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: cs.onSurfaceVariant,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
                                               ),
                                             ),
                                           ],
@@ -1202,6 +1203,8 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                                             fontWeight: FontWeight.w800,
                                             color: cs.onSurface,
                                           ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ],
                                     ),
@@ -1210,7 +1213,7 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                                     decoration: BoxDecoration(
                                       color: isDark ? AppColors.cardDark : AppColors.backgroundLight,
                                       borderRadius: BorderRadius.circular(14),
@@ -1230,12 +1233,16 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                                               child: Icon(Icons.arrow_downward_rounded, size: 12, color: errorColor),
                                             ),
                                             const SizedBox(width: 6),
-                                            Text(
-                                              'Borrowed (Taken)',
-                                              style: TextStyle(
-                                                fontSize: 11.5,
-                                                fontWeight: FontWeight.w600,
-                                                color: cs.onSurfaceVariant,
+                                            Expanded(
+                                              child: Text(
+                                                'Borrowed (Taken)',
+                                                style: TextStyle(
+                                                  fontSize: 11.5,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: cs.onSurfaceVariant,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
                                               ),
                                             ),
                                           ],
@@ -1248,6 +1255,8 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                                             fontWeight: FontWeight.w800,
                                             color: cs.onSurface,
                                           ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ],
                                     ),
@@ -1549,30 +1558,32 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
       }
     }
 
+    final hasExtraDetails = dueStatusText != null || customNote != null || txn.isSettled;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: cs.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: txn.isSettled
               ? cs.outline.withValues(alpha: 0.06)
-              : typeColor.withValues(alpha: 0.2),
+              : typeColor.withValues(alpha: 0.18),
           width: 1.0,
         ),
         boxShadow: [
           BoxShadow(
             color: isDark ? Colors.black.withValues(alpha: 0.18) : cs.shadow.withValues(alpha: 0.03),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Row 1: Direction Chip + Date/Time + Amount
+          // Row 1: Direction Chip + Date/Time + Amount + Menu Button
           Row(
             children: [
               Container(
@@ -1614,165 +1625,177 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 6),
               Text(
                 '${isGiven ? '+' : '-'}$currency${txn.amount.toStringAsFixed(2)}',
                 style: tt.titleMedium?.copyWith(
                   fontWeight: FontWeight.w900,
-                  fontSize: 16,
+                  fontSize: 15.5,
                   color: typeColor,
                   decoration: txn.isSettled ? TextDecoration.lineThrough : null,
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-
-          // Row 2: Status Pill / Note + 3-Dot Menu
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (dueStatusText != null)
-                      Row(
+              const SizedBox(width: 2),
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: PopupMenuButton<String>(
+                  padding: EdgeInsets.zero,
+                  iconSize: 18,
+                  splashRadius: 14,
+                  icon: Icon(
+                    Icons.more_vert_rounded,
+                    size: 18,
+                    color: cs.onSurfaceVariant.withValues(alpha: 0.7),
+                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  onSelected: (val) async {
+                    if (val == 'settle') {
+                      _settleSingleDebt(txn);
+                    } else if (val == 'edit') {
+                      final updated = await AddDebtBottomSheet.show(
+                        context,
+                        editTransaction: txn,
+                        initialAmount: txn.amount,
+                        initialDebtType: txn.debtType,
+                        initialPersonName: (txn.personName != null && txn.personName!.isNotEmpty)
+                            ? txn.personName!
+                            : widget.personName,
+                      );
+                      if (updated == true || mounted) {
+                        ref.read(transactionListProvider.notifier).refresh();
+                        _loadPersonData();
+                      }
+                    } else if (val == 'clear_flag') {
+                      _clearDebtFlag(txn);
+                    } else if (val == 'delete') {
+                      _deleteDebtTransaction(txn);
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    if (!txn.isSettled)
+                      const PopupMenuItem(
+                        value: 'settle',
+                        height: 36,
+                        child: Row(
+                          children: [
+                            Icon(Icons.check_circle_outline_rounded, size: 16),
+                            SizedBox(width: 8),
+                            Text('Mark Settled', style: TextStyle(fontSize: 13)),
+                          ],
+                        ),
+                      ),
+                    const PopupMenuItem(
+                      value: 'edit',
+                      height: 36,
+                      child: Row(
                         children: [
-                          Icon(
-                            txn.isSettled
-                                ? Icons.done_all_rounded
-                                : (txn.dueDate != null ? Icons.event_available_rounded : Icons.schedule_rounded),
-                            size: 13,
-                            color: dueStatusColor,
-                          ),
-                          const SizedBox(width: 4),
-                          Flexible(
-                            child: Text(
-                              dueStatusText,
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w600,
-                                color: dueStatusColor,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
+                          Icon(Icons.edit_outlined, size: 16),
+                          SizedBox(width: 8),
+                          Text('Edit Transaction', style: TextStyle(fontSize: 13)),
                         ],
                       ),
-                    if (customNote != null) ...[
-                      const SizedBox(height: 3),
-                      Text(
-                        customNote,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: cs.onSurfaceVariant.withValues(alpha: 0.85),
-                          fontStyle: FontStyle.italic,
+                    ),
+                    if (!txn.isSettled)
+                      const PopupMenuItem(
+                        value: 'clear_flag',
+                        height: 36,
+                        child: Row(
+                          children: [
+                            Icon(Icons.flag_outlined, size: 16),
+                            SizedBox(width: 8),
+                            Text('Remove Debt Flag', style: TextStyle(fontSize: 13)),
+                          ],
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                    ],
+                    PopupMenuItem(
+                      value: 'delete',
+                      height: 36,
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete_outline_rounded, color: errorColor, size: 16),
+                          const SizedBox(width: 8),
+                          Text('Delete', style: TextStyle(color: errorColor, fontSize: 13)),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
-              if (txn.isSettled)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  margin: const EdgeInsets.only(right: 6),
-                  decoration: BoxDecoration(
-                    color: positiveColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    'Settled',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: positiveColor,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              PopupMenuButton<String>(
-                padding: EdgeInsets.zero,
-                iconSize: 18,
-                splashRadius: 14,
-                icon: Icon(
-                  Icons.more_vert_rounded,
-                  size: 18,
-                  color: cs.onSurfaceVariant.withValues(alpha: 0.7),
-                ),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                onSelected: (val) async {
-                  if (val == 'settle') {
-                    _settleSingleDebt(txn);
-                  } else if (val == 'edit') {
-                    final updated = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => AddTransactionPage(editTransaction: txn),
-                      ),
-                    );
-                    if (updated == true || mounted) {
-                      ref.read(transactionListProvider.notifier).refresh();
-                      _loadPersonData();
-                    }
-                  } else if (val == 'clear_flag') {
-                    _clearDebtFlag(txn);
-                  } else if (val == 'delete') {
-                    _deleteDebtTransaction(txn);
-                  }
-                },
-                itemBuilder: (context) => [
-                  if (!txn.isSettled)
-                    const PopupMenuItem(
-                      value: 'settle',
-                      height: 36,
-                      child: Row(
-                        children: [
-                          Icon(Icons.check_circle_outline_rounded, size: 16),
-                          SizedBox(width: 8),
-                          Text('Mark Settled', style: TextStyle(fontSize: 13)),
-                        ],
-                      ),
-                    ),
-                  const PopupMenuItem(
-                    value: 'edit',
-                    height: 36,
-                    child: Row(
-                      children: [
-                        Icon(Icons.edit_outlined, size: 16),
-                        SizedBox(width: 8),
-                        Text('Edit Transaction', style: TextStyle(fontSize: 13)),
-                      ],
-                    ),
-                  ),
-                  if (!txn.isSettled)
-                    const PopupMenuItem(
-                      value: 'clear_flag',
-                      height: 36,
-                      child: Row(
-                        children: [
-                          Icon(Icons.flag_outlined, size: 16),
-                          SizedBox(width: 8),
-                          Text('Remove Debt Flag', style: TextStyle(fontSize: 13)),
-                        ],
-                      ),
-                    ),
-                  PopupMenuItem(
-                    value: 'delete',
-                    height: 36,
-                    child: Row(
-                      children: [
-                        Icon(Icons.delete_outline_rounded, color: errorColor, size: 16),
-                        const SizedBox(width: 8),
-                        Text('Delete', style: TextStyle(color: errorColor, fontSize: 13)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
             ],
           ),
+
+          // Row 2: Status Pill / Note (Only displayed if details exist)
+          if (hasExtraDetails) ...[
+            const SizedBox(height: 6),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                if (txn.isSettled)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    margin: const EdgeInsets.only(right: 6),
+                    decoration: BoxDecoration(
+                      color: positiveColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'Settled',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: positiveColor,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (dueStatusText != null)
+                        Row(
+                          children: [
+                            Icon(
+                              txn.isSettled
+                                  ? Icons.done_all_rounded
+                                  : (txn.dueDate != null ? Icons.event_available_rounded : Icons.schedule_rounded),
+                              size: 13,
+                              color: dueStatusColor,
+                            ),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                dueStatusText,
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: dueStatusColor,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      if (customNote != null) ...[
+                        if (dueStatusText != null) const SizedBox(height: 3),
+                        Text(
+                          customNote,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: cs.onSurfaceVariant.withValues(alpha: 0.85),
+                            fontStyle: FontStyle.italic,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );

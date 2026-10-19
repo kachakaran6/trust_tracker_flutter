@@ -85,7 +85,9 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
 
       _isDebt = source.isDebt;
       _debtType = source.debtType ?? (source.type == TransactionType.expense ? 'given' : 'taken');
-      _personNameController.text = source.personName ?? '';
+      _personNameController.text = (source.personName != null && source.personName!.isNotEmpty)
+          ? source.personName!
+          : _extractPersonName(source.description);
       _dueDate = source.dueDate;
       _affectsBalance = source.affectsBalance;
 
@@ -594,16 +596,27 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
     );
   }
 
+  static String _extractPersonName(String desc) {
+    if (desc.startsWith('Lent to ')) return desc.substring(8).trim();
+    if (desc.startsWith('Borrowed from ')) return desc.substring(14).trim();
+    return '';
+  }
+
   Future<void> _switchToDebtLentModal() async {
     HapticFeedback.mediumImpact();
     setState(() => _isDebt = true);
     final amt = double.tryParse(_amountController.text.trim().replaceAll(',', ''));
     final initialDebtType = _tabController.index == 0 ? 'given' : 'taken';
+    final personName = _personNameController.text.trim().isNotEmpty
+        ? _personNameController.text.trim()
+        : (widget.editTransaction?.personName ?? _extractPersonName(widget.editTransaction?.description ?? ''));
 
     final saved = await AddDebtBottomSheet.show(
       context,
       initialAmount: amt != null && amt > 0 ? amt : null,
       initialDebtType: initialDebtType,
+      initialPersonName: personName.isNotEmpty ? personName : null,
+      editTransaction: widget.editTransaction,
     );
 
     if (saved == true && mounted) {
@@ -694,7 +707,9 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Switch directly to Debt & Lent record modal',
+                        _isDebt && _personNameController.text.isNotEmpty
+                            ? 'Contact: ${_personNameController.text.trim()} · Tap to configure in modal'
+                            : 'Switch directly to Debt & Lent record modal',
                         style: TextStyle(
                           fontSize: 11,
                           color: labelColor.withOpacity(0.7),

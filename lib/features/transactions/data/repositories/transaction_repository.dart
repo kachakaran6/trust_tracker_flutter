@@ -79,7 +79,7 @@ class TransactionRepository {
     final db = await _dbHelper.database;
     final result = await db.query(
       'transactions',
-      where: 'date >= ? AND date < ?',
+      where: 'date >= ? AND date < ? AND (isDebt = 0 OR (affectsBalance IS NOT NULL AND affectsBalance = 1))',
       whereArgs: [start.toIso8601String(), end.toIso8601String()],
     );
     return result.map((e) => TransactionModel.fromMap(e)).toList();
@@ -97,7 +97,7 @@ class TransactionRepository {
     final db = await _dbHelper.database;
     final result = await db.query(
       'transactions',
-      where: 'monthKey = ?',
+      where: 'monthKey = ? AND (isDebt = 0 OR (affectsBalance IS NOT NULL AND affectsBalance = 1))',
       whereArgs: [monthKey],
       orderBy: 'date DESC',
     );
@@ -107,7 +107,11 @@ class TransactionRepository {
   // READ — All transactions
   Future<List<TransactionModel>> getAll() async {
     final db = await _dbHelper.database;
-    final result = await db.query('transactions', orderBy: 'date DESC');
+    final result = await db.query(
+      'transactions',
+      where: 'isDebt = 0 OR (affectsBalance IS NOT NULL AND affectsBalance = 1)',
+      orderBy: 'date DESC',
+    );
     return result.map((e) => TransactionModel.fromMap(e)).toList();
   }
 
@@ -116,9 +120,9 @@ class TransactionRepository {
     final db = await _dbHelper.database;
     String? where;
     List<dynamic> whereArgs = [];
+    final List<String> conditions = ['(isDebt = 0 OR (affectsBalance IS NOT NULL AND affectsBalance = 1))'];
 
     if (filter != null) {
-      final List<String> conditions = [];
       if (filter.type == 'income') {
         conditions.add('type = ?');
         whereArgs.add(TransactionType.income.index);
@@ -142,8 +146,8 @@ class TransactionRepository {
         whereArgs.add(start.toIso8601String());
         whereArgs.add(end.toIso8601String());
       }
-      if (conditions.isNotEmpty) where = conditions.join(' AND ');
     }
+    where = conditions.join(' AND ');
 
     final result = await db.query(
       'transactions',
@@ -162,9 +166,9 @@ class TransactionRepository {
     final db = await _dbHelper.database;
     String? where;
     List<dynamic>? whereArgs = [];
+    final List<String> conditions = ['(isDebt = 0 OR (affectsBalance IS NOT NULL AND affectsBalance = 1))'];
     
     if (filter != null) {
-      final List<String> conditions = [];
       if (filter.type == 'income') {
         conditions.add('type = ?');
         whereArgs.add(TransactionType.income.index);
@@ -188,8 +192,8 @@ class TransactionRepository {
         whereArgs.add(start.toIso8601String());
         whereArgs.add(end.toIso8601String());
       }
-      if (conditions.isNotEmpty) where = conditions.join(' AND ');
     }
+    where = conditions.join(' AND ');
     
     String orderBy = 'date DESC';
     if (filter != null) {
@@ -217,7 +221,7 @@ class TransactionRepository {
     final db = await _dbHelper.database;
     String? where;
     List<dynamic>? whereArgs = [];
-    final List<String> conditions = [];
+    final List<String> conditions = ['(isDebt = 0 OR (affectsBalance IS NOT NULL AND affectsBalance = 1))'];
     if (filter.type == 'income') {
       conditions.add('type = ?');
       whereArgs.add(TransactionType.income.index);
@@ -241,7 +245,7 @@ class TransactionRepository {
       whereArgs.add(start.toIso8601String());
       whereArgs.add(end.toIso8601String());
     }
-    if (conditions.isNotEmpty) where = conditions.join(' AND ');
+    where = conditions.join(' AND ');
 
     String orderBy = 'date ASC';
     final result = await db.query(
@@ -255,7 +259,12 @@ class TransactionRepository {
 
   Future<List<TransactionModel>> getRecent(int n) async {
     final db = await _dbHelper.database;
-    final result = await db.query('transactions', orderBy: 'date DESC', limit: n);
+    final result = await db.query(
+      'transactions',
+      where: 'isDebt = 0 OR (affectsBalance IS NOT NULL AND affectsBalance = 1)',
+      orderBy: 'date DESC',
+      limit: n,
+    );
     return result.map((e) => TransactionModel.fromMap(e)).toList();
   }
 

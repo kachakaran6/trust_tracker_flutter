@@ -19,6 +19,7 @@ import 'package:trust_tracker_flutter/features/transactions/data/models/transact
 import 'package:trust_tracker_flutter/features/transactions/data/models/filter_utils.dart';
 import 'package:trust_tracker_flutter/features/transactions/presentation/widgets/filter_bottom_sheet.dart';
 import 'package:trust_tracker_flutter/features/categories/presentation/providers/category_provider.dart';
+import 'package:trust_tracker_flutter/features/transactions/presentation/widgets/add_debt_bottom_sheet.dart';
 
 // --- Providers & State ---
 
@@ -168,7 +169,28 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   }
 
   void _editTransaction(TransactionModel transaction) {
-    context.push('/add-transaction', extra: {'edit': transaction});
+    if (transaction.isDebt) {
+      final personName = (transaction.personName != null && transaction.personName!.isNotEmpty)
+          ? transaction.personName!
+          : (transaction.description.startsWith('Lent to ')
+              ? transaction.description.substring(8).trim()
+              : (transaction.description.startsWith('Borrowed from ')
+                  ? transaction.description.substring(14).trim()
+                  : null));
+      AddDebtBottomSheet.show(
+        context,
+        editTransaction: transaction,
+        initialAmount: transaction.amount,
+        initialDebtType: transaction.debtType,
+        initialPersonName: personName,
+        onSaved: () {
+          ref.read(transactionListProvider.notifier).refresh();
+          ref.invalidate(_groupedFutureProvider);
+        },
+      );
+    } else {
+      context.push('/add-transaction', extra: {'edit': transaction});
+    }
   }
 
   void _duplicateTransaction(TransactionModel transaction) {
@@ -213,6 +235,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     final currentFilter = ref.read(transactionListProvider).valueOrNull?.filter ?? const TransactionFilter();
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => FilterBottomSheet(
@@ -234,6 +257,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
 
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => ExportBottomSheet(
@@ -976,7 +1000,9 @@ class _SwipeableTransactionTile extends StatelessWidget {
       onLongPress: () {
         showModalBottomSheet(
           context: context,
+          useRootNavigator: true,
           backgroundColor: Colors.transparent,
+          isScrollControlled: true,
           builder: (ctx) => _QuickActionsSheet(
             transaction: transaction,
             onEdit: onEdit,
@@ -1110,30 +1136,66 @@ class _QuickActionsSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 20),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: cs.onSurface.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(2),
-            ),
+    return SafeArea(
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackgroundColor,
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(
+            color: cs.outlineVariant.withValues(alpha: isDark ? 0.25 : 0.4),
+            width: 1.2,
           ),
-          const SizedBox(height: 20),
-          _buildAction(context, Icons.edit_rounded, 'Edit', onEdit),
-          _buildAction(context, Icons.content_copy_rounded, 'Duplicate', onDuplicate),
-          _buildAction(context, Icons.delete_outline_rounded, 'Delete', onDelete, isDestructive: true),
-          const SizedBox(height: 10),
-        ],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.12),
+              blurRadius: 28,
+              spreadRadius: -2,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 42,
+              height: 4,
+              decoration: BoxDecoration(
+                color: cs.onSurface.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      transaction.description,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 6),
+            Divider(height: 1, color: cs.outlineVariant.withValues(alpha: isDark ? 0.15 : 0.25)),
+            const SizedBox(height: 6),
+            _buildAction(context, Icons.edit_rounded, 'Edit', onEdit),
+            _buildAction(context, Icons.content_copy_rounded, 'Duplicate', onDuplicate),
+            _buildAction(context, Icons.delete_outline_rounded, 'Delete', onDelete, isDestructive: true),
+            const SizedBox(height: 4),
+          ],
+        ),
       ),
     );
   }

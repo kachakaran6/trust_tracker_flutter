@@ -21,6 +21,7 @@ import 'package:trust_tracker_flutter/features/settings/presentation/widgets/ava
 import 'package:trust_tracker_flutter/core/security/security_provider.dart';
 import 'package:trust_tracker_flutter/core/utils/financial_utils.dart';
 import 'package:intl/intl.dart' as intl;
+import 'package:trust_tracker_flutter/features/transactions/presentation/widgets/add_debt_bottom_sheet.dart';
 
 // --- Providers ---
 final debtSummaryProvider =
@@ -153,8 +154,27 @@ class DashboardPage extends ConsumerWidget {
                             category: cat,
                             currency: settings.currency,
                             isTapMode: isTapMode,
-                            onEdit: () => context
-                                .push('/add-transaction', extra: {'edit': t}),
+                            onEdit: () {
+                              if (t.isDebt) {
+                                final personName = (t.personName != null && t.personName!.isNotEmpty)
+                                    ? t.personName!
+                                    : (t.description.startsWith('Lent to ')
+                                        ? t.description.substring(8).trim()
+                                        : (t.description.startsWith('Borrowed from ')
+                                            ? t.description.substring(14).trim()
+                                            : null));
+                                AddDebtBottomSheet.show(
+                                  context,
+                                  editTransaction: t,
+                                  initialAmount: t.amount,
+                                  initialDebtType: t.debtType,
+                                  initialPersonName: personName,
+                                  onSaved: () => ref.read(transactionListProvider.notifier).refresh(),
+                                );
+                              } else {
+                                context.push('/add-transaction', extra: {'edit': t});
+                              }
+                            },
                             onDuplicate: () => context.push('/add-transaction',
                                 extra: {'duplicate': t}),
                             onDelete: () => _confirmDelete(context, ref, t),
@@ -669,20 +689,16 @@ class _SummarySection extends StatelessWidget {
     return Column(
       children: [
         _FintechHeaderRow(balance: balance),
-        const SizedBox(height: 16),
-        _FintechHeroBalance(
+        const SizedBox(height: 14),
+        _UnifiedSummaryCard(
           balance: balance,
           openingBalance: openingBalance,
+          income: income,
+          expense: expense,
           currency: currency,
           carryForwardEnabled: carryForwardEnabled,
           startDate: startDate,
           endDate: endDate,
-        ),
-        const SizedBox(height: 20),
-        _CompactIncomeExpenseRow(
-          income: income,
-          expense: expense,
-          currency: currency,
         ),
       ],
     );
@@ -736,15 +752,17 @@ class _FintechHeaderRow extends StatelessWidget {
   }
 }
 
-class _FintechHeroBalance extends StatelessWidget {
-  final double balance, openingBalance;
+class _UnifiedSummaryCard extends StatelessWidget {
+  final double balance, openingBalance, income, expense;
   final String currency;
   final bool carryForwardEnabled;
   final DateTime startDate, endDate;
 
-  const _FintechHeroBalance({
+  const _UnifiedSummaryCard({
     required this.balance,
     required this.openingBalance,
+    required this.income,
+    required this.expense,
     required this.currency,
     required this.carryForwardEnabled,
     required this.startDate,
@@ -756,150 +774,179 @@ class _FintechHeroBalance extends StatelessWidget {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final tt = theme.textTheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            cs.primary.withOpacity(0.15),
-            cs.primary.withOpacity(0.05),
+            cs.primary.withValues(alpha: isDark ? 0.14 : 0.08),
+            cs.surface,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: cs.primary.withOpacity(0.2)),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: cs.outlineVariant.withValues(alpha: isDark ? 0.22 : 0.4),
+          width: 1.1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: cs.primary.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
-      child: Stack(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: cs.surface.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: cs.outline.withOpacity(0.1)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.calendar_today_rounded, size: 12, color: cs.primary),
-                    const SizedBox(width: 6),
-                    Text('${intl.DateFormat('d MMM').format(startDate)} — ${intl.DateFormat('d MMM').format(endDate)}', 
-                      style: tt.labelSmall?.copyWith(color: cs.onSurface, fontWeight: FontWeight.w600)),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              _AnimatedBalanceText(
-                value: balance,
-                currency: currency,
-                style: tt.displaySmall?.copyWith(
-                  color: cs.onSurface,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -1.0,
-                  fontSize: 34,
-                ) ?? const TextStyle(),
-              ),
-              if (carryForwardEnabled && openingBalance != 0) ...[
-                const SizedBox(height: 8),
+          // Row 1: Date Range Pill
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
+            decoration: BoxDecoration(
+              color: cs.surface.withValues(alpha: isDark ? 0.6 : 0.9),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: cs.outline.withValues(alpha: 0.12)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.calendar_today_rounded, size: 11, color: cs.primary),
+                const SizedBox(width: 5),
                 Text(
-                  'Opening Balance • ${openingBalance.toCurrency(currency)}',
-                  style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant, fontWeight: FontWeight.w600),
+                  '${intl.DateFormat('d MMM').format(startDate)} — ${intl.DateFormat('d MMM').format(endDate)}',
+                  style: tt.labelSmall?.copyWith(
+                    color: cs.onSurface,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 11,
+                  ),
                 ),
               ],
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // Row 2: Net Balance Display
+          _AnimatedBalanceText(
+            value: balance,
+            currency: currency,
+            style: tt.displaySmall?.copyWith(
+              color: cs.onSurface,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.8,
+              fontSize: 32,
+            ) ?? const TextStyle(),
+          ),
+          if (carryForwardEnabled && openingBalance != 0) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Opening Balance • ${openingBalance.toCurrency(currency)}',
+              style: tt.labelSmall?.copyWith(
+                color: cs.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+                fontSize: 11,
+              ),
+            ),
+          ],
+
+          const SizedBox(height: 12),
+          // Subtle inner divider
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: cs.outlineVariant.withValues(alpha: isDark ? 0.18 : 0.3),
+          ),
+          const SizedBox(height: 12),
+
+          // Row 3: Compact Income & Expenses section
+          Row(
+            children: [
+              Expanded(
+                child: _buildMetricItem(
+                  context,
+                  l10n.income,
+                  income,
+                  currency,
+                  AppColors.success,
+                  Icons.arrow_upward_rounded,
+                ),
+              ),
+              Container(
+                width: 1,
+                height: 32,
+                color: cs.outlineVariant.withValues(alpha: isDark ? 0.18 : 0.3),
+                margin: const EdgeInsets.symmetric(horizontal: 10),
+              ),
+              Expanded(
+                child: _buildMetricItem(
+                  context,
+                  l10n.expenses,
+                  expense,
+                  currency,
+                  AppColors.error,
+                  Icons.arrow_downward_rounded,
+                ),
+              ),
             ],
           ),
         ],
       ),
     );
   }
-}
 
-class _CompactIncomeExpenseRow extends StatelessWidget {
-  final double income;
-  final double expense;
-  final String currency;
-
-  const _CompactIncomeExpenseRow({
-    required this.income,
-    required this.expense,
-    required this.currency,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-    
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: cs.outline.withOpacity(0.1)),
-        boxShadow: [
-          BoxShadow(
-            color: cs.shadow.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildItem(context, AppLocalizations.of(context)!.income, income, currency, AppColors.success, Icons.arrow_upward_rounded),
-          ),
-          Container(
-            width: 1,
-            height: 40,
-            color: cs.outline.withOpacity(0.1),
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-          ),
-          Expanded(
-            child: _buildItem(context, AppLocalizations.of(context)!.expenses, expense, currency, AppColors.error, Icons.arrow_downward_rounded),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildItem(BuildContext context, String label, double value, String currency, Color color, IconData icon) {
+  Widget _buildMetricItem(
+    BuildContext context,
+    String label,
+    double value,
+    String currency,
+    Color color,
+    IconData icon,
+  ) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final tt = theme.textTheme;
+
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(7),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.12),
-            borderRadius: BorderRadius.circular(10),
+            color: color.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(9),
           ),
-          child: Icon(icon, color: color, size: 16),
+          child: Icon(icon, color: color, size: 15),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 9),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(label, style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
-              const SizedBox(height: 2),
-              Text(value.toCurrencyCompact(currency), style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700, fontSize: 14), maxLines: 1, overflow: TextOverflow.ellipsis),
+              Text(
+                label,
+                style: tt.labelSmall?.copyWith(
+                  color: cs.onSurfaceVariant,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 1),
+              Text(
+                value.toCurrencyCompact(currency),
+                style: tt.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14.5,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ],
           ),
         ),
@@ -913,10 +960,10 @@ class _SummarySectionSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Container(
-      height: 160,
+      height: 155,
       decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(20),
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(22),
       ),
     );
   }

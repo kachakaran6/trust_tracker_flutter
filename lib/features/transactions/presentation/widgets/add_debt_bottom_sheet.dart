@@ -13,6 +13,7 @@ class AddDebtBottomSheet extends ConsumerStatefulWidget {
   final double? initialAmount;
   final String? initialDebtType;
   final String? initialPersonName;
+  final TransactionModel? editTransaction;
 
   const AddDebtBottomSheet({
     super.key,
@@ -20,6 +21,7 @@ class AddDebtBottomSheet extends ConsumerStatefulWidget {
     this.initialAmount,
     this.initialDebtType,
     this.initialPersonName,
+    this.editTransaction,
   });
 
   static Future<bool?> show(
@@ -28,6 +30,7 @@ class AddDebtBottomSheet extends ConsumerStatefulWidget {
     double? initialAmount,
     String? initialDebtType,
     String? initialPersonName,
+    TransactionModel? editTransaction,
   }) {
     return showModalBottomSheet<bool>(
       context: context,
@@ -39,6 +42,7 @@ class AddDebtBottomSheet extends ConsumerStatefulWidget {
         initialAmount: initialAmount,
         initialDebtType: initialDebtType,
         initialPersonName: initialPersonName,
+        editTransaction: editTransaction,
       ),
     );
   }
@@ -55,7 +59,7 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
   // 'given' = Lent (Receivable / You gave money)
   // 'taken' = Borrowed (Payable / You took money)
   String _debtType = 'given';
-  final DateTime _txnDate = DateTime.now();
+  DateTime _txnDate = DateTime.now();
   DateTime? _dueDate;
   bool _affectsBalance = true;
   bool _isSaving = false;
@@ -65,20 +69,41 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
   @override
   void initState() {
     super.initState();
-    if (widget.initialAmount != null && widget.initialAmount! > 0) {
-      final amt = widget.initialAmount!;
+    final edit = widget.editTransaction;
+    if (edit != null) {
+      final amt = edit.amount;
       _amountController.text =
           amt % 1 == 0 ? amt.toInt().toString() : amt.toStringAsFixed(2);
-    }
-    if (widget.initialDebtType != null &&
-        widget.initialDebtType!.trim().isNotEmpty) {
-      _debtType = widget.initialDebtType!;
-    }
-    if (widget.initialPersonName != null &&
-        widget.initialPersonName!.trim().isNotEmpty) {
-      _personController.text = widget.initialPersonName!.trim();
+      _debtType = edit.debtType ?? (edit.type == TransactionType.expense ? 'given' : 'taken');
+      _personController.text = (edit.personName != null && edit.personName!.isNotEmpty)
+          ? edit.personName!
+          : (widget.initialPersonName ?? _extractPersonNameFromDescription(edit.description));
+      _noteController.text = edit.note ?? '';
+      _dueDate = edit.dueDate;
+      _affectsBalance = edit.affectsBalance;
+      _txnDate = edit.date;
+    } else {
+      if (widget.initialAmount != null && widget.initialAmount! > 0) {
+        final amt = widget.initialAmount!;
+        _amountController.text =
+            amt % 1 == 0 ? amt.toInt().toString() : amt.toStringAsFixed(2);
+      }
+      if (widget.initialDebtType != null &&
+          widget.initialDebtType!.trim().isNotEmpty) {
+        _debtType = widget.initialDebtType!;
+      }
+      if (widget.initialPersonName != null &&
+          widget.initialPersonName!.trim().isNotEmpty) {
+        _personController.text = widget.initialPersonName!.trim();
+      }
     }
     _loadSavedNames();
+  }
+
+  static String _extractPersonNameFromDescription(String desc) {
+    if (desc.startsWith('Lent to ')) return desc.substring(8).trim();
+    if (desc.startsWith('Borrowed from ')) return desc.substring(14).trim();
+    return '';
   }
 
   Future<void> _loadSavedNames() async {
@@ -172,24 +197,41 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
           ? note
           : (isGiven ? 'Lent to $person' : 'Borrowed from $person');
 
-      final debtTxn = TransactionModel.create(
-        amount: amount,
-        description: desc,
-        date: _txnDate,
-        type: isGiven ? TransactionType.expense : TransactionType.income,
-        isDebt: true,
-        debtType: _debtType,
-        personName: person,
-        dueDate: _dueDate,
-        affectsBalance: _affectsBalance,
-        note: note.isNotEmpty ? note : null,
-      );
+      if (widget.editTransaction != null) {
+        final edit = widget.editTransaction!;
+        edit.amount = amount;
+        edit.description = desc;
+        edit.type = isGiven ? TransactionType.expense : TransactionType.income;
+        edit.isDebt = true;
+        edit.debtType = _debtType;
+        edit.personName = person;
+        edit.dueDate = _dueDate;
+        edit.affectsBalance = _affectsBalance;
+        edit.note = note.isNotEmpty ? note : null;
 
-      // Persist person name in repository storage
-      await ref.read(transactionRepositoryProvider).saveDebtPersonName(person);
+        await ref.read(transactionRepositoryProvider).saveDebtPersonName(person);
+        await ref.read(transactionListProvider.notifier).updateTransaction(edit);
+        ref.read(transactionChangeProvider.notifier).update((v) => v + 1);
+      } else {
+        final debtTxn = TransactionModel.create(
+          amount: amount,
+          description: desc,
+          date: _txnDate,
+          type: isGiven ? TransactionType.expense : TransactionType.income,
+          isDebt: true,
+          debtType: _debtType,
+          personName: person,
+          dueDate: _dueDate,
+          affectsBalance: _affectsBalance,
+          note: note.isNotEmpty ? note : null,
+        );
 
-      await ref.read(transactionListProvider.notifier).addTransaction(debtTxn);
-      ref.read(transactionChangeProvider.notifier).update((v) => v + 1);
+        // Persist person name in repository storage
+        await ref.read(transactionRepositoryProvider).saveDebtPersonName(person);
+
+        await ref.read(transactionListProvider.notifier).addTransaction(debtTxn);
+        ref.read(transactionChangeProvider.notifier).update((v) => v + 1);
+      }
 
       HapticFeedback.heavyImpact();
 
@@ -205,9 +247,11 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    isGiven
-                        ? 'Lent ₹${amount.toStringAsFixed(0)} to $person recorded!'
-                        : 'Borrowed ₹${amount.toStringAsFixed(0)} from $person recorded!',
+                    widget.editTransaction != null
+                        ? (isGiven ? 'Lent record updated!' : 'Borrowed record updated!')
+                        : (isGiven
+                            ? 'Lent ₹${amount.toStringAsFixed(0)} to $person recorded!'
+                            : 'Borrowed ₹${amount.toStringAsFixed(0)} from $person recorded!'),
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ),
@@ -323,7 +367,9 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Debt & Lent Record',
+                              widget.editTransaction != null
+                                  ? 'Edit Debt & Lent Record'
+                                  : 'Debt & Lent Record',
                               style: tt.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w800,
                                 fontSize: 17,
@@ -1007,7 +1053,7 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const Text(
-                                    'Affects Wallet Balance',
+                                    'Record in Transactions & Wallet Balance',
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
@@ -1016,9 +1062,9 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                                   Text(
                                     _affectsBalance
                                         ? (isGiven
-                                            ? 'Deducts from current balance'
-                                            : 'Adds to current balance')
-                                        : 'Ledger record only (balance unchanged)',
+                                            ? 'Adds to transactions list & deducts balance'
+                                            : 'Adds to transactions list & adds to balance')
+                                        : 'Debt/Lent page only (no transaction record, balance unchanged)',
                                     style: TextStyle(
                                       fontSize: 11.5,
                                       color: cs.onSurface.withValues(alpha: 0.5),
@@ -1098,9 +1144,13 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    isGiven
-                                        ? 'Save Lent Record'
-                                        : 'Save Borrowed Record',
+                                    widget.editTransaction != null
+                                        ? (isGiven
+                                            ? 'Update Lent Record'
+                                            : 'Update Borrowed Record')
+                                        : (isGiven
+                                            ? 'Save Lent Record'
+                                            : 'Save Borrowed Record'),
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 15,
