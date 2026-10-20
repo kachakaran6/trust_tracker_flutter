@@ -13,6 +13,7 @@ class AddDebtBottomSheet extends ConsumerStatefulWidget {
   final double? initialAmount;
   final String? initialDebtType;
   final String? initialPersonName;
+  final bool? isPersonLocked;
   final TransactionModel? editTransaction;
 
   const AddDebtBottomSheet({
@@ -21,6 +22,7 @@ class AddDebtBottomSheet extends ConsumerStatefulWidget {
     this.initialAmount,
     this.initialDebtType,
     this.initialPersonName,
+    this.isPersonLocked,
     this.editTransaction,
   });
 
@@ -30,6 +32,7 @@ class AddDebtBottomSheet extends ConsumerStatefulWidget {
     double? initialAmount,
     String? initialDebtType,
     String? initialPersonName,
+    bool? isPersonLocked,
     TransactionModel? editTransaction,
   }) {
     return showModalBottomSheet<bool>(
@@ -42,6 +45,7 @@ class AddDebtBottomSheet extends ConsumerStatefulWidget {
         initialAmount: initialAmount,
         initialDebtType: initialDebtType,
         initialPersonName: initialPersonName,
+        isPersonLocked: isPersonLocked,
         editTransaction: editTransaction,
       ),
     );
@@ -65,6 +69,7 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
   bool _isSaving = false;
   List<String> _savedNames = [];
   bool _showNameDropdown = false;
+  bool _isPersonLocked = false;
 
   @override
   void initState() {
@@ -75,13 +80,15 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
       _amountController.text =
           amt % 1 == 0 ? amt.toInt().toString() : amt.toStringAsFixed(2);
       _debtType = edit.debtType ?? (edit.type == TransactionType.expense ? 'given' : 'taken');
-      _personController.text = (edit.personName != null && edit.personName!.isNotEmpty)
+      final person = (edit.personName != null && edit.personName!.isNotEmpty)
           ? edit.personName!
           : (widget.initialPersonName ?? _extractPersonNameFromDescription(edit.description));
+      _personController.text = person;
       _noteController.text = edit.note ?? '';
       _dueDate = edit.dueDate;
       _affectsBalance = edit.affectsBalance;
       _txnDate = edit.date;
+      _isPersonLocked = widget.isPersonLocked ?? (person.trim().isNotEmpty);
     } else {
       if (widget.initialAmount != null && widget.initialAmount! > 0) {
         final amt = widget.initialAmount!;
@@ -96,6 +103,9 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
           widget.initialPersonName!.trim().isNotEmpty) {
         _personController.text = widget.initialPersonName!.trim();
       }
+      _isPersonLocked = widget.isPersonLocked ??
+          (widget.initialPersonName != null &&
+              widget.initialPersonName!.trim().isNotEmpty);
     }
     _loadSavedNames();
   }
@@ -657,87 +667,243 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                   ),
                   child: Column(
                     children: [
-                      // Person Field with Dropdown
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: activeAccent.withValues(alpha: 0.12),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.person_rounded,
-                                size: 18,
-                                color: activeAccent,
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: TextField(
-                                controller: _personController,
-                                onChanged: (_) => setState(() {}),
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                decoration: InputDecoration(
-                                  border: InputBorder.none,
-                                  enabledBorder: InputBorder.none,
-                                  focusedBorder: InputBorder.none,
-                                  errorBorder: InputBorder.none,
-                                  disabledBorder: InputBorder.none,
-                                  hintText: isGiven
-                                      ? 'Borrower\'s name (e.g. John)'
-                                      : 'Lender\'s name (e.g. Alex)',
-                                  hintStyle: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w400,
-                                    color: cs.onSurface.withValues(alpha: 0.4),
+                      // Person Field: Locked Contact Card vs Editable Field with Dropdown
+                      if (_isPersonLocked && _personController.text.trim().isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      activeAccent,
+                                      activeAccent.withValues(alpha: 0.8),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
                                   ),
-                                  isDense: true,
-                                  contentPadding: const EdgeInsets.symmetric(
-                                      vertical: 14),
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: activeAccent.withValues(alpha: 0.25),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  _personController.text.trim().isNotEmpty
+                                      ? _personController.text.trim()[0].toUpperCase()
+                                      : '?',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ),
-                            ),
-                            if (_personController.text.isNotEmpty)
-                              GestureDetector(
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            isGiven ? 'BORROWER' : 'LENDER',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w800,
+                                              letterSpacing: 0.8,
+                                              color: activeAccent,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                          decoration: BoxDecoration(
+                                            color: activeAccent.withValues(alpha: 0.1),
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(Icons.lock_rounded, size: 9, color: activeAccent),
+                                              const SizedBox(width: 2.5),
+                                              Text(
+                                                'Linked',
+                                                style: TextStyle(
+                                                  fontSize: 9,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: activeAccent,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      _personController.text.trim(),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w800,
+                                        color: cs.onSurface,
+                                        letterSpacing: -0.2,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              InkWell(
                                 onTap: () {
-                                  _personController.clear();
-                                  setState(() {});
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.all(6),
-                                  child: Icon(
-                                    Icons.cancel_rounded,
-                                    size: 16,
-                                    color: cs.onSurface.withValues(alpha: 0.35),
-                                  ),
-                                ),
-                              ),
-                            if (_savedNames.isNotEmpty)
-                              IconButton(
-                                tooltip: 'Select Previous Name',
-                                icon: AnimatedRotation(
-                                  turns: _showNameDropdown ? 0.5 : 0.0,
-                                  duration: const Duration(milliseconds: 200),
-                                  child: Icon(
-                                    Icons.keyboard_arrow_down_rounded,
-                                    size: 24,
-                                    color: _showNameDropdown ? activeAccent : cs.onSurface.withValues(alpha: 0.6),
-                                  ),
-                                ),
-                                onPressed: () {
                                   HapticFeedback.selectionClick();
-                                  setState(() => _showNameDropdown = !_showNameDropdown);
+                                  setState(() => _isPersonLocked = false);
                                 },
+                                borderRadius: BorderRadius.circular(8),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: cs.onSurface.withValues(alpha: 0.05),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: cs.outlineVariant.withValues(alpha: 0.25),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.edit_rounded, size: 12, color: cs.onSurface.withValues(alpha: 0.7)),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'Change',
+                                        style: TextStyle(
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.w700,
+                                          color: cs.onSurface.withValues(alpha: 0.8),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                          ],
+                            ],
+                          ),
+                        )
+                      else ...[
+                        // Person Field with Dropdown (when unlocked / manual input)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: activeAccent.withValues(alpha: 0.12),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.person_rounded,
+                                  size: 18,
+                                  color: activeAccent,
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: TextField(
+                                  controller: _personController,
+                                  onChanged: (_) => setState(() {}),
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  decoration: InputDecoration(
+                                    border: InputBorder.none,
+                                    enabledBorder: InputBorder.none,
+                                    focusedBorder: InputBorder.none,
+                                    errorBorder: InputBorder.none,
+                                    disabledBorder: InputBorder.none,
+                                    hintText: isGiven
+                                        ? 'Borrower\'s name (e.g. John)'
+                                        : 'Lender\'s name (e.g. Alex)',
+                                    hintStyle: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w400,
+                                      color: cs.onSurface.withValues(alpha: 0.4),
+                                    ),
+                                    isDense: true,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        vertical: 14),
+                                  ),
+                                ),
+                              ),
+                              if (_personController.text.isNotEmpty)
+                                GestureDetector(
+                                  onTap: () {
+                                    _personController.clear();
+                                    setState(() {});
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(6),
+                                    child: Icon(
+                                      Icons.cancel_rounded,
+                                      size: 16,
+                                      color: cs.onSurface.withValues(alpha: 0.35),
+                                    ),
+                                  ),
+                                ),
+                              if (widget.initialPersonName != null &&
+                                  widget.initialPersonName!.trim().isNotEmpty &&
+                                  _personController.text.trim().toLowerCase() ==
+                                      widget.initialPersonName!.trim().toLowerCase())
+                                Tooltip(
+                                  message: 'Lock to contact',
+                                  child: IconButton(
+                                    icon: Icon(
+                                      Icons.lock_outline_rounded,
+                                      size: 18,
+                                      color: activeAccent,
+                                    ),
+                                    onPressed: () {
+                                      HapticFeedback.selectionClick();
+                                      setState(() => _isPersonLocked = true);
+                                    },
+                                  ),
+                                ),
+                              if (_savedNames.isNotEmpty)
+                                IconButton(
+                                  tooltip: 'Select Previous Name',
+                                  icon: AnimatedRotation(
+                                    turns: _showNameDropdown ? 0.5 : 0.0,
+                                    duration: const Duration(milliseconds: 200),
+                                    child: Icon(
+                                      Icons.keyboard_arrow_down_rounded,
+                                      size: 24,
+                                      color: _showNameDropdown ? activeAccent : cs.onSurface.withValues(alpha: 0.6),
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    HapticFeedback.selectionClick();
+                                    setState(() => _showNameDropdown = !_showNameDropdown);
+                                  },
+                                ),
+                            ],
+                          ),
                         ),
-                      ),
+                      ],
                       // Inline dropdown opened directly under the input field
                       if (_showNameDropdown && _savedNames.isNotEmpty) ...[
                         Divider(

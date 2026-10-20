@@ -2129,8 +2129,7 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
           child: InkWell(
             onTap: () async {
               HapticFeedback.lightImpact();
-              await Navigator.push(
-                context,
+              await Navigator.of(context, rootNavigator: true).push(
                 MaterialPageRoute(
                   builder: (_) => PersonDebtDetailPage(personName: group.personName),
                 ),

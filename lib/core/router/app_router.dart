@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:trust_tracker_flutter/generated/app_localizations.dart';
 import 'package:trust_tracker_flutter/features/onboarding/presentation/pages/onboarding_page.dart';
 import 'package:trust_tracker_flutter/features/dashboard/presentation/pages/dashboard_page.dart';

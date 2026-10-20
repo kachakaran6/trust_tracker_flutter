@@ -13,7 +13,8 @@
     <application
         android:label="Trust Tracker"
         android:name="${applicationName}"
-        android:icon="@mipmap/launcher_icon">
+        android:icon="@mipmap/launcher_icon"
+        android:enableOnBackInvokedCallback="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -47,6 +48,8 @@
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_color"
             android:resource="@color/colorPrimary"/>
+
+
         <service
             android:name=".QuickAddTileService"
             android:label="Trust Tracker"

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trust_tracker_flutter/core/security/security_provider.dart';
-import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
+
 
 class LockScreenPage extends ConsumerStatefulWidget {
   const LockScreenPage({super.key});
@@ -138,7 +138,6 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
     const double spSect = 24.0;
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [

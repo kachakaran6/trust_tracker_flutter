@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trust_tracker_flutter/core/constants/app_constants.dart';
-import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
 import 'package:trust_tracker_flutter/core/utils/currency_detector.dart';
 import 'package:trust_tracker_flutter/core/database/database_helper.dart';
 import 'package:trust_tracker_flutter/core/services/background_service.dart';
