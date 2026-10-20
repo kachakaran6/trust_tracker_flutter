@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trust_tracker_flutter/core/utils/extensions.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
@@ -35,18 +36,17 @@ class AddDebtBottomSheet extends ConsumerStatefulWidget {
     bool? isPersonLocked,
     TransactionModel? editTransaction,
   }) {
-    return showModalBottomSheet<bool>(
-      context: context,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => AddDebtBottomSheet(
-        onSaved: onSaved,
-        initialAmount: initialAmount,
-        initialDebtType: initialDebtType,
-        initialPersonName: initialPersonName,
-        isPersonLocked: isPersonLocked,
-        editTransaction: editTransaction,
+    return Navigator.of(context, rootNavigator: true).push<bool>(
+      MaterialPageRoute<bool>(
+        fullscreenDialog: true,
+        builder: (context) => AddDebtBottomSheet(
+          onSaved: onSaved,
+          initialAmount: initialAmount,
+          initialDebtType: initialDebtType,
+          initialPersonName: initialPersonName,
+          isPersonLocked: isPersonLocked,
+          editTransaction: editTransaction,
+        ),
       ),
     );
   }
@@ -65,6 +65,7 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
   String _debtType = 'given';
   DateTime _txnDate = DateTime.now();
   DateTime? _dueDate;
+  String _repaymentSchedule = 'one_time'; // 'one_time', 'weekly', 'biweekly', 'monthly'
   bool _affectsBalance = true;
   bool _isSaving = false;
   List<String> _savedNames = [];
@@ -89,6 +90,11 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
       _affectsBalance = edit.affectsBalance;
       _txnDate = edit.date;
       _isPersonLocked = widget.isPersonLocked ?? (person.trim().isNotEmpty);
+      if (edit.note?.contains('Weekly') == true) {
+        _repaymentSchedule = 'weekly';
+      } else if (edit.note?.contains('Monthly') == true) {
+        _repaymentSchedule = 'monthly';
+      }
     } else {
       if (widget.initialAmount != null && widget.initialAmount! > 0) {
         final amt = widget.initialAmount!;
@@ -106,8 +112,19 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
       _isPersonLocked = widget.isPersonLocked ??
           (widget.initialPersonName != null &&
               widget.initialPersonName!.trim().isNotEmpty);
+      _loadSavedPreferences();
     }
     _loadSavedNames();
+  }
+
+  Future<void> _loadSavedPreferences() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedBalance = prefs.getBool('debt_affects_balance_preference');
+      if (savedBalance != null && widget.editTransaction == null && mounted) {
+        setState(() => _affectsBalance = savedBalance);
+      }
+    } catch (_) {}
   }
 
   static String _extractPersonNameFromDescription(String desc) {
@@ -145,24 +162,62 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
     setState(() {});
   }
 
-  Future<void> _pickDueDate() async {
-    final now = DateTime.now();
+  Future<void> _pickTxnDate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: _dueDate ?? now.add(const Duration(days: 7)),
-      firstDate: now,
-      lastDate: now.add(const Duration(days: 365 * 5)),
-      helpText: 'Select Due / Repayment Date',
+      initialDate: _txnDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      helpText: 'Select Transaction Date (dd/MM/yyyy)',
+    );
+    if (picked != null) {
+      setState(() {
+        _txnDate = DateTime(
+          picked.year,
+          picked.month,
+          picked.day,
+          _txnDate.hour,
+          _txnDate.minute,
+        );
+      });
+    }
+  }
+
+  void _setQuickTxnDate(int daysAgo) {
+    HapticFeedback.selectionClick();
+    final now = DateTime.now();
+    final target = now.subtract(Duration(days: daysAgo));
+    setState(() {
+      _txnDate = DateTime(
+        target.year,
+        target.month,
+        target.day,
+        _txnDate.hour,
+        _txnDate.minute,
+      );
+    });
+  }
+
+  Future<void> _pickDueDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _dueDate ?? _txnDate.add(const Duration(days: 7)),
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+      helpText: 'Select Repayment Date (dd/MM/yyyy)',
     );
     if (picked != null) {
       setState(() => _dueDate = picked);
     }
   }
 
-  void _setQuickDueDate(int days) {
+  void _setQuickDueDate(int days, {String? schedule}) {
     HapticFeedback.selectionClick();
     setState(() {
-      _dueDate = DateTime.now().add(Duration(days: days));
+      _dueDate = _txnDate.add(Duration(days: days));
+      if (schedule != null) {
+        _repaymentSchedule = schedule;
+      }
     });
   }
 
@@ -202,7 +257,13 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
 
     try {
       final isGiven = _debtType == 'given';
-      final note = _noteController.text.trim();
+      String note = _noteController.text.trim();
+      if (_repaymentSchedule == 'weekly' && !note.contains('Weekly')) {
+        note = note.isEmpty ? '[Weekly Repayment]' : '$note • [Weekly Repayment]';
+      } else if (_repaymentSchedule == 'monthly' && !note.contains('Monthly')) {
+        note = note.isEmpty ? '[Monthly Repayment]' : '$note • [Monthly Repayment]';
+      }
+
       final desc = note.isNotEmpty
           ? note
           : (isGiven ? 'Lent to $person' : 'Borrowed from $person');
@@ -211,6 +272,7 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
         final edit = widget.editTransaction!;
         edit.amount = amount;
         edit.description = desc;
+        edit.date = _txnDate;
         edit.type = isGiven ? TransactionType.expense : TransactionType.income;
         edit.isDebt = true;
         edit.debtType = _debtType;
@@ -305,115 +367,47 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
         : cs.surface;
     final cardBorder = cs.outlineVariant.withValues(alpha: isDark ? 0.2 : 0.35);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF161618) : const Color(0xFFF8F9FC),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        border: Border.all(
-          color: cs.outlineVariant.withValues(alpha: isDark ? 0.2 : 0.4),
+    return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF141416) : const Color(0xFFF7F8FA),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.close_rounded, size: 24),
+          onPressed: () => Navigator.of(context).pop(),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.6 : 0.12),
-            blurRadius: 36,
-            offset: const Offset(0, -8),
+        title: Text(
+          widget.editTransaction != null
+              ? 'Edit Debt & Lent Record'
+              : 'Debt & Lent Record',
+          style: tt.titleMedium?.copyWith(
+            fontWeight: FontWeight.w800,
+            fontSize: 18,
+            letterSpacing: -0.3,
           ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: _isSaving ? null : _saveDebt,
+            child: Text(
+              'Save',
+              style: TextStyle(
+                color: activeAccent,
+                fontWeight: FontWeight.w800,
+                fontSize: 15,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
         ],
       ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-          ),
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Top Grabber
-                Center(
-                  child: Container(
-                    width: 36,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: cs.onSurface.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                // Header Row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 38,
-                          height: 38,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                activeAccent.withValues(alpha: 0.2),
-                                activeAccent.withValues(alpha: 0.08),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            Icons.handshake_rounded,
-                            color: activeAccent,
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.editTransaction != null
-                                  ? 'Edit Debt & Lent Record'
-                                  : 'Debt & Lent Record',
-                              style: tt.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 17,
-                                letterSpacing: -0.3,
-                              ),
-                            ),
-                            Text(
-                              isGiven
-                                  ? 'Money you gave · Receivable'
-                                  : 'Money you took · Payable',
-                              style: tt.bodySmall?.copyWith(
-                                color: cs.onSurface.withValues(alpha: 0.55),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close_rounded, size: 20),
-                      onPressed: () => Navigator.of(context).pop(),
-                      style: IconButton.styleFrom(
-                        backgroundColor: cs.onSurface.withValues(alpha: 0.05),
-                        padding: const EdgeInsets.all(8),
-                        minimumSize: const Size(34, 34),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // Sleek Segmented Switcher (iOS / M3 style)
+      body: SafeArea(
+        child: ListView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
+          children: [
+            // Sleek Segmented Switcher (iOS / M3 style)
                 Container(
                   height: 44,
                   padding: const EdgeInsets.all(3.5),
@@ -1090,7 +1084,7 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                 ),
                 const SizedBox(height: 12),
 
-                // Card 2: Due Date & Wallet Impact
+                // Card 2: Transaction Date, Repayment Date & Wallet Impact
                 Container(
                   decoration: BoxDecoration(
                     color: cardBg,
@@ -1107,98 +1101,249 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                   ),
                   child: Column(
                     children: [
-                      // Due Date Row
+                      // 1. Transaction Date Row (Date Added/Given/Taken)
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        child: Row(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: _dueDate != null
-                                    ? activeAccent.withValues(alpha: 0.12)
-                                    : cs.onSurface.withValues(alpha: 0.05),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.calendar_today_rounded,
-                                size: 17,
-                                color: _dueDate != null
-                                    ? activeAccent
-                                    : cs.onSurface.withValues(alpha: 0.6),
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Repayment Due Date',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: activeAccent.withValues(alpha: 0.12),
+                                    shape: BoxShape.circle,
                                   ),
-                                  Text(
-                                    _dueDate != null
-                                        ? DateFormat('EEE, dd MMM yyyy')
-                                            .format(_dueDate!)
-                                        : 'No reminder set',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                      color: _dueDate != null
-                                          ? activeAccent
-                                          : cs.onSurface.withValues(alpha: 0.45),
-                                    ),
+                                  child: Icon(
+                                    Icons.event_note_rounded,
+                                    size: 18,
+                                    color: activeAccent,
                                   ),
-                                ],
-                              ),
-                            ),
-                            if (_dueDate != null)
-                              IconButton(
-                                icon: const Icon(Icons.cancel_rounded, size: 18),
-                                color: cs.onSurface.withValues(alpha: 0.4),
-                                onPressed: () => setState(() => _dueDate = null),
-                                tooltip: 'Clear date',
-                              )
-                            else
-                              Row(
-                                children: [
-                                  _buildMiniDateChip('1 Wk', 7),
-                                  const SizedBox(width: 6),
-                                  _buildMiniDateChip('1 Mo', 30),
-                                  const SizedBox(width: 6),
-                                  InkWell(
-                                    onTap: _pickDueDate,
-                                    borderRadius: BorderRadius.circular(10),
-                                    child: Container(
-                                      padding: const EdgeInsets.all(6),
-                                      decoration: BoxDecoration(
-                                        color: cs.onSurface.withValues(alpha: 0.06),
-                                        borderRadius: BorderRadius.circular(10),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Transaction Date',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                        ),
                                       ),
-                                      child: const Icon(
-                                        Icons.calendar_month_rounded,
-                                        size: 16,
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'Selected: ${DateFormat('dd/MM/yyyy').format(_txnDate)}',
+                                        style: TextStyle(
+                                          fontSize: 12.5,
+                                          fontWeight: FontWeight.w700,
+                                          color: activeAccent,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                _buildMiniDateActionChip('Today', () => _setQuickTxnDate(0)),
+                                _buildMiniDateActionChip('Yesterday', () => _setQuickTxnDate(1)),
+                                InkWell(
+                                  onTap: _pickTxnDate,
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: cs.onSurface.withValues(alpha: 0.06),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: cs.outlineVariant.withValues(alpha: isDark ? 0.2 : 0.35),
+                                        width: 1,
                                       ),
                                     ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.calendar_month_rounded,
+                                          size: 15,
+                                          color: cs.onSurface.withValues(alpha: 0.8),
+                                        ),
+                                        const SizedBox(width: 5),
+                                        Text(
+                                          'Custom Date',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            color: cs.onSurface.withValues(alpha: 0.8),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
+                            ),
                           ],
                         ),
                       ),
                       Divider(
                         height: 1,
-                        indent: 52,
+                        indent: 16,
                         endIndent: 16,
                         color: cs.outlineVariant.withValues(alpha: 0.15),
                       ),
-                      // Affects Wallet Balance Row
+
+                      // 2. Repayment Due Date Row
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: _dueDate != null
+                                        ? activeAccent.withValues(alpha: 0.12)
+                                        : cs.onSurface.withValues(alpha: 0.05),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.schedule_rounded,
+                                    size: 18,
+                                    color: _dueDate != null
+                                        ? activeAccent
+                                        : cs.onSurface.withValues(alpha: 0.6),
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Repayment Due Date',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        _dueDate != null
+                                            ? '${DateFormat('dd/MM/yyyy').format(_dueDate!)}${_repaymentSchedule == 'weekly' ? ' • Weekly Cycle' : (_repaymentSchedule == 'monthly' ? ' • Monthly Cycle' : '')}'
+                                            : 'No due date set (Optional)',
+                                        style: TextStyle(
+                                          fontSize: 12.5,
+                                          fontWeight: _dueDate != null ? FontWeight.w700 : FontWeight.w500,
+                                          color: _dueDate != null
+                                              ? activeAccent
+                                              : cs.onSurface.withValues(alpha: 0.45),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (_dueDate != null)
+                                  IconButton(
+                                    icon: const Icon(Icons.cancel_rounded, size: 20),
+                                    color: cs.onSurface.withValues(alpha: 0.4),
+                                    onPressed: () => setState(() {
+                                      _dueDate = null;
+                                      _repaymentSchedule = 'one_time';
+                                    }),
+                                    tooltip: 'Clear date',
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                _buildMiniDateChip('1 Wk (Weekly)', 7, schedule: 'weekly'),
+                                _buildMiniDateChip('2 Wks', 14),
+                                _buildMiniDateChip('1 Mo (Monthly)', 30, schedule: 'monthly'),
+                                InkWell(
+                                  onTap: _pickDueDate,
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: cs.onSurface.withValues(alpha: 0.06),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: cs.outlineVariant.withValues(alpha: isDark ? 0.2 : 0.35),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.calendar_month_rounded,
+                                          size: 15,
+                                          color: cs.onSurface.withValues(alpha: 0.8),
+                                        ),
+                                        const SizedBox(width: 5),
+                                        Text(
+                                          'Custom Date',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            color: cs.onSurface.withValues(alpha: 0.8),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            // Recurring Schedule selection pills when due date is set
+                            if (_dueDate != null) ...[
+                              const SizedBox(height: 12),
+                              Text(
+                                'RECURRENCE SCHEDULE',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.8,
+                                  color: cs.onSurface.withValues(alpha: 0.5),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: [
+                                  _buildScheduleChip('One-time', 'one_time', activeAccent),
+                                  _buildScheduleChip('Weekly Cycle', 'weekly', activeAccent, days: 7),
+                                  _buildScheduleChip('Monthly Cycle', 'monthly', activeAccent, days: 30),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      Divider(
+                        height: 1,
+                        indent: 16,
+                        endIndent: 16,
+                        color: cs.outlineVariant.withValues(alpha: 0.15),
+                      ),
+
+                      // 3. Affects Wallet Balance Row (Choice Stored in SharedPreferences)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         child: Row(
                           children: [
                             Container(
@@ -1209,7 +1354,7 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                               ),
                               child: Icon(
                                 Icons.account_balance_wallet_outlined,
-                                size: 17,
+                                size: 18,
                                 color: cs.primary,
                               ),
                             ),
@@ -1219,12 +1364,13 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const Text(
-                                    'Record in Transactions & Wallet Balance',
+                                    'Record in Transactions & Wallet',
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
+                                  const SizedBox(height: 2),
                                   Text(
                                     _affectsBalance
                                         ? (isGiven
@@ -1254,9 +1400,13 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                                 return isDark ? Colors.white24 : Colors.grey.shade300;
                               }),
                               trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
-                              onChanged: (val) {
+                              onChanged: (val) async {
                                 HapticFeedback.selectionClick();
                                 setState(() => _affectsBalance = val);
+                                try {
+                                    final prefs = await SharedPreferences.getInstance();
+                                    await prefs.setBool('debt_affects_balance_preference', val);
+                                } catch (_) {}
                               },
                             ),
                           ],
@@ -1265,72 +1415,73 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 20),
-
-                // Save Record CTA
-                Container(
-                  height: 52,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: activeGradient,
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: activeAccent.withValues(alpha: 0.35),
-                        blurRadius: 16,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: _isSaving ? null : _saveDebt,
-                      borderRadius: BorderRadius.circular(16),
-                      child: Center(
-                        child: _isSaving
-                            ? const SizedBox(
-                                height: 22,
-                                width: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(
-                                    Icons.check_rounded,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    widget.editTransaction != null
-                                        ? (isGiven
-                                            ? 'Update Lent Record'
-                                            : 'Update Borrowed Record')
-                                        : (isGiven
-                                            ? 'Save Lent Record'
-                                            : 'Save Borrowed Record'),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.2,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                      ),
-                    ),
-                  ),
+                const SizedBox(height: 24),
+              ],
+            ),
+          ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 6, 18, 14),
+          child: Container(
+            height: 52,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: activeGradient,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: activeAccent.withValues(alpha: 0.35),
+                  blurRadius: 14,
+                  offset: const Offset(0, 5),
                 ),
               ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _isSaving ? null : _saveDebt,
+                borderRadius: BorderRadius.circular(16),
+                child: Center(
+                  child: _isSaving
+                      ? const SizedBox(
+                          height: 22,
+                          width: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.check_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              widget.editTransaction != null
+                                  ? (isGiven
+                                      ? 'Update Lent Record'
+                                      : 'Update Borrowed Record')
+                                  : (isGiven
+                                      ? 'Save Lent Record'
+                                      : 'Save Borrowed Record'),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+              ),
             ),
           ),
         ),
@@ -1338,10 +1489,10 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
     );
   }
 
-  Widget _buildMiniDateChip(String label, int days) {
+  Widget _buildMiniDateChip(String label, int days, {String? schedule}) {
     final cs = Theme.of(context).colorScheme;
     return InkWell(
-      onTap: () => _setQuickDueDate(days),
+      onTap: () => _setQuickDueDate(days, schedule: schedule),
       borderRadius: BorderRadius.circular(10),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -1356,6 +1507,74 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
             fontWeight: FontWeight.w600,
             color: cs.onSurface.withValues(alpha: 0.8),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMiniDateActionChip(String label, VoidCallback onTap) {
+    final cs = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+        decoration: BoxDecoration(
+          color: cs.onSurface.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11.5,
+            fontWeight: FontWeight.w600,
+            color: cs.onSurface.withValues(alpha: 0.8),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScheduleChip(String label, String key, Color accent, {int? days}) {
+    final isSelected = _repaymentSchedule == key;
+    return InkWell(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        setState(() {
+          _repaymentSchedule = key;
+          if (days != null) {
+            _dueDate = _txnDate.add(Duration(days: days));
+          }
+        });
+      },
+      borderRadius: BorderRadius.circular(20),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: isSelected ? accent.withValues(alpha: 0.16) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? accent : Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),
+            width: isSelected ? 1.4 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isSelected) ...[
+              Icon(Icons.check_rounded, size: 12, color: accent),
+              const SizedBox(width: 4),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected ? accent : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
+            ),
+          ],
         ),
       ),
     );

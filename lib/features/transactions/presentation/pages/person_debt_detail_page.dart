@@ -1530,273 +1530,368 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
       }
     }
 
-    final hasTime = txn.date.hour != 0 || txn.date.minute != 0;
-    final timestampText = hasTime
-        ? DateFormat('MMM dd, yyyy · h:mm a').format(txn.date)
-        : DateFormat('MMM dd, yyyy').format(txn.date);
+    // Normal date format: dd/MM/yyyy
+    final normalDateText = DateFormat('dd/MM/yyyy').format(txn.date);
 
     String? dueStatusText;
     Color dueStatusColor = cs.onSurfaceVariant;
+    int diffDays = 0;
     if (txn.isSettled) {
-      dueStatusText = 'Settled ${txn.settledAt != null ? DateFormat('MMM dd').format(txn.settledAt!) : DateFormat('MMM dd').format(txn.date)}';
+      final settledDate = txn.settledAt != null
+          ? DateFormat('dd/MM/yyyy').format(txn.settledAt!)
+          : DateFormat('dd/MM/yyyy').format(txn.date);
+      dueStatusText = 'Settled on $settledDate';
       dueStatusColor = positiveColor;
     } else if (txn.dueDate != null) {
-      final diffDays = txn.dueDate!.difference(DateTime(now.year, now.month, now.day)).inDays;
-      final dueFmt = DateFormat('MMM dd').format(txn.dueDate!);
+      diffDays = txn.dueDate!.difference(DateTime(now.year, now.month, now.day)).inDays;
+      final dueFmt = DateFormat('dd/MM/yyyy').format(txn.dueDate!);
       if (diffDays < 0) {
-        dueStatusText = 'Due $dueFmt · ⚠️ ${diffDays.abs()}d overdue';
+        dueStatusText = 'Due: $dueFmt (${diffDays.abs()}d overdue)';
         dueStatusColor = errorColor;
       } else if (diffDays == 0) {
-        dueStatusText = 'Due $dueFmt · ⏰ Due today';
+        dueStatusText = 'Due Today ($dueFmt)';
         dueStatusColor = warningColor;
       } else if (diffDays == 1) {
-        dueStatusText = 'Due $dueFmt · In 1d';
+        dueStatusText = 'Due: $dueFmt (Tomorrow)';
         dueStatusColor = infoColor;
       } else {
-        dueStatusText = 'Due $dueFmt · In ${diffDays}d';
+        dueStatusText = 'Due: $dueFmt (In ${diffDays}d)';
         dueStatusColor = infoColor;
       }
     }
 
-    final hasExtraDetails = dueStatusText != null || customNote != null || txn.isSettled;
-
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: cs.surface,
+        color: isDark ? const Color(0xFF1E1E24) : Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: txn.isSettled
-              ? cs.outline.withValues(alpha: 0.06)
-              : typeColor.withValues(alpha: 0.18),
-          width: 1.0,
+              ? cs.outlineVariant.withValues(alpha: isDark ? 0.2 : 0.35)
+              : typeColor.withValues(alpha: isDark ? 0.3 : 0.2),
+          width: 1.1,
         ),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.black.withValues(alpha: 0.18) : cs.shadow.withValues(alpha: 0.03),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Row 1: Direction Chip + Date/Time + Amount + Menu Button
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                decoration: BoxDecoration(
-                  color: typeColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isGiven ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
-                      size: 12,
-                      color: typeColor,
-                    ),
-                    const SizedBox(width: 3),
-                    Text(
-                      isGiven ? 'Lent' : 'Borrowed',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: typeColor,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  timestampText,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: cs.onSurfaceVariant,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                '${isGiven ? '+' : '-'}$currency${txn.amount.toStringAsFixed(2)}',
-                style: tt.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 15.5,
-                  color: typeColor,
-                  decoration: txn.isSettled ? TextDecoration.lineThrough : null,
-                ),
-              ),
-              const SizedBox(width: 2),
-              SizedBox(
-                width: 24,
-                height: 24,
-                child: PopupMenuButton<String>(
-                  padding: EdgeInsets.zero,
-                  iconSize: 18,
-                  splashRadius: 14,
-                  icon: Icon(
-                    Icons.more_vert_rounded,
-                    size: 18,
-                    color: cs.onSurfaceVariant.withValues(alpha: 0.7),
-                  ),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  onSelected: (val) async {
-                    if (val == 'settle') {
-                      _settleSingleDebt(txn);
-                    } else if (val == 'edit') {
-                      final updated = await AddDebtBottomSheet.show(
-                        context,
-                        editTransaction: txn,
-                        initialAmount: txn.amount,
-                        initialDebtType: txn.debtType,
-                        initialPersonName: (txn.personName != null && txn.personName!.isNotEmpty)
-                            ? txn.personName!
-                            : widget.personName,
-                      );
-                      if (updated == true || mounted) {
-                        ref.read(transactionListProvider.notifier).refresh();
-                        _loadPersonData();
-                      }
-                    } else if (val == 'clear_flag') {
-                      _clearDebtFlag(txn);
-                    } else if (val == 'delete') {
-                      _deleteDebtTransaction(txn);
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    if (!txn.isSettled)
-                      const PopupMenuItem(
-                        value: 'settle',
-                        height: 36,
-                        child: Row(
-                          children: [
-                            Icon(Icons.check_circle_outline_rounded, size: 16),
-                            SizedBox(width: 8),
-                            Text('Mark Settled', style: TextStyle(fontSize: 13)),
-                          ],
-                        ),
-                      ),
-                    const PopupMenuItem(
-                      value: 'edit',
-                      height: 36,
-                      child: Row(
-                        children: [
-                          Icon(Icons.edit_outlined, size: 16),
-                          SizedBox(width: 8),
-                          Text('Edit Transaction', style: TextStyle(fontSize: 13)),
-                        ],
-                      ),
-                    ),
-                    if (!txn.isSettled)
-                      const PopupMenuItem(
-                        value: 'clear_flag',
-                        height: 36,
-                        child: Row(
-                          children: [
-                            Icon(Icons.flag_outlined, size: 16),
-                            SizedBox(width: 8),
-                            Text('Remove Debt Flag', style: TextStyle(fontSize: 13)),
-                          ],
-                        ),
-                      ),
-                    PopupMenuItem(
-                      value: 'delete',
-                      height: 36,
-                      child: Row(
-                        children: [
-                          Icon(Icons.delete_outline_rounded, color: errorColor, size: 16),
-                          const SizedBox(width: 8),
-                          Text('Delete', style: TextStyle(color: errorColor, fontSize: 13)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          // Row 2: Status Pill / Note (Only displayed if details exist)
-          if (hasExtraDetails) ...[
-            const SizedBox(height: 6),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: () async {
+            final updated = await AddDebtBottomSheet.show(
+              context,
+              editTransaction: txn,
+              initialAmount: txn.amount,
+              initialDebtType: txn.debtType,
+              initialPersonName: (txn.personName != null && txn.personName!.isNotEmpty)
+                  ? txn.personName!
+                  : widget.personName,
+            );
+            if (updated == true || mounted) {
+              ref.read(transactionListProvider.notifier).refresh();
+              _loadPersonData();
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9.5),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                if (txn.isSettled)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    margin: const EdgeInsets.only(right: 6),
-                    decoration: BoxDecoration(
-                      color: positiveColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      'Settled',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: positiveColor,
-                        fontWeight: FontWeight.w700,
+                // ── LINE 1: [LENT/BORROWED] Date  <spacer>  Amount + Menu ──
+                Row(
+                  children: [
+                    // Direction Badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6.5, vertical: 2.5),
+                      decoration: BoxDecoration(
+                        color: typeColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            isGiven ? Icons.arrow_outward_rounded : Icons.arrow_downward_rounded,
+                            size: 11.5,
+                            color: typeColor,
+                          ),
+                          const SizedBox(width: 3.5),
+                          Text(
+                            isGiven ? 'LENT' : 'BORROWED',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.3,
+                              color: typeColor,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (dueStatusText != null)
-                        Row(
-                          children: [
+                    const SizedBox(width: 8),
+
+                    // Normal Date Format (10/01/2026)
+                    Text(
+                      normalDateText,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                    const Spacer(),
+
+                    // Amount
+                    Text(
+                      '${isGiven ? '+' : '-'}$currency${txn.amount.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
+                        color: txn.isSettled
+                            ? cs.onSurface.withValues(alpha: 0.4)
+                            : typeColor,
+                        decoration: txn.isSettled ? TextDecoration.lineThrough : null,
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+
+                    // Menu Button (3 dots)
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: PopupMenuButton<String>(
+                        padding: EdgeInsets.zero,
+                        iconSize: 18,
+                        splashRadius: 14,
+                        icon: Icon(
+                          Icons.more_vert_rounded,
+                          size: 18,
+                          color: cs.onSurfaceVariant.withValues(alpha: 0.65),
+                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        onSelected: (val) async {
+                          if (val == 'settle') {
+                            _settleSingleDebt(txn);
+                          } else if (val == 'edit') {
+                            final updated = await AddDebtBottomSheet.show(
+                              context,
+                              editTransaction: txn,
+                              initialAmount: txn.amount,
+                              initialDebtType: txn.debtType,
+                              initialPersonName: (txn.personName != null && txn.personName!.isNotEmpty)
+                                  ? txn.personName!
+                                  : widget.personName,
+                            );
+                            if (updated == true || mounted) {
+                              ref.read(transactionListProvider.notifier).refresh();
+                              _loadPersonData();
+                            }
+                          } else if (val == 'clear_flag') {
+                            _clearDebtFlag(txn);
+                          } else if (val == 'delete') {
+                            _deleteDebtTransaction(txn);
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          if (!txn.isSettled)
+                            const PopupMenuItem(
+                              value: 'settle',
+                              height: 36,
+                              child: Row(
+                                children: [
+                                  Icon(Icons.check_circle_outline_rounded, size: 16),
+                                  SizedBox(width: 8),
+                                  Text('Mark Settled', style: TextStyle(fontSize: 13)),
+                                ],
+                              ),
+                            ),
+                          const PopupMenuItem(
+                            value: 'edit',
+                            height: 36,
+                            child: Row(
+                              children: [
+                                Icon(Icons.edit_outlined, size: 16),
+                                SizedBox(width: 8),
+                                Text('Edit Record', style: TextStyle(fontSize: 13)),
+                              ],
+                            ),
+                          ),
+                          if (!txn.isSettled)
+                            const PopupMenuItem(
+                              value: 'clear_flag',
+                              height: 36,
+                              child: Row(
+                                children: [
+                                  Icon(Icons.flag_outlined, size: 16),
+                                  SizedBox(width: 8),
+                                  Text('Remove Debt Flag', style: TextStyle(fontSize: 13)),
+                                ],
+                              ),
+                            ),
+                          PopupMenuItem(
+                            value: 'delete',
+                            height: 36,
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete_outline_rounded, color: errorColor, size: 16),
+                                const SizedBox(width: 8),
+                                Text('Delete', style: TextStyle(color: errorColor, fontSize: 13)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 5),
+
+                // ── LINE 2: Note / Due / Wallet Info  <spacer>  Settle Action / Settled Badge ──
+                Row(
+                  children: [
+                    // Left: Details / Metadata
+                    Expanded(
+                      child: Row(
+                        children: [
+                          // Custom note if present
+                          if (customNote != null && customNote.isNotEmpty) ...[
+                            Flexible(
+                              child: Text(
+                                customNote,
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: cs.onSurface.withValues(alpha: 0.85),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              '•',
+                              style: TextStyle(color: cs.outline.withValues(alpha: 0.5), fontSize: 11),
+                            ),
+                            const SizedBox(width: 5),
+                          ],
+
+                          // Due date tag if set and not settled
+                          if (!txn.isSettled && dueStatusText != null) ...[
                             Icon(
-                              txn.isSettled
-                                  ? Icons.done_all_rounded
-                                  : (txn.dueDate != null ? Icons.event_available_rounded : Icons.schedule_rounded),
-                              size: 13,
+                              diffDays < 0 ? Icons.warning_amber_rounded : Icons.schedule_rounded,
+                              size: 11.5,
                               color: dueStatusColor,
                             ),
-                            const SizedBox(width: 4),
+                            const SizedBox(width: 3),
                             Flexible(
                               child: Text(
                                 dueStatusText,
                                 style: TextStyle(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w600,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
                                   color: dueStatusColor,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
+                            const SizedBox(width: 5),
+                            Text(
+                              '•',
+                              style: TextStyle(color: cs.outline.withValues(alpha: 0.5), fontSize: 11),
+                            ),
+                            const SizedBox(width: 5),
+                          ],
+
+                          // Wallet Balance Indicator
+                          Icon(
+                            txn.affectsBalance
+                                ? Icons.account_balance_wallet_outlined
+                                : Icons.bookmark_border_rounded,
+                            size: 11.5,
+                            color: cs.onSurfaceVariant.withValues(alpha: 0.6),
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            txn.affectsBalance ? 'In Wallet' : 'Debt Only',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+
+                    // Right: Quick Settle button OR Settled badge
+                    if (!txn.isSettled)
+                      InkWell(
+                        onTap: () => _settleSingleDebt(txn),
+                        borderRadius: BorderRadius.circular(6),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                          decoration: BoxDecoration(
+                            color: cs.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: cs.primary.withValues(alpha: 0.28), width: 0.8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.check_rounded, size: 11.5, color: cs.primary),
+                              const SizedBox(width: 3),
+                              Text(
+                                'Settle',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: cs.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    else
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: positiveColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.check_circle_rounded, size: 11, color: positiveColor),
+                            const SizedBox(width: 3),
+                            Text(
+                              'Settled',
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w700,
+                                color: positiveColor,
+                              ),
+                            ),
                           ],
                         ),
-                      if (customNote != null) ...[
-                        if (dueStatusText != null) const SizedBox(height: 3),
-                        Text(
-                          customNote,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: cs.onSurfaceVariant.withValues(alpha: 0.85),
-                            fontStyle: FontStyle.italic,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ],
-                  ),
+                      ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ],
+          ),
+        ),
       ),
     );
   }
