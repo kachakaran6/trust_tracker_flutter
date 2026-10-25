@@ -22,7 +22,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 10,
+      version: 11,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
       onOpen: (db) async {
@@ -111,6 +111,9 @@ class DatabaseHelper {
         // Column may already exist
       }
     }
+    if (oldVersion < 11) {
+      await _createSmsDetectionTables(db);
+    }
   }
 
   Future _createDB(Database db, int version) async {
@@ -180,6 +183,9 @@ class DatabaseHelper {
 
     // Banking Management Tables - Added in v6
     await _createBankingTables(db);
+
+    // SMS Transaction Detection Tables - Added in v11
+    await _createSmsDetectionTables(db);
   }
 
   Future<void> _createSettingsTable(Database db) async {
@@ -284,6 +290,42 @@ class DatabaseHelper {
 
     await db.execute('CREATE INDEX idx_bank_loans_status ON bank_loans(status);');
     await db.execute('CREATE INDEX idx_loan_payments_loanId ON loan_payments(loanId);');
+  }
+
+  Future<void> _createSmsDetectionTables(Database db) async {
+    const idType = 'INTEGER PRIMARY KEY AUTOINCREMENT';
+    const textType = 'TEXT NOT NULL';
+    const integerType = 'INTEGER NOT NULL';
+    const realType = 'REAL NOT NULL';
+    const textNullable = 'TEXT';
+    const integerNullable = 'INTEGER';
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS sms_detected_transactions (
+        id $idType,
+        smsFingerprint $textType UNIQUE,
+        referenceNumber $textNullable,
+        sender $textType,
+        amount $realType,
+        currency $textType,
+        type $integerType,
+        categoryId $integerNullable,
+        categoryName $textNullable,
+        merchant $textNullable,
+        maskedAccount $textNullable,
+        date $textType,
+        confidenceScore $realType,
+        confidenceLevel $textType,
+        status $textType,
+        rawSnippet $textNullable,
+        transactionId $integerNullable,
+        createdAt $textType
+      )
+    ''');
+
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_sms_fingerprint ON sms_detected_transactions(smsFingerprint);');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_sms_status ON sms_detected_transactions(status);');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_sms_date ON sms_detected_transactions(date);');
   }
 
   Future<void> _ensureDefaultCategories(Database db) async {
