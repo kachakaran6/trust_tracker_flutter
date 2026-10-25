@@ -923,7 +923,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
               ],
             ),
           ),
-          const SizedBox(height: 80),
+          Builder(
+            builder: (context) {
+              final bottomInset = MediaQuery.of(context).padding.bottom;
+              // Provide ample clearance for floating navigation bar + FAB + system navigation insets
+              return SizedBox(height: 140 + bottomInset);
+            },
+          ),
         ],
       ),
     );

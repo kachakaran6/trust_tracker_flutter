@@ -601,12 +601,14 @@ class _FloatingCtaButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     final Color buttonColor = cs.primary;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.only(bottom: 4),
       child: Tooltip(
         message: currentIndex == 2
             ? 'Add Debt / Lent Record'
@@ -620,7 +622,7 @@ class _FloatingCtaButton extends StatelessWidget {
               gradient: LinearGradient(
                 colors: [
                   buttonColor,
-                  buttonColor.withValues(alpha: 0.88),
+                  buttonColor.withValues(alpha: 0.90),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -628,9 +630,14 @@ class _FloatingCtaButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(18),
               boxShadow: [
                 BoxShadow(
-                  color: buttonColor.withValues(alpha: 0.42),
-                  blurRadius: 18,
-                  offset: const Offset(0, 6),
+                  color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.12),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+                BoxShadow(
+                  color: buttonColor.withValues(alpha: isDark ? 0.20 : 0.22),
+                  blurRadius: 6,
+                  offset: const Offset(0, 1),
                 ),
               ],
             ),
