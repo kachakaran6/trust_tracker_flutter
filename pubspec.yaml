@@ -57,6 +57,7 @@ dependencies:
   # Security
   local_auth: ^2.3.0
   flutter_secure_storage: ^9.2.2
+  crypto: ^3.0.3
 
   # Export & Documents
   pdf: ^3.10.10
@@ -66,6 +67,7 @@ dependencies:
   http: ^1.6.0
   in_app_review: ^2.0.12
   sqflite_common_ffi_web: ^1.1.1
+  liquid_glass_widgets: 1.14.2
 
 dev_dependencies:
   flutter_test:

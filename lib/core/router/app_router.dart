@@ -33,6 +33,8 @@ import 'package:trust_tracker_flutter/features/banking/data/models/loan_model.da
 import 'package:trust_tracker_flutter/features/transactions/presentation/pages/debt_manager_page.dart';
 import 'package:trust_tracker_flutter/features/transactions/presentation/pages/person_debt_detail_page.dart';
 import 'package:trust_tracker_flutter/features/transactions/presentation/widgets/add_debt_bottom_sheet.dart';
+import 'package:trust_tracker_flutter/features/sms_detection/presentation/pages/sms_review_page.dart';
+import 'package:trust_tracker_flutter/core/widgets/liquid_glass_bottom_nav_bar.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Router Notifier — bridges Riverpod state into GoRouter's refreshListenable.
@@ -293,6 +295,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const EmiCalendarPage(),
       ),
+      GoRoute(
+        path: '/sms-review',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const SmsReviewPage(),
+      ),
     ],
   );
 });
@@ -425,7 +432,7 @@ class _MainShellState extends ConsumerState<MainShell> with WidgetsBindingObserv
           },
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-        bottomNavigationBar: _FloatingBottomNavBar(
+        bottomNavigationBar: LiquidGlassBottomNavBar(
           selectedIndex: selectedIndex,
           onTap: _onTabTapped,
           cs: cs,
@@ -578,188 +585,7 @@ Future<bool?> showExitConfirmationDialog(BuildContext context) {
         ),
       );
     },
-    transitionBuilder: (context, animation, secondaryAnimation, child) {
-      return FadeTransition(
-        opacity: animation,
-        child: ScaleTransition(
-          scale: Tween<double>(begin: 0.9, end: 1.0).animate(
-            CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
-          ),
-          child: child,
-        ),
-      );
-    },
   );
-}
-
-class _FloatingBottomNavBar extends StatelessWidget {
-  final int selectedIndex;
-  final void Function(int) onTap;
-  final ColorScheme cs;
-  final AppLocalizations l10n;
-
-  const _FloatingBottomNavBar({
-    required this.selectedIndex,
-    required this.onTap,
-    required this.cs,
-    required this.l10n,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
-
-    return Padding(
-      padding: EdgeInsets.fromLTRB(12, 0, 12, bottomPadding > 0 ? bottomPadding : 12),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-            decoration: BoxDecoration(
-              color: cs.surface.withValues(alpha: isDark ? 0.88 : 0.94),
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(
-                color: cs.outlineVariant.withValues(alpha: isDark ? 0.25 : 0.45),
-                width: 1.2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
-                  blurRadius: 24,
-                  spreadRadius: -2,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                _FloatingNavItem(
-                  icon: Icons.dashboard_outlined,
-                  activeIcon: Icons.dashboard_rounded,
-                  label: l10n.home,
-                  selected: selectedIndex == 0,
-                  onTap: () => onTap(0),
-                  cs: cs,
-                ),
-                _FloatingNavItem(
-                  icon: Icons.receipt_long_outlined,
-                  activeIcon: Icons.receipt_long_rounded,
-                  label: l10n.activity,
-                  selected: selectedIndex == 1,
-                  onTap: () => onTap(1),
-                  cs: cs,
-                ),
-                _FloatingNavItem(
-                  icon: Icons.handshake_outlined,
-                  activeIcon: Icons.handshake_rounded,
-                  label: 'Debt / Lent',
-                  selected: selectedIndex == 2,
-                  onTap: () => onTap(2),
-                  cs: cs,
-                ),
-                _FloatingNavItem(
-                  icon: Icons.event_repeat_outlined,
-                  activeIcon: Icons.event_repeat_rounded,
-                  label: 'Subs',
-                  selected: selectedIndex == 3,
-                  onTap: () => onTap(3),
-                  cs: cs,
-                ),
-                _FloatingNavItem(
-                  icon: Icons.settings_outlined,
-                  activeIcon: Icons.settings_rounded,
-                  label: l10n.settings,
-                  selected: selectedIndex == 4,
-                  onTap: () => onTap(4),
-                  cs: cs,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _FloatingNavItem extends StatelessWidget {
-  final IconData icon;
-  final IconData activeIcon;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  final ColorScheme cs;
-
-  const _FloatingNavItem({
-    required this.icon,
-    required this.activeIcon,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-    required this.cs,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          HapticFeedback.selectionClick();
-          onTap();
-        },
-        behavior: HitTestBehavior.opaque,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeOutCubic,
-          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeOutCubic,
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: selected
-                      ? cs.primary.withValues(alpha: 0.14)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: AnimatedScale(
-                  scale: selected ? 1.08 : 1.0,
-                  duration: const Duration(milliseconds: 200),
-                  child: Icon(
-                    selected ? activeIcon : icon,
-                    color: selected
-                        ? cs.primary
-                        : cs.onSurface.withValues(alpha: 0.55),
-                    size: 22,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                  color: selected
-                      ? cs.primary
-                      : cs.onSurface.withValues(alpha: 0.6),
-                  letterSpacing: selected ? 0.1 : 0,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class _FloatingCtaButton extends StatelessWidget {

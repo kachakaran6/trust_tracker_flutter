@@ -20,6 +20,10 @@ import 'package:trust_tracker_flutter/features/transactions/presentation/widgets
 
 import 'package:flutter/foundation.dart';
 import 'package:trust_tracker_flutter/core/services/debt_notification_service.dart';
+import 'package:trust_tracker_flutter/features/sms_detection/presentation/providers/sms_settings_provider.dart';
+import 'package:trust_tracker_flutter/features/sms_detection/presentation/providers/sms_detection_provider.dart';
+import 'package:trust_tracker_flutter/features/sms_detection/data/services/sms_channel_service.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,6 +33,12 @@ Future<void> main() async {
 
   tz.initializeTimeZones();
   
+  try {
+    await LiquidGlassWidgets.initialize();
+  } catch (e) {
+    debugPrint("LiquidGlassWidgets initialization skipped: $e");
+  }
+
   try {
     await Firebase.initializeApp();
   } catch (e) {
@@ -103,6 +113,9 @@ Future<void> main() async {
         securityProvider.overrideWith(
           (ref) => SecurityNotifier(ref.watch(localAuthProvider), prefs),
         ),
+        smsSettingsProvider.overrideWith(
+          (ref) => SmsSettingsNotifier(prefs, ref.watch(smsRepositoryProvider)),
+        ),
       ],
       child: const TrustTrackerApp(),
     ),
@@ -128,6 +141,36 @@ class _TrustTrackerAppState extends ConsumerState<TrustTrackerApp>
     WidgetsBinding.instance.addObserver(this);
     _initQuickActions();
     _initMethodChannel();
+    _initSmsDetection();
+  }
+
+  void _initSmsDetection() {
+    SmsChannelService.initialize(
+      onSmsReceived: (sender, body, timestamp) {
+        ref.read(smsDetectionProvider.notifier).processManualSms(
+          body: body,
+          sender: sender,
+          receivedTime: DateTime.fromMillisecondsSinceEpoch(timestamp),
+        );
+      },
+    );
+    _pollNativeSms();
+  }
+
+  Future<void> _pollNativeSms() async {
+    final pending = await SmsChannelService.pollPendingNativeSms();
+    for (final item in pending) {
+      final sender = item['sender'] as String? ?? 'UNKNOWN';
+      final body = item['body'] as String? ?? '';
+      final timestamp = item['timestamp'] as int? ?? DateTime.now().millisecondsSinceEpoch;
+      if (body.isNotEmpty) {
+        await ref.read(smsDetectionProvider.notifier).processManualSms(
+          body: body,
+          sender: sender,
+          receivedTime: DateTime.fromMillisecondsSinceEpoch(timestamp),
+        );
+      }
+    }
   }
 
   void _initQuickActions() {
@@ -182,6 +225,8 @@ class _TrustTrackerAppState extends ConsumerState<TrustTrackerApp>
       securityNotifier.setVisibility(false);
     } else if (state == AppLifecycleState.resumed) {
       securityNotifier.setVisibility(true);
+      ref.read(smsSettingsProvider.notifier).checkPermissionState();
+      _pollNativeSms();
     }
   }
 
