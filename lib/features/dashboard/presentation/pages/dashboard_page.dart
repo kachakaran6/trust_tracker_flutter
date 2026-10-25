@@ -22,6 +22,7 @@ import 'package:trust_tracker_flutter/core/security/security_provider.dart';
 import 'package:trust_tracker_flutter/core/utils/financial_utils.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:trust_tracker_flutter/features/transactions/presentation/widgets/add_debt_bottom_sheet.dart';
+import 'package:trust_tracker_flutter/features/sms_detection/presentation/widgets/sms_pending_banner.dart';
 
 // --- Providers ---
 final debtSummaryProvider =
@@ -120,6 +121,7 @@ class DashboardPage extends ConsumerWidget {
                   loading: () => _SummarySectionSkeleton(),
                   error: (_, __) => const SizedBox.shrink(),
                 ),
+                const SmsPendingBanner(),
                 const SizedBox(height: 20),
                 const _UpcomingRenewalsWidget(),
                 const SizedBox(height: 16),

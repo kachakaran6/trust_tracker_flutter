@@ -26,6 +26,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/widgets/avatar_selection_modal.dart';
 import 'package:path/path.dart' as p;
+import 'package:trust_tracker_flutter/features/sms_detection/presentation/providers/sms_settings_provider.dart';
+import 'package:trust_tracker_flutter/features/sms_detection/presentation/widgets/sms_consent_dialog.dart';
+import 'package:trust_tracker_flutter/features/sms_detection/presentation/widgets/sms_sync_history_sheet.dart';
+import 'package:trust_tracker_flutter/features/sms_detection/data/services/sms_channel_service.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -47,6 +51,18 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
     WidgetsBinding.instance.addObserver(this);
     _nameController =
         TextEditingController(text: ref.read(settingsProvider).userName);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(smsSettingsProvider.notifier).checkPermissionState();
+      }
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.read(smsSettingsProvider.notifier).checkPermissionState();
+    }
   }
 
   @override
@@ -516,6 +532,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
           ),
           const SizedBox(height: 16),
 
+          // ── Automatic SMS Transaction Detection ─────────────────────
+          _buildSmsDetectionSection(context, ref, cs, tt),
+          const SizedBox(height: 16),
 
           _SettingsSection(
             title: l10n.security,
@@ -1370,6 +1389,154 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
       styleInformation: const BigTextStyleInformation(''),
     );
     await notifications.show(999, l10n.dailySummary, message, const NotificationDetails(android: android));
+  }
+
+  Widget _buildSmsDetectionSection(
+    BuildContext context,
+    WidgetRef ref,
+    ColorScheme cs,
+    TextTheme tt,
+  ) {
+    final smsSettings = ref.watch(smsSettingsProvider);
+    final smsNotifier = ref.read(smsSettingsProvider.notifier);
+
+    return _SettingsSection(
+      title: 'SMS Detection',
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Icon(
+                      Icons.sms_rounded,
+                      size: 20,
+                      color: smsSettings.isEnabled
+                          ? cs.primary
+                          : cs.onSurface.withValues(alpha: 0.55),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Automatic Detection',
+                          style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          'Detect bank transaction messages directly on this device. SMS data stays on your device.',
+                          style: tt.bodySmall?.copyWith(
+                            color: cs.onSurface.withValues(alpha: 0.6),
+                            height: 1.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Switch.adaptive(
+                    value: smsSettings.isEnabled,
+                    onChanged: (val) async {
+                      if (val) {
+                        final consent = await showDialog<bool>(
+                          context: context,
+                          builder: (_) => const SmsConsentDialog(),
+                        );
+                        if (consent == true) {
+                          final granted = await smsNotifier.enableFeatureWithPermission();
+                          if (!granted && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('SMS permission denied. Transaction detection remains OFF.'),
+                                duration: Duration(seconds: 3),
+                              ),
+                            );
+                          }
+                        }
+                      } else {
+                        await smsNotifier.disableFeature();
+                      }
+                    },
+                  ),
+                ],
+              ),
+              if (smsSettings.isPermanentlyDenied) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: cs.errorContainer.withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline, size: 18, color: cs.error),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'SMS permission is disabled in system settings.',
+                          style: TextStyle(fontSize: 12, color: cs.onErrorContainer),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => SmsChannelService.openAppSettings(),
+                        child: const Text('Open Settings', style: TextStyle(fontSize: 12)),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        if (smsSettings.isEnabled) ...[
+          const Divider(height: 1, indent: 16, endIndent: 16),
+          _SettingsTile(
+            icon: Icons.mark_email_unread_outlined,
+            label: 'Review Pending Transactions',
+            trailing: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+              decoration: BoxDecoration(
+                color: smsSettings.pendingCount > 0
+                    ? cs.primary
+                    : cs.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '${smsSettings.pendingCount} Pending',
+                style: tt.labelSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: smsSettings.pendingCount > 0
+                      ? cs.onPrimary
+                      : cs.onSurface.withValues(alpha: 0.6),
+                ),
+              ),
+            ),
+            onTap: () => context.push('/sms-review'),
+          ),
+          _SettingsToggle(
+            icon: Icons.auto_awesome_rounded,
+            label: 'Auto-add high confidence entries',
+            value: smsSettings.autoApproveHighConfidence,
+            onChanged: (v) => smsNotifier.setAutoApprove(v),
+          ),
+        ],
+        const Divider(height: 1, indent: 16, endIndent: 16),
+        _SettingsTile(
+          icon: Icons.history_toggle_off_rounded,
+          label: 'Sync Past Bank SMS',
+          onTap: () => SmsSyncHistorySheet.show(context),
+        ),
+      ],
+    );
   }
 }
 
