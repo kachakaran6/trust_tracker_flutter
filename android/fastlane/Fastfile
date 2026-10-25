@@ -6,6 +6,11 @@
 #     https://docs.fastlane.tools/actions
 #
 
+require "net/http"
+require "uri"
+require "json"
+require "fileutils"
+
 default_platform(:android)
 
 platform :android do
@@ -105,6 +110,163 @@ platform :android do
     UI.user_error!("❌ Release APK not found at: #{apk_path}") unless File.exist?(apk_path)
     UI.success("✅ Release APK successfully built: #{apk_path}")
     apk_path
+  end
+
+  # ============================================================================
+  # Helper: AI-Generated Google Play Release Notes
+  # ============================================================================
+  def generate_google_play_release_notes(build_num)
+    root_dir = File.expand_path("../..", __dir__)
+    changelogs_dir = File.join(__dir__, "metadata", "android", "en-US", "changelogs")
+    FileUtils.mkdir_p(changelogs_dir)
+    changelog_path = File.join(changelogs_dir, "#{build_num}.txt")
+    default_changelog_path = File.join(changelogs_dir, "default.txt")
+
+    UI.message("🤖 Generating Google Play release notes for build ##{build_num}...")
+
+    commits = []
+    diff_summary = ""
+
+    Dir.chdir(root_dir) do
+      # Find latest release tag to isolate new commits
+      tag_list = `git tag --sort=-creatordate`.split("\n").map { |t| t.strip }.reject { |t| t.empty? }
+      last_tag = tag_list.first
+
+      if last_tag && !last_tag.empty?
+        UI.message("📌 Comparing changes against previous release tag: #{last_tag}")
+        commits = `git log #{last_tag}..HEAD --pretty=format:%s`.split("\n").map { |c| c.strip }
+        diff_summary = `git diff --stat #{last_tag}..HEAD`.strip
+      end
+
+      # Fallback if no new commits since tag or working on current HEAD
+      if commits.empty?
+        commits = `git log -n 8 --pretty=format:%s`.split("\n").map { |c| c.strip }
+        diff_summary = `git diff --stat HEAD~1 2>nul || git diff --stat`.strip if diff_summary.empty?
+      end
+    end
+
+    # Filter out release noise and merge commits
+    filtered_commits = commits.reject do |c|
+      c.downcase.include?("[skip ci]") ||
+      c.downcase.start_with?("chore(release)") ||
+      c.downcase.start_with?("merge ") ||
+      c.strip.empty?
+    end
+
+    commits_context = filtered_commits.take(6).join("\n")
+    diff_context = diff_summary.to_s.lines.take(10).join
+
+    context_text = "Recent Commits:\n#{commits_context}\n\nDiff Summary:\n#{diff_context}".strip
+
+    generated_notes = nil
+
+    # Option A: Gemini API (if GEMINI_API_KEY is present)
+    if ENV["GEMINI_API_KEY"] && !ENV["GEMINI_API_KEY"].empty?
+      begin
+        UI.message("✨ Querying Gemini API for Google Play release notes...")
+        uri = URI("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=#{ENV['GEMINI_API_KEY']}")
+        http = Net::HTTP.new(uri.host, uri.port)
+        http.use_ssl = true
+        http.open_timeout = 8
+        http.read_timeout = 10
+
+        prompt = "Write concise, user-facing Google Play release notes in English for build ##{build_num}. " \
+                 "Maximum 450 characters total. Use 2 to 4 bullet points starting with •. " \
+                 "Focus on user features, performance, and stability. " \
+                 "Do NOT use markdown bold or headings. Strictly under 450 characters.\n\nChanges:\n#{context_text}"
+
+        req = Net::HTTP::Post.new(uri.request_uri, { "Content-Type" => "application/json" })
+        req.body = {
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 150, temperature: 0.3 }
+        }.to_json
+
+        res = http.request(req)
+        if res.is_a?(Net::HTTPSuccess)
+          data = JSON.parse(res.body)
+          text = data.dig("candidates", 0, "content", "parts", 0, "text")
+          if text && !text.strip.empty?
+            generated_notes = text.strip
+            UI.success("🤖 Successfully generated release notes via Gemini API!")
+          end
+        else
+          UI.important("⚠️ Gemini API returned HTTP #{res.code}, falling back to smart formatter.")
+        end
+      rescue => ex
+        UI.important("⚠️ Gemini API query skipped (#{ex.message}), falling back to smart formatter.")
+      end
+    # Option B: OpenAI API (if OPENAI_API_KEY is present)
+    elsif ENV["OPENAI_API_KEY"] && !ENV["OPENAI_API_KEY"].empty?
+      begin
+        UI.message("✨ Querying OpenAI API for Google Play release notes...")
+        uri = URI("https://api.openai.com/v1/chat/completions")
+        http = Net::HTTP.new(uri.host, uri.port)
+        http.use_ssl = true
+        http.open_timeout = 8
+        http.read_timeout = 10
+
+        req = Net::HTTP::Post.new(uri.request_uri, {
+          "Content-Type" => "application/json",
+          "Authorization" => "Bearer #{ENV['OPENAI_API_KEY']}"
+        })
+        req.body = {
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: "You write concise, user-friendly Google Play Store release notes (maximum 450 characters, bullet points starting with •, no markdown)." },
+            { role: "user", content: "Generate release notes for build ##{build_num} based on:\n#{context_text}" }
+          ],
+          max_tokens: 150,
+          temperature: 0.3
+        }.to_json
+
+        res = http.request(req)
+        if res.is_a?(Net::HTTPSuccess)
+          data = JSON.parse(res.body)
+          text = data.dig("choices", 0, "message", "content")
+          if text && !text.strip.empty?
+            generated_notes = text.strip
+            UI.success("🤖 Successfully generated release notes via OpenAI API!")
+          end
+        else
+          UI.important("⚠️ OpenAI API returned HTTP #{res.code}, falling back to smart formatter.")
+        end
+      rescue => ex
+        UI.important("⚠️ OpenAI API query skipped (#{ex.message}), falling back to smart formatter.")
+      end
+    end
+
+    # Fallback: Intelligent rule-based bullet point generator
+    if generated_notes.nil? || generated_notes.empty?
+      UI.message("📋 Formatting release notes from recent commits and diff...")
+      bullet_items = []
+      filtered_commits.take(4).each do |commit|
+        clean = commit.sub(/^(feat|fix|perf|refactor|docs|style|test)(\([^)]+\))?:\s*/i, "").strip
+        clean = clean[0].upcase + clean[1..] unless clean.empty?
+        bullet_items << "• #{clean}" unless clean.empty?
+      end
+
+      if bullet_items.empty?
+        bullet_items = [
+          "• Performance enhancements and bug fixes",
+          "• UI and transaction tracking improvements"
+        ]
+      end
+      generated_notes = bullet_items.join("\n")
+    end
+
+    # Enforce Google Play's strict 500-character ceiling
+    if generated_notes.length > 490
+      generated_notes = generated_notes[0...485] + "..."
+    end
+
+    # Write changelog files into Fastlane's standard supply directory
+    File.write(changelog_path, generated_notes)
+    File.write(default_changelog_path, generated_notes)
+
+    UI.success("📝 Google Play Release Notes (build ##{build_num}, #{generated_notes.length} chars):\n#{generated_notes}")
+    UI.success("💾 Saved changelog to: #{changelog_path}")
+
+    generated_notes
   end
 
   # ============================================================================
@@ -211,8 +373,14 @@ platform :android do
   desc "Build and upload AAB to Google Play Closed Testing track with Git archiving"
   lane :closed do |options|
     build_num = get_target_build_number(options)
+
+    # 1. Generate release notes and save to metadata directory before upload
+    generate_google_play_release_notes(build_num)
+
+    # 2. Build release AAB
     aab_path = build_flutter_aab(build_num)
     json_key = resolve_json_key
+    metadata_dir = File.expand_path("metadata/android", __dir__)
 
     track_name = options[:track] || 'alpha'
     begin
@@ -221,10 +389,11 @@ platform :android do
         package_name: "com.trusttracker.trust_tracker_flutter",
         track: track_name,
         aab: aab_path,
+        metadata_path: metadata_dir,
         skip_upload_metadata: true,
         skip_upload_images: true,
         skip_upload_screenshots: true,
-        skip_upload_changelogs: true,
+        skip_upload_changelogs: false,
         release_status: "completed"
       )
     rescue => e
@@ -236,10 +405,11 @@ platform :android do
           package_name: "com.trusttracker.trust_tracker_flutter",
           track: track_name,
           aab: aab_path,
+          metadata_path: metadata_dir,
           skip_upload_metadata: true,
           skip_upload_images: true,
           skip_upload_screenshots: true,
-          skip_upload_changelogs: true,
+          skip_upload_changelogs: false,
           release_status: "completed"
         )
       elsif e.message.include?("Track") && track_name == 'Alpha-1'
@@ -250,10 +420,11 @@ platform :android do
           package_name: "com.trusttracker.trust_tracker_flutter",
           track: track_name,
           aab: aab_path,
+          metadata_path: metadata_dir,
           skip_upload_metadata: true,
           skip_upload_images: true,
           skip_upload_screenshots: true,
-          skip_upload_changelogs: true,
+          skip_upload_changelogs: false,
           release_status: "completed"
         )
       else
@@ -261,6 +432,7 @@ platform :android do
       end
     end
 
+    # 3. Only after successful upload, run git archiving & backup
     git_version_backup(build_num, track_name)
   end
 
