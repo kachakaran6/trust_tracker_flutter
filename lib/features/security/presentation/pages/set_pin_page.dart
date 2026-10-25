@@ -6,6 +6,7 @@ import 'package:trust_tracker_flutter/core/security/security_provider.dart';
 import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
 import 'package:trust_tracker_flutter/generated/app_localizations.dart';
 
+
 class SetPinPage extends ConsumerStatefulWidget {
   final bool isChangingPin;
   final bool isDisabling;

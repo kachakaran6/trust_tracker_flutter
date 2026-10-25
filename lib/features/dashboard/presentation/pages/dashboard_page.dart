@@ -11,45 +11,64 @@ import 'package:trust_tracker_flutter/core/utils/greeting_helper.dart';
 import 'package:trust_tracker_flutter/features/categories/data/repositories/category_repository.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
+import 'package:trust_tracker_flutter/features/transactions/data/repositories/transaction_repository.dart';
 import 'package:trust_tracker_flutter/features/transactions/presentation/providers/transaction_provider.dart';
+import 'package:trust_tracker_flutter/features/subscriptions/presentation/providers/subscription_provider.dart';
+import 'package:trust_tracker_flutter/features/subscriptions/data/models/subscription_model.dart';
 import 'package:trust_tracker_flutter/features/categories/data/models/category_model.dart';
 import 'package:trust_tracker_flutter/generated/app_localizations.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/widgets/avatar_selection_modal.dart';
 import 'package:trust_tracker_flutter/core/security/security_provider.dart';
+import 'package:trust_tracker_flutter/core/utils/financial_utils.dart';
+import 'package:intl/intl.dart' as intl;
+import 'package:trust_tracker_flutter/features/transactions/presentation/widgets/add_debt_bottom_sheet.dart';
+import 'package:trust_tracker_flutter/features/sms_detection/presentation/widgets/sms_pending_banner.dart';
 
 // --- Providers ---
+final debtSummaryProvider =
+    FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
+  ref.watch(transactionChangeProvider);
+  final repo = ref.watch(transactionRepositoryProvider);
+  return repo.getDebtSummary();
+});
+
 final dashboardSummaryProvider =
-    Provider.autoDispose<Map<String, double>>((ref) {
-  final txnsAsync = ref.watch(transactionListProvider);
-  final now = DateTime.now();
-  final monthKey = now.toMonthKey();
-  return txnsAsync.when(
-    data: (txns) {
-      final monthly = txns.where((t) => t.monthKey == monthKey).toList();
-      double income = 0, expense = 0;
-      for (final t in monthly) {
-        if (t.type == TransactionType.income) {
-          income += t.amount;
-        } else {
-          expense += t.amount;
-        }
-      }
-      return {
-        'income': income,
-        'expense': expense,
-        'balance': income - expense
-      };
-    },
-    loading: () => {},
-    error: (_, __) => {},
-  );
+    FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
+  ref.watch(transactionChangeProvider); // Re-run when database changes
+  final settings = ref.watch(settingsProvider);
+  final repo = ref.watch(transactionRepositoryProvider);
+  
+  final cycleRange = FinancialUtils.getCurrentCycleRange(settings.monthStartDay);
+  
+  final rangeSummary = await repo.getRangeSummary(cycleRange.start, cycleRange.end);
+  final txns = await repo.getTransactionsByDateRange(cycleRange.start, cycleRange.end);
+  
+  double income = rangeSummary['income'] ?? 0;
+  double expense = rangeSummary['expense'] ?? 0;
+  double balance = income - expense;
+  double openingBalance = 0;
+
+  if (settings.carryForwardEnabled) {
+    openingBalance = await repo.getNetBalanceBefore(cycleRange.start);
+    balance += openingBalance;
+  }
+  
+  return {
+    'income': income,
+    'expense': expense,
+    'balance': balance,
+    'openingBalance': openingBalance,
+    'startDate': cycleRange.start,
+    'endDate': cycleRange.end,
+    'transactionCount': txns.length,
+  };
 });
 
 final recentTransactionsProvider =
-    Provider.autoDispose<AsyncValue<List<TransactionModel>>>((ref) {
-  return ref.watch(transactionListProvider).whenData(
-        (all) => all.take(5).toList(),
-      );
+    FutureProvider.autoDispose<List<TransactionModel>>((ref) async {
+  ref.watch(transactionChangeProvider); // Re-run when database changes
+  final repo = ref.watch(transactionRepositoryProvider);
+  return repo.getRecent(5);
 });
 
 final allCategoriesProvider =
@@ -83,17 +102,30 @@ class DashboardPage extends ConsumerWidget {
         slivers: [
           _buildAppBar(context, ref, settings, security, now),
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                summary.isEmpty
-                    ? _SummarySectionSkeleton()
-                    : _SummarySection(
-                        income: summary['income'] ?? 0,
-                        expense: summary['expense'] ?? 0,
-                        balance: summary['balance'] ?? 0,
-                        currency: settings.currency,
-                      ),
+                const SizedBox(height: 16),
+                summary.when(
+                  data: (data) => _SummarySection(
+                    income: data['income'] ?? 0,
+                    expense: data['expense'] ?? 0,
+                    balance: data['balance'] ?? 0,
+                    openingBalance: (data['openingBalance'] as double?) ?? 0,
+                    transactionCount: data['transactionCount'] as int? ?? 0,
+                    startDate: data['startDate'] as DateTime,
+                    endDate: data['endDate'] as DateTime,
+                    currency: settings.currency,
+                    carryForwardEnabled: settings.carryForwardEnabled,
+                  ),
+                  loading: () => _SummarySectionSkeleton(),
+                  error: (_, __) => const SizedBox.shrink(),
+                ),
+                const SmsPendingBanner(),
+                const SizedBox(height: 20),
+                const _UpcomingRenewalsWidget(),
+                const SizedBox(height: 16),
+                const _DebtSummaryWidget(),
                 const SizedBox(height: 24),
 
                 Row(
@@ -124,8 +156,27 @@ class DashboardPage extends ConsumerWidget {
                             category: cat,
                             currency: settings.currency,
                             isTapMode: isTapMode,
-                            onEdit: () => context
-                                .push('/add-transaction', extra: {'edit': t}),
+                            onEdit: () {
+                              if (t.isDebt) {
+                                final personName = (t.personName != null && t.personName!.isNotEmpty)
+                                    ? t.personName!
+                                    : (t.description.startsWith('Lent to ')
+                                        ? t.description.substring(8).trim()
+                                        : (t.description.startsWith('Borrowed from ')
+                                            ? t.description.substring(14).trim()
+                                            : null));
+                                AddDebtBottomSheet.show(
+                                  context,
+                                  editTransaction: t,
+                                  initialAmount: t.amount,
+                                  initialDebtType: t.debtType,
+                                  initialPersonName: personName,
+                                  onSaved: () => ref.read(transactionListProvider.notifier).refresh(),
+                                );
+                              } else {
+                                context.push('/add-transaction', extra: {'edit': t});
+                              }
+                            },
                             onDuplicate: () => context.push('/add-transaction',
                                 extra: {'duplicate': t}),
                             onDelete: () => _confirmDelete(context, ref, t),
@@ -168,8 +219,8 @@ class DashboardPage extends ConsumerWidget {
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: theme.colorScheme.error,
-              foregroundColor: theme.colorScheme.onError,
+              backgroundColor: theme.colorScheme.primary,
+              foregroundColor: theme.colorScheme.onPrimary,
             ),
             child: Text(AppLocalizations.of(context)!.delete),
           ),
@@ -201,140 +252,130 @@ class DashboardPage extends ConsumerWidget {
   SliverAppBar _buildAppBar(
       BuildContext context, WidgetRef ref, SettingsState settings, SecurityState security, DateTime now) {
     final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final tt = theme.textTheme;
     return SliverAppBar(
-      expandedHeight: 70,
       pinned: true,
       elevation: 0,
-      backgroundColor: theme.colorScheme.surface.withOpacity(0.8),
-      flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          padding: const EdgeInsets.fromLTRB(20, 54, 20, 10),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _GreetingText(userName: settings.userName),
-                  Text(now.toDisplayShort(),
-                      style: Theme.of(context).textTheme.bodySmall),
-                ],
-              ),
-              Builder(builder: (ctx) {
-                final cs = Theme.of(ctx).colorScheme;
-                final tt = Theme.of(ctx).textTheme;
-                final l10n = AppLocalizations.of(ctx)!;
-                return PopupMenuButton<String>(
-                  offset: const Offset(0, 48), // Reduced offset to pull menu up
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 6,
-                  color: cs.surface,
-                  // position: PopupMenuPosition.under handles bottom-left/right, but offset 44 is safer
-                  onSelected: (value) {
-                    if (value == 'avatar') {
-                      showAvatarSelectionModal(context: context, ref: ref, settings: settings);
-                    } else if (value == 'pin') {
-                      context.push('/set-pin', extra: {'changing': true});
-                    } else if (value == 'budget') {
-                      context.push('/budget');
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      enabled: false,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 16,
-                            backgroundColor: cs.primaryContainer,
-                            backgroundImage: settings.userAvatar != null
-                                ? (settings.userAvatar!.startsWith('assets/')
-                                    ? AssetImage(settings.userAvatar!)
-                                    : FileImage(File(settings.userAvatar!)) as ImageProvider)
-                                : null,
-                            child: settings.userAvatar == null
-                                ? Text(
-                                    settings.userName.isNotEmpty
-                                        ? settings.userName[0].toUpperCase()
-                                        : '?',
-                                    style: tt.labelMedium?.copyWith(
-                                        color: cs.onPrimaryContainer,
-                                        fontWeight: FontWeight.bold),
-                                  )
-                                : null,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  settings.userName.isEmpty ? l10n.user : settings.userName,
-                                  style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold, height: 1.1),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                Text(
-                                  l10n.trustTrackerUser,
-                                  style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant, height: 1.1),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuDivider(height: 1),
-                    PopupMenuItem(
-                      value: 'avatar',
-                      height: 44,
-                      child: _buildPopupItem(ctx, Icons.person_outline_rounded, l10n.chooseAvatar),
-                    ),
-                    PopupMenuItem(
-                      value: 'pin',
-                      height: 44,
-                      child: _buildPopupItem(ctx, Icons.lock_outline_rounded, 
-                          security.isPinEnabled ? l10n.changePin : l10n.setPin),
-                    ),
-                    PopupMenuItem(
-                      value: 'budget',
-                      height: 44,
-                      child: _buildPopupItem(ctx, Icons.account_balance_wallet_outlined, l10n.setBudget),
-                    ),
-                  ],
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: cs.primary.withOpacity(0.12), width: 2),
-                    ),
-                    child: CircleAvatar(
-                      radius: 20,
-                      backgroundColor: cs.primaryContainer,
-                      backgroundImage: settings.userAvatar != null
-                          ? (settings.userAvatar!.startsWith('assets/')
-                              ? AssetImage(settings.userAvatar!)
-                              : FileImage(File(settings.userAvatar!)) as ImageProvider)
-                          : null,
-                      child: settings.userAvatar == null
-                          ? Text(
-                              settings.userName.isNotEmpty
-                                  ? settings.userName[0].toUpperCase()
-                                  : '?',
-                              style: tt.titleLarge?.copyWith(
-                                  color: cs.onPrimaryContainer,
-                                  fontWeight: FontWeight.bold),
-                            )
-                          : null,
-                    ),
-                  ),
-                );
-              }),
-            ],
+      backgroundColor: cs.surface.withOpacity(0.95),
+      toolbarHeight: 90,
+      titleSpacing: 16,
+      title: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _GreetingText(userName: settings.userName),
+                const SizedBox(height: 2),
+                Text(now.toDisplayShort(),
+                    style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant)),
+              ],
+            ),
           ),
-        ),
+          Builder(builder: (ctx) {
+            final l10n = AppLocalizations.of(ctx)!;
+            return PopupMenuButton<String>(
+              offset: const Offset(0, 56),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              elevation: 6,
+              color: cs.surface,
+              onSelected: (value) {
+                if (value == 'avatar') {
+                  showAvatarSelectionModal(context: context, ref: ref, settings: settings);
+                } else if (value == 'pin') {
+                  context.push('/set-pin', extra: {'changing': true});
+                } else if (value == 'budget') {
+                  context.push('/budget');
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  enabled: false,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 16,
+                        backgroundColor: cs.primaryContainer,
+                        backgroundImage: settings.userAvatar != null
+                            ? (settings.userAvatar!.startsWith('assets/')
+                                ? AssetImage(settings.userAvatar!)
+                                : FileImage(File(settings.userAvatar!)) as ImageProvider)
+                            : null,
+                        child: settings.userAvatar == null
+                            ? Text(
+                                settings.userName.isNotEmpty
+                                    ? settings.userName[0].toUpperCase()
+                                    : '?',
+                                style: tt.labelMedium?.copyWith(
+                                    color: cs.onPrimaryContainer,
+                                    fontWeight: FontWeight.bold),
+                              )
+                            : null,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              settings.userName.isEmpty ? l10n.user : settings.userName,
+                              style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold, height: 1.1),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              l10n.trustTrackerUser,
+                              style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant, height: 1.1),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const PopupMenuDivider(height: 1),
+                PopupMenuItem(
+                  value: 'avatar',
+                  height: 44,
+                  child: _buildPopupItem(ctx, Icons.person_outline_rounded, l10n.chooseAvatar),
+                ),
+                PopupMenuItem(
+                  value: 'pin',
+                  height: 44,
+                  child: _buildPopupItem(ctx, Icons.lock_outline_rounded, 
+                      security.isPinEnabled ? l10n.changePin : l10n.setPin),
+                ),
+                PopupMenuItem(
+                  value: 'budget',
+                  height: 44,
+                  child: _buildPopupItem(ctx, Icons.account_balance_wallet_outlined, l10n.setBudget),
+                ),
+              ],
+              child: CircleAvatar(
+                radius: 20,
+                backgroundColor: cs.primaryContainer,
+                backgroundImage: settings.userAvatar != null
+                    ? (settings.userAvatar!.startsWith('assets/')
+                        ? AssetImage(settings.userAvatar!)
+                        : FileImage(File(settings.userAvatar!)) as ImageProvider)
+                    : null,
+                child: settings.userAvatar == null
+                    ? Text(
+                        settings.userName.isNotEmpty
+                            ? settings.userName[0].toUpperCase()
+                            : '?',
+                        style: tt.titleLarge?.copyWith(
+                            color: cs.onPrimaryContainer,
+                            fontWeight: FontWeight.bold),
+                      )
+                    : null,
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
@@ -506,18 +547,35 @@ class _DashboardTransactionTile extends StatelessWidget {
       Color bgColor, Color iconColor, ColorScheme cs3) {
     final theme = Theme.of(context);
     final tt = theme.textTheme;
+    final isDebt = transaction.isDebt;
+    final isGiven = (transaction.debtType ?? 'given') == 'given';
+    final avatarLetter = isDebt
+        ? (isGiven ? 'L' : 'D')
+        : (transaction.description.isNotEmpty
+            ? transaction.description[0].toUpperCase()
+            : '?');
+    final avatarColor = isDebt
+        ? (isGiven ? cs3.primary : const Color(0xFFD97706))
+        : iconColor;
+    final avatarBg = isDebt
+        ? (isGiven
+            ? cs3.primary.withValues(alpha: 0.12)
+            : const Color(0xFFF59E0B).withValues(alpha: 0.15))
+        : bgColor;
+
     return Row(children: [
       Container(
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-            color: bgColor, borderRadius: BorderRadius.circular(12)),
+            color: avatarBg, borderRadius: BorderRadius.circular(12)),
         child: Center(
           child: Text(
-            transaction.description.isNotEmpty
-                ? transaction.description[0].toUpperCase()
-                : '?',
-            style: tt.titleLarge?.copyWith(color: iconColor),
+            avatarLetter,
+            style: tt.titleLarge?.copyWith(
+              color: avatarColor,
+              fontWeight: isDebt ? FontWeight.w800 : FontWeight.w600,
+            ),
           ),
         ),
       ),
@@ -528,10 +586,73 @@ class _DashboardTransactionTile extends StatelessWidget {
               style: tt.titleMedium,
               maxLines: 1,
               overflow: TextOverflow.ellipsis),
-          Text(
-            '${category?.name ?? AppLocalizations.of(context)!.uncategorized} · ${transaction.date.toDisplayShort()}',
-            style: tt.bodySmall,
-          ),
+          const SizedBox(height: 3),
+          if (isDebt)
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                  decoration: BoxDecoration(
+                    color: transaction.isSettled
+                        ? cs3.onSurface.withValues(alpha: 0.08)
+                        : (isGiven
+                            ? cs3.primary.withValues(alpha: 0.14)
+                            : const Color(0xFFF59E0B).withValues(alpha: 0.16)),
+                    borderRadius: BorderRadius.circular(5),
+                    border: Border.all(
+                      color: transaction.isSettled
+                          ? cs3.onSurface.withValues(alpha: 0.18)
+                          : (isGiven
+                              ? cs3.primary.withValues(alpha: 0.35)
+                              : const Color(0xFFF59E0B).withValues(alpha: 0.4)),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        transaction.isSettled
+                            ? Icons.check_circle_outline_rounded
+                            : (isGiven ? Icons.arrow_outward_rounded : Icons.south_west_rounded),
+                        size: 10,
+                        color: transaction.isSettled
+                            ? cs3.onSurface.withValues(alpha: 0.7)
+                            : (isGiven ? cs3.primary : const Color(0xFFD97706)),
+                      ),
+                      const SizedBox(width: 2.5),
+                      Text(
+                        transaction.isSettled
+                            ? 'SETTLED'
+                            : (isGiven ? 'LENT' : 'DEBT'),
+                        style: TextStyle(
+                          color: transaction.isSettled
+                              ? cs3.onSurface.withValues(alpha: 0.7)
+                              : (isGiven ? cs3.primary : const Color(0xFFB45309)),
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    '${transaction.date.toDisplayShort()}${transaction.personName != null ? " · ${transaction.personName}" : ""}',
+                    style: tt.bodySmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            )
+          else
+            Text(
+              '${category?.name ?? AppLocalizations.of(context)!.uncategorized} · ${transaction.date.toDisplayShort()}',
+              style: tt.bodySmall,
+            ),
         ]),
       ),
       Text(
@@ -542,132 +663,296 @@ class _DashboardTransactionTile extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// PREMIUM MICRO-COMPONENTS (DASHBOARD SUMMARY)
+// ─────────────────────────────────────────────────────────────────────────────
+
 class _SummarySection extends StatelessWidget {
-  final double income, expense, balance;
+  final double income, expense, balance, openingBalance;
+  final int transactionCount;
   final String currency;
-  const _SummarySection(
-      {required this.income,
-      required this.expense,
-      required this.balance,
-      required this.currency});
+  final DateTime startDate, endDate;
+  final bool carryForwardEnabled;
+
+  const _SummarySection({
+    required this.income,
+    required this.expense,
+    required this.balance,
+    required this.openingBalance,
+    required this.transactionCount,
+    required this.startDate,
+    required this.endDate,
+    required this.currency,
+    required this.carryForwardEnabled,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _FintechHeaderRow(balance: balance),
+        const SizedBox(height: 14),
+        _UnifiedSummaryCard(
+          balance: balance,
+          openingBalance: openingBalance,
+          income: income,
+          expense: expense,
+          currency: currency,
+          carryForwardEnabled: carryForwardEnabled,
+          startDate: startDate,
+          endDate: endDate,
+        ),
+      ],
+    );
+  }
+}
+
+class _FintechHeaderRow extends StatelessWidget {
+  final double balance;
+  const _FintechHeaderRow({required this.balance});
+  
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final tt = theme.textTheme;
+    final isPositive = balance >= 0;
+    
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(AppLocalizations.of(context)!.netBalance, style: tt.labelLarge?.copyWith(fontWeight: FontWeight.w800)),
+            Text("Monthly Summary", style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
+          ],
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: isPositive ? AppColors.success.withOpacity(0.12) : AppColors.error.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            children: [
+              Icon(isPositive ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded, 
+                   size: 14, color: isPositive ? AppColors.success : AppColors.error),
+              const SizedBox(width: 4),
+              Text(
+                "Health", 
+                style: tt.labelMedium?.copyWith(
+                  color: isPositive ? AppColors.success : AppColors.error,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _UnifiedSummaryCard extends StatelessWidget {
+  final double balance, openingBalance, income, expense;
+  final String currency;
+  final bool carryForwardEnabled;
+  final DateTime startDate, endDate;
+
+  const _UnifiedSummaryCard({
+    required this.balance,
+    required this.openingBalance,
+    required this.income,
+    required this.expense,
+    required this.currency,
+    required this.carryForwardEnabled,
+    required this.startDate,
+    required this.endDate,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final tt = theme.textTheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
-    return Column(children: [
-      _BalanceCardAnimationWrapper(
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: cs.primary.withOpacity(0.08), // Sophisticated accent tint
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: cs.primary.withOpacity(0.12)),
-          ),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(AppLocalizations.of(context)!.netBalance,
-                style: tt.bodySmall?.copyWith(
-                    color: cs.primary.withOpacity(0.6), // Accent-tinted label
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.1)),
-            const SizedBox(height: 8),
-            _AnimatedBalanceText(
-              value: balance,
-              currency: currency,
-              style: tt.balanceAmount.copyWith(
-                color: cs.onSurface,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -1.0,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: cs.primary.withOpacity(0.06),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.calendar_today_rounded, size: 10, color: cs.primary.withOpacity(0.6)),
-                  const SizedBox(width: 6),
-                  Text(AppLocalizations.of(context)!.thisMonth,
-                      style: tt.labelSmall?.copyWith(color: cs.primary.withOpacity(0.6))),
-                ],
-              ),
-            ),
-          ]),
-        ),
-      ),
-      const SizedBox(height: 12),
-      Row(children: [
-        Expanded(
-            child: _MiniCard(
-                label: AppLocalizations.of(context)!.income,
-                amount: income,
-                currency: currency,
-                color: AppColors.success,
-                icon: Icons.arrow_upward_rounded)),
-        const SizedBox(width: 12),
-        Expanded(
-            child: _MiniCard(
-                label: AppLocalizations.of(context)!.expenses,
-                amount: expense,
-                currency: currency,
-                color: cs.error,
-                icon: Icons.arrow_downward_rounded)),
-      ]),
-    ]);
-  }
-}
-
-class _MiniCard extends StatelessWidget {
-  final String label, currency;
-  final double amount;
-  final Color color;
-  final IconData icon;
-  const _MiniCard(
-      {required this.label,
-      required this.amount,
-      required this.currency,
-      required this.color,
-      required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final cs2 = theme.colorScheme;
-    final tt = theme.textTheme;
     return Container(
-      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       decoration: BoxDecoration(
-        color: cs2.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cs2.outline.withOpacity(0.1)),
+        gradient: LinearGradient(
+          colors: [
+            cs.primary.withValues(alpha: isDark ? 0.14 : 0.08),
+            cs.surface,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: cs.outlineVariant.withValues(alpha: isDark ? 0.22 : 0.4),
+          width: 1.1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
-      child: Row(children: [
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Row 1: Date Range Pill
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
+            decoration: BoxDecoration(
+              color: cs.surface.withValues(alpha: isDark ? 0.6 : 0.9),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: cs.outline.withValues(alpha: 0.12)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.calendar_today_rounded, size: 11, color: cs.primary),
+                const SizedBox(width: 5),
+                Text(
+                  '${intl.DateFormat('d MMM').format(startDate)} — ${intl.DateFormat('d MMM').format(endDate)}',
+                  style: tt.labelSmall?.copyWith(
+                    color: cs.onSurface,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // Row 2: Net Balance Display
+          _AnimatedBalanceText(
+            value: balance,
+            currency: currency,
+            style: tt.displaySmall?.copyWith(
+              color: cs.onSurface,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.8,
+              fontSize: 32,
+            ) ?? const TextStyle(),
+          ),
+          if (carryForwardEnabled && openingBalance != 0) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Opening Balance • ${openingBalance.toCurrency(currency)}',
+              style: tt.labelSmall?.copyWith(
+                color: cs.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+                fontSize: 11,
+              ),
+            ),
+          ],
+
+          const SizedBox(height: 12),
+          // Subtle inner divider
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: cs.outlineVariant.withValues(alpha: isDark ? 0.18 : 0.3),
+          ),
+          const SizedBox(height: 12),
+
+          // Row 3: Compact Income & Expenses section
+          Row(
+            children: [
+              Expanded(
+                child: _buildMetricItem(
+                  context,
+                  l10n.income,
+                  income,
+                  currency,
+                  AppColors.success,
+                  Icons.arrow_upward_rounded,
+                ),
+              ),
+              Container(
+                width: 1,
+                height: 32,
+                color: cs.outlineVariant.withValues(alpha: isDark ? 0.18 : 0.3),
+                margin: const EdgeInsets.symmetric(horizontal: 10),
+              ),
+              Expanded(
+                child: _buildMetricItem(
+                  context,
+                  l10n.expenses,
+                  expense,
+                  currency,
+                  AppColors.error,
+                  Icons.arrow_downward_rounded,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMetricItem(
+    BuildContext context,
+    String label,
+    double value,
+    String currency,
+    Color color,
+    IconData icon,
+  ) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final tt = theme.textTheme;
+
+    return Row(
+      children: [
         Container(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(7),
           decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10)),
-          child: Icon(icon, color: color, size: 18),
+            color: color.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(9),
+          ),
+          child: Icon(icon, color: color, size: 15),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 9),
         Expanded(
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(label,
-                style: tt.labelSmall),
-            Text(amount.toCurrencyCompact(currency),
-                style: tt.titleSmall),
-          ]),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                label,
+                style: tt.labelSmall?.copyWith(
+                  color: cs.onSurfaceVariant,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 1),
+              Text(
+                value.toCurrencyCompact(currency),
+                style: tt.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14.5,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
-      ]),
+      ],
     );
   }
 }
@@ -677,10 +962,10 @@ class _SummarySectionSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Container(
-      height: 160,
+      height: 155,
       decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(20),
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(22),
       ),
     );
   }
@@ -892,5 +1177,272 @@ class _GradientRotation extends GradientTransform {
   @override
   Matrix4? transform(Rect bounds, {TextDirection? textDirection}) {
     return Matrix4.translationValues(bounds.width * progress * 2, 0, 0);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UPCOMING RENEWALS WIDGET
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _UpcomingRenewalsWidget extends ConsumerWidget {
+  const _UpcomingRenewalsWidget();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final asyncSubs = ref.watch(upcomingSubscriptionsProvider);
+    final currency = ref.watch(settingsProvider).currency;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final tt = theme.textTheme;
+
+    return asyncSubs.when(
+      data: (subs) {
+        final topSubs = subs.isEmpty ? <SubscriptionModel>[] : subs.take(2).toList();
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Upcoming Payments', style: tt.headlineSmall),
+                TextButton(
+                  onPressed: () => context.go('/subscriptions'),
+                  child: Text('Manage', style: tt.labelLarge?.copyWith(color: cs.primary)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: cs.surface,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: cs.outline.withOpacity(0.1)),
+              ),
+              child: topSubs.isEmpty
+                  ? Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: cs.surfaceContainerHighest,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.event_repeat, color: cs.onSurfaceVariant.withOpacity(0.7), size: 22),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('No upcoming payments', style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                              Text('Add one to track it', style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
+                            ],
+                          ),
+                        ),
+                        FilledButton.tonal(
+                          onPressed: () => context.push('/add-subscription'),
+                          style: FilledButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            minimumSize: const Size(0, 36),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          child: const Text('Add'),
+                        ),
+                      ],
+                    )
+                  : Column(
+                children: [
+                  for (int i = 0; i < topSubs.length; i++) ...[
+                    Builder(
+                      builder: (context) {
+                        final sub = topSubs[i];
+                        final due = DateTime(sub.nextDueDate.year, sub.nextDueDate.month, sub.nextDueDate.day);
+                        final daysDue = due.difference(today).inDays;
+                        
+                        String dueText;
+                        if (daysDue < 0) dueText = 'Overdue';
+                        else if (daysDue == 0) dueText = 'Today';
+                        else if (daysDue == 1) dueText = 'Tomorrow';
+                        else dueText = '$daysDue Days';
+
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.event_repeat, size: 16, color: cs.primary),
+                                const SizedBox(width: 8),
+                                Text('${sub.name} — $dueText', style: tt.bodyMedium),
+                              ],
+                            ),
+                            Text(sub.amount.toCurrency(currency), style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                          ],
+                        );
+                      }
+                    ),
+                    if (i < topSubs.length - 1)
+                      Divider(color: cs.outline.withOpacity(0.1), height: 16),
+                  ]
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+}
+
+class _DebtSummaryWidget extends ConsumerWidget {
+  const _DebtSummaryWidget();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final debtAsync = ref.watch(debtSummaryProvider);
+    final currencyCode = ref.watch(settingsProvider).currency;
+    final currency = getCurrencySymbol(currencyCode);
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final tt = theme.textTheme;
+    final successColor = AppColors.getSuccess(context);
+    final errorColor = AppColors.getError(context);
+
+    return debtAsync.when(
+      data: (summary) {
+        final double totalGiven = summary['totalGiven'] ?? 0.0;
+        final double totalTaken = summary['totalTaken'] ?? 0.0;
+        final int activeCount = summary['activeCount'] ?? 0;
+        final int overdueCount = summary['overdueCount'] ?? 0;
+
+        if (activeCount == 0) return const SizedBox.shrink();
+
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: cs.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: overdueCount > 0 ? errorColor.withOpacity(0.3) : cs.outline.withOpacity(0.12),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: cs.shadow.withOpacity(0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: cs.primary.withOpacity(0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.handshake_outlined, color: cs.primary, size: 18),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Active Debt & Lent',
+                        style: tt.labelLarge?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  InkWell(
+                    onTap: () => context.go('/debt-manager'),
+                    child: Row(
+                      children: [
+                        Text(
+                          'View All',
+                          style: tt.labelSmall?.copyWith(fontSize: 12, fontWeight: FontWeight.bold, color: cs.primary),
+                        ),
+                        const SizedBox(width: 2),
+                        Icon(Icons.chevron_right_rounded, size: 16, color: cs.primary),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Icon(Icons.arrow_upward_rounded, color: successColor, size: 16),
+                        const SizedBox(width: 4),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Lent (Receivable)', style: tt.labelSmall?.copyWith(fontSize: 10, color: cs.onSurfaceVariant)),
+                            Text(
+                              '$currency${totalGiven.toStringAsFixed(0)}',
+                              style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 14, color: successColor),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Icon(Icons.arrow_downward_rounded, color: errorColor, size: 16),
+                        const SizedBox(width: 4),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Borrowed (Payable)', style: tt.labelSmall?.copyWith(fontSize: 10, color: cs.onSurfaceVariant)),
+                            Text(
+                              '$currency${totalTaken.toStringAsFixed(0)}',
+                              style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 14, color: errorColor),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (overdueCount > 0) ...[
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: errorColor.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.warning_amber_rounded, size: 14, color: errorColor),
+                      const SizedBox(width: 6),
+                      Text(
+                        '$overdueCount debt reminder(s) are overdue today!',
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: errorColor),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
   }
 }

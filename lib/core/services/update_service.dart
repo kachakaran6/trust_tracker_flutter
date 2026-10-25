@@ -4,63 +4,123 @@ import 'package:in_app_update/in_app_update.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class UpdateService {
   final Ref ref;
+  final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
 
   UpdateService(this.ref);
 
   /// Checks if an update is available on the Play Store.
-  /// If available, shows a custom dialog to the user.
-  /// Set [isDebugUpdateTest] to true to simulate update available in debug mode.
-  static const bool isDebugUpdateTest = false;
-
+  /// If available, triggers either immediate or flexible update based on priority.
   Future<void> checkForUpdate(BuildContext context) async {
     try {
-      bool updateAvailable = false;
-      AppUpdateInfo? info;
-
-      // Simulation logic for testing UI without Play Store dependency
-      if (!kReleaseMode && isDebugUpdateTest) {
-        updateAvailable = true;
-      } else {
-        info = await InAppUpdate.checkForUpdate();
-        updateAvailable =
-            info.updateAvailability == UpdateAvailability.updateAvailable;
+      if (!kReleaseMode) {
+        debugPrint('Update check skipped: Not in release mode');
+        return;
       }
 
+      final info = await InAppUpdate.checkForUpdate();
+      final bool updateAvailable = info.updateAvailability == UpdateAvailability.updateAvailable;
+
       if (updateAvailable) {
-        if (!context.mounted) return;
-        _showUpdateDialog(context, info);
+        _analytics.logEvent(name: 'update_available', parameters: {
+          'priority': info.updatePriority,
+          'available_version_code': info.availableVersionCode as Object,
+        });
+
+        _showUpdateNotification();
+
+        // Priority >= 4 is considered a critical update (can be adjusted)
+        if (info.updatePriority >= 4) {
+          await _performImmediateUpdate(context);
+        } else {
+          await _performFlexibleUpdate(context, info);
+        }
       }
     } catch (e) {
       if (e.toString().contains('ERROR_APP_NOT_OWNED')) {
-        debugPrint(
-            'In-app update skipped: app not from Play Store (expected in debug/APK)');
+        debugPrint('In-app update skipped: app not from Play Store (expected in debug/APK)');
         return;
       }
       debugPrint('Update check failed: $e');
     }
   }
 
+  Future<void> _showUpdateNotification() async {
+    try {
+      final notifications = FlutterLocalNotificationsPlugin();
+      const androidInit = AndroidInitializationSettings('tt_stat_icon');
+      await notifications.initialize(const InitializationSettings(android: androidInit));
+
+      const androidDetails = AndroidNotificationDetails(
+        'update_channel', 'App Updates',
+        channelDescription: 'Notifications for app updates',
+        importance: Importance.max, 
+        priority: Priority.high,
+        color: Color(0xFF008B9C),
+        icon: 'tt_stat_icon',
+        styleInformation: BigTextStyleInformation('A new version of Trust Tracker is ready with improvements, fixes, and new features.'),
+      );
+
+      await notifications.show(
+        300,
+        'New Update Available! \uD83C\uDF89',
+        'A new version of Trust Tracker is ready with improvements, fixes, and new features.',
+        const NotificationDetails(android: androidDetails),
+      );
+    } catch (e) {
+      debugPrint('Failed to show update notification: $e');
+    }
+  }
+
+  Future<void> _performImmediateUpdate(BuildContext context) async {
+    try {
+      _analytics.logEvent(name: 'update_started', parameters: {'type': 'immediate'});
+      await InAppUpdate.performImmediateUpdate();
+      _analytics.logEvent(name: 'update_completed', parameters: {'type': 'immediate'});
+    } catch (e) {
+      debugPrint('Immediate update failed: $e');
+      _analytics.logEvent(name: 'update_skipped', parameters: {'type': 'immediate', 'error': e.toString()});
+    }
+  }
+
+  Future<void> _performFlexibleUpdate(BuildContext context, AppUpdateInfo info) async {
+    try {
+      if (!context.mounted) return;
+      
+      // We can still show our custom UI before starting the flexible update
+      // But the user requested the "Modern update card". We will use our custom dialog
+      // to prompt them, and if they click "Update Now", we start the flexible update.
+      _showUpdateDialog(context, info);
+    } catch (e) {
+      debugPrint('Flexible update init failed: $e');
+    }
+  }
+
   /// Manually check for updates from settings.
   Future<bool> manualCheck(BuildContext context) async {
     try {
-      bool updateAvailable = false;
-      AppUpdateInfo? info;
-
-      if (!kReleaseMode && isDebugUpdateTest) {
-        updateAvailable = true;
-      } else {
-        info = await InAppUpdate.checkForUpdate();
-        updateAvailable =
-            info.updateAvailability == UpdateAvailability.updateAvailable;
+      if (!kReleaseMode) {
+        _showUpdateDialog(context, null, isDebug: true);
+        return true;
       }
+
+      final info = await InAppUpdate.checkForUpdate();
+      final bool updateAvailable = info.updateAvailability == UpdateAvailability.updateAvailable;
 
       if (updateAvailable) {
         if (!context.mounted) return true;
-        _showUpdateDialog(context, info);
+        
+        _showUpdateNotification();
+        
+        if (info.updatePriority >= 4) {
+           await _performImmediateUpdate(context);
+        } else {
+           _showUpdateDialog(context, info);
+        }
         return true;
       }
       return false;
@@ -75,12 +135,7 @@ class UpdateService {
     }
   }
 
-  /// Trigger the update dialog manually for UI testing.
-  void testUpdateUI(BuildContext context) {
-    _showUpdateDialog(context, null);
-  }
-
-  void _showUpdateDialog(BuildContext context, AppUpdateInfo? info) {
+  void _showUpdateDialog(BuildContext context, AppUpdateInfo? info, {bool isDebug = false}) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -105,7 +160,7 @@ class UpdateService {
             style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.5),
           ),
           content: Text(
-            'A new version of Trust Tracker is available. Please update to get the latest features and security improvements.',
+            'A new version of Trust Tracker is ready with improvements, fixes, and new features.',
             textAlign: TextAlign.center,
             style: tt.bodyMedium?.copyWith(color: cs.onSurface.withOpacity(0.6), height: 1.5),
           ),
@@ -119,7 +174,21 @@ class UpdateService {
                   onPressed: () async {
                     HapticFeedback.mediumImpact();
                     Navigator.pop(context);
-                    await _openPlayStore();
+                    
+                    if (isDebug) {
+                      debugPrint('Debug mode: Update Now clicked');
+                      return;
+                    }
+
+                    _analytics.logEvent(name: 'update_started', parameters: {'type': 'flexible'});
+                    try {
+                      await InAppUpdate.startFlexibleUpdate();
+                      await InAppUpdate.completeFlexibleUpdate();
+                      _analytics.logEvent(name: 'update_completed', parameters: {'type': 'flexible'});
+                    } catch (e) {
+                      debugPrint('Flexible update error: $e');
+                      _analytics.logEvent(name: 'update_skipped', parameters: {'type': 'flexible', 'error': e.toString()});
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size.fromHeight(52),
@@ -139,6 +208,7 @@ class UpdateService {
                   onPressed: () {
                     HapticFeedback.lightImpact();
                     Navigator.pop(context);
+                    _analytics.logEvent(name: 'update_skipped', parameters: {'type': 'flexible', 'reason': 'user_dismissed'});
                   },
                   style: TextButton.styleFrom(
                     minimumSize: const Size.fromHeight(48),

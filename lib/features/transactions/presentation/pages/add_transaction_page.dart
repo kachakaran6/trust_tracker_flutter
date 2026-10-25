@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:trust_tracker_flutter/features/categories/data/models/category_model.dart';
-import 'package:trust_tracker_flutter/features/categories/data/repositories/category_repository.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
 import 'package:trust_tracker_flutter/features/transactions/presentation/providers/transaction_provider.dart';
 import 'package:trust_tracker_flutter/features/transactions/presentation/widgets/category_dropdown_field.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
 import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
 import 'package:intl/intl.dart';
+import 'package:trust_tracker_flutter/features/transactions/presentation/widgets/add_debt_bottom_sheet.dart';
 import 'package:trust_tracker_flutter/generated/app_localizations.dart';
 
 // Removed unused provider
@@ -36,11 +37,19 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
   final _amountController = TextEditingController();
   final _descController = TextEditingController();
   final _noteController = TextEditingController();
+  final _personNameController = TextEditingController();
 
   late DateTime _selectedDate;
   TimeOfDay _selectedTime = TimeOfDay.now();
   CategoryModel? _selectedCategory;
   bool _isLoading = false;
+
+  // Debt & Lent state
+  bool _isDebt = false;
+  String _debtType = 'given'; // 'given' or 'taken'
+  DateTime? _dueDate;
+  int _selectedDurationDays = 7;
+  bool _affectsBalance = true;
 
   bool get _isEditMode => widget.editTransaction != null;
   bool get _isDuplicateMode => widget.duplicateTransaction != null;
@@ -74,6 +83,14 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
       _descController.text = source.description;
       _noteController.text = source.note ?? '';
 
+      _isDebt = source.isDebt;
+      _debtType = source.debtType ?? (source.type == TransactionType.expense ? 'given' : 'taken');
+      _personNameController.text = (source.personName != null && source.personName!.isNotEmpty)
+          ? source.personName!
+          : _extractPersonName(source.description);
+      _dueDate = source.dueDate;
+      _affectsBalance = source.affectsBalance;
+
       if (edit != null) {
         _selectedDate = edit.date;
         _selectedTime = TimeOfDay.fromDateTime(edit.date);
@@ -84,6 +101,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
     } else {
       _selectedDate = DateTime.now();
       _selectedTime = TimeOfDay.now();
+      _dueDate = _selectedDate.add(const Duration(days: 7));
     }
   }
 
@@ -94,6 +112,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
     _amountController.dispose();
     _descController.dispose();
     _noteController.dispose();
+    _personNameController.dispose();
     super.dispose();
   }
 
@@ -111,10 +130,18 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    if (picked != null) setState(() => _selectedDate = picked);
+    if (picked != null) {
+      setState(() {
+        _selectedDate = picked;
+        if (_isDebt && (_dueDate == null || _dueDate!.isBefore(picked))) {
+          _dueDate = picked.add(Duration(days: _selectedDurationDays));
+        }
+      });
+    }
   }
+
 
   Future<void> _pickTime() async {
     final picked = await showTimePicker(
@@ -167,6 +194,13 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
             : _noteController.text.trim();
         edit.monthKey =
             '${_fullDateTime.year}-${_fullDateTime.month.toString().padLeft(2, '0')}';
+        
+        edit.isDebt = _isDebt;
+        edit.debtType = _isDebt ? _debtType : null;
+        edit.personName = _isDebt ? _personNameController.text.trim() : null;
+        edit.dueDate = _isDebt ? _dueDate : null;
+        edit.affectsBalance = _isDebt ? _affectsBalance : true;
+
         await notifier.updateTransaction(edit);
       } else {
         final t = TransactionModel.create(
@@ -178,6 +212,11 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
           note: _noteController.text.trim().isEmpty
               ? null
               : _noteController.text.trim(),
+          isDebt: _isDebt,
+          debtType: _isDebt ? _debtType : null,
+          personName: _isDebt ? _personNameController.text.trim() : null,
+          dueDate: _isDebt ? _dueDate : null,
+          affectsBalance: _isDebt ? _affectsBalance : true,
         );
         await notifier.addTransaction(t);
       }
@@ -192,6 +231,8 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
       if (mounted) setState(() => _isLoading = false);
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -316,7 +357,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
                 controller: _tabController,
                 dividerColor: Colors.transparent,
                 indicator: BoxDecoration(
-                  color: isDark ? activeAccent.withOpacity(0.1) : Colors.white,
+                  color: isDark ? activeAccent.withOpacity(0.1) : cs.surface,
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
@@ -454,6 +495,10 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
             ),
             const SizedBox(height: spSect),
 
+            // --- Debt / Lent Tracking Card ---
+            _buildDebtTrackingCard(isDark, cs, tt, activeAccent, labelColor, inputBorderColor),
+            const SizedBox(height: spSect),
+
             // --- Notes ---
             _buildSectionLabel('NOTES (OPTIONAL)', labelColor),
             const SizedBox(height: spMicro),
@@ -506,28 +551,26 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
             SizedBox(
               width: double.infinity,
               height: 56,
-              child: ElevatedButton(
+              child: FilledButton(
                 onPressed: _isLoading ? null : _save,
-                style: ElevatedButton.styleFrom(
+                style: FilledButton.styleFrom(
                   backgroundColor: activeAccent,
-                  foregroundColor: Colors.white,
-                  elevation: 4,
-                  shadowColor: activeAccent.withOpacity(0.3),
+                  foregroundColor: cs.onPrimary,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
                 child: _isLoading
-                    ? SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: isExpense ? cs.onError : Colors.white, strokeWidth: 2))
+                    ? SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: cs.onPrimary, strokeWidth: 2))
                     : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.done_rounded, size: 20),
-                          const SizedBox(width: spSmall),
+                          Icon(widget.editTransaction != null ? Icons.save_rounded : Icons.check_circle_rounded),
+                          const SizedBox(width: 8),
                           Text(
-                            _isEditMode ? 'Update Transaction' : 'Save Transaction',
+                            widget.editTransaction != null ? l10n.update : l10n.addTransaction,
                             style: tt.titleMedium?.copyWith(
-                              color: isExpense ? cs.onError : Colors.white,
                               fontWeight: FontWeight.w800,
-                              fontSize: 16,
+                              color: cs.onPrimary,
                             ),
                           ),
                         ],
@@ -550,6 +593,148 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
             color: color.withOpacity(0.5),
             fontSize: 10,
           ),
+    );
+  }
+
+  static String _extractPersonName(String desc) {
+    if (desc.startsWith('Lent to ')) return desc.substring(8).trim();
+    if (desc.startsWith('Borrowed from ')) return desc.substring(14).trim();
+    return '';
+  }
+
+  Future<void> _switchToDebtLentModal() async {
+    HapticFeedback.mediumImpact();
+    setState(() => _isDebt = true);
+    final amt = double.tryParse(_amountController.text.trim().replaceAll(',', ''));
+    final initialDebtType = _tabController.index == 0 ? 'given' : 'taken';
+    final personName = _personNameController.text.trim().isNotEmpty
+        ? _personNameController.text.trim()
+        : (widget.editTransaction?.personName ?? _extractPersonName(widget.editTransaction?.description ?? ''));
+
+    final saved = await AddDebtBottomSheet.show(
+      context,
+      initialAmount: amt != null && amt > 0 ? amt : null,
+      initialDebtType: initialDebtType,
+      initialPersonName: personName.isNotEmpty ? personName : null,
+      editTransaction: widget.editTransaction,
+    );
+
+    if (saved == true && mounted) {
+      Navigator.of(context).pop();
+    } else if (mounted) {
+      setState(() => _isDebt = false);
+    }
+  }
+
+  Widget _buildDebtTrackingCard(
+    bool isDark,
+    ColorScheme cs,
+    TextTheme tt,
+    Color activeAccent,
+    Color labelColor,
+    Color inputBorderColor,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: cs.outline.withOpacity(0.12),
+          width: 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: cs.shadow.withOpacity(isDark ? 0.2 : 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _switchToDebtLentModal,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: cs.primary.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.handshake_rounded,
+                    color: cs.primary,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'Debt / Lent Tracking',
+                            style: tt.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: cs.primary.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              'MODAL',
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w800,
+                                color: cs.primary,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _isDebt && _personNameController.text.isNotEmpty
+                            ? 'Contact: ${_personNameController.text.trim()} · Tap to configure in modal'
+                            : 'Switch directly to Debt & Lent record modal',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: labelColor.withOpacity(0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Switch.adaptive(
+                  value: _isDebt,
+                  activeTrackColor: cs.primary,
+                  activeColor: cs.onPrimary,
+                  onChanged: (val) {
+                    if (val) {
+                      _switchToDebtLentModal();
+                    } else {
+                      setState(() => _isDebt = false);
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

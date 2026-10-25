@@ -22,13 +22,98 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 11,
       onCreate: _createDB,
+      onUpgrade: _onUpgrade,
       onOpen: (db) async {
+        try {
+          await db.execute('ALTER TABLE transactions ADD COLUMN affectsBalance INTEGER DEFAULT 1;');
+        } catch (_) {}
         await _ensureDefaultCategories(db);
         await _ensureDefaultBudgets(db);
       },
     );
+  }
+
+  Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('CREATE INDEX idx_transactions_date ON transactions(date);');
+      await db.execute('CREATE INDEX idx_transactions_category ON transactions(categoryId);');
+      await db.execute('CREATE INDEX idx_transactions_monthKey ON transactions(monthKey);');
+      await db.execute('CREATE INDEX idx_categories_type ON categories(type);');
+    }
+    if (oldVersion < 3) {
+      await _createSettingsTable(db);
+    }
+    if (oldVersion < 4) {
+      await _createSubscriptionsTable(db);
+    }
+    if (oldVersion < 5) {
+      // Add subscriptionType column safely (backward compatible)
+      try {
+        await db.execute('ALTER TABLE subscriptions ADD COLUMN subscriptionType TEXT;');
+      } catch (e) {
+        // Column may already exist in fresh installs
+      }
+    }
+    if (oldVersion < 6) {
+      await _createBankingTables(db);
+    }
+    if (oldVersion < 7) {
+      // Add autoRecordExpense column to bank_loans
+      try {
+        await db.execute('ALTER TABLE bank_loans ADD COLUMN autoRecordExpense INTEGER DEFAULT 0;');
+      } catch (e) {
+        // May already exist
+      }
+      // Ensure EMI Payments category exists for older users
+      final maps = await db.query('categories', where: 'name = ?', whereArgs: ['EMI Payments']);
+      if (maps.isEmpty) {
+        await db.insert('categories', {
+          'name': 'EMI Payments',
+          'type': CategoryType.expense.index,
+          'colorHex': '#EF4444',
+          'iconName': '💸',
+          'isDefault': 1,
+        });
+      }
+    }
+    if (oldVersion < 8) {
+      // Add takenDate column to bank_loans
+      try {
+        await db.execute('ALTER TABLE bank_loans ADD COLUMN takenDate TEXT;');
+      } catch (e) {
+        // May already exist
+      }
+    }
+    if (oldVersion < 9) {
+      // Debt & Udhar tracking fields for transactions table
+      final debtColumns = [
+        'ALTER TABLE transactions ADD COLUMN isDebt INTEGER DEFAULT 0;',
+        'ALTER TABLE transactions ADD COLUMN debtType TEXT;',
+        'ALTER TABLE transactions ADD COLUMN personName TEXT;',
+        'ALTER TABLE transactions ADD COLUMN dueDate TEXT;',
+        'ALTER TABLE transactions ADD COLUMN isSettled INTEGER DEFAULT 0;',
+        'ALTER TABLE transactions ADD COLUMN settledAt TEXT;',
+      ];
+      for (final sql in debtColumns) {
+        try {
+          await db.execute(sql);
+        } catch (e) {
+          // Column may already exist
+        }
+      }
+    }
+    if (oldVersion < 10) {
+      try {
+        await db.execute('ALTER TABLE transactions ADD COLUMN affectsBalance INTEGER DEFAULT 1;');
+      } catch (e) {
+        // Column may already exist
+      }
+    }
+    if (oldVersion < 11) {
+      await _createSmsDetectionTables(db);
+    }
   }
 
   Future _createDB(Database db, int version) async {
@@ -63,9 +148,21 @@ class DatabaseHelper {
         categoryId $integerNullable,
         note $textNullable,
         monthKey $textType,
-        createdAt $textType
+        createdAt $textType,
+        isDebt INTEGER DEFAULT 0,
+        debtType $textNullable,
+        personName $textNullable,
+        dueDate $textNullable,
+        isSettled INTEGER DEFAULT 0,
+        settledAt $textNullable,
+        affectsBalance INTEGER DEFAULT 1
       )
     ''');
+
+    await db.execute('CREATE INDEX idx_transactions_date ON transactions(date);');
+    await db.execute('CREATE INDEX idx_transactions_category ON transactions(categoryId);');
+    await db.execute('CREATE INDEX idx_transactions_monthKey ON transactions(monthKey);');
+    await db.execute('CREATE INDEX idx_categories_type ON categories(type);');
 
     // Budgets Table
     await db.execute('''
@@ -77,6 +174,158 @@ class DatabaseHelper {
         createdAt $textType
       )
     ''');
+
+    // App Settings Table - Added in v3
+    await _createSettingsTable(db);
+
+    // Subscriptions Table - Added in v4
+    await _createSubscriptionsTable(db);
+
+    // Banking Management Tables - Added in v6
+    await _createBankingTables(db);
+
+    // SMS Transaction Detection Tables - Added in v11
+    await _createSmsDetectionTables(db);
+  }
+
+  Future<void> _createSettingsTable(Database db) async {
+    const idType = 'INTEGER PRIMARY KEY AUTOINCREMENT';
+    const integerType = 'INTEGER NOT NULL';
+    const boolType = 'INTEGER NOT NULL';
+
+    await db.execute('''
+      CREATE TABLE app_settings (
+        id $idType,
+        monthStartDay $integerType,
+        carryForwardEnabled $boolType
+      )
+    ''');
+    
+    // Insert initial row
+    await db.insert('app_settings', {
+      'id': 1,
+      'monthStartDay': 1,
+      'carryForwardEnabled': 0
+    });
+  }
+
+  Future<void> _createSubscriptionsTable(Database db) async {
+    const idType = 'INTEGER PRIMARY KEY AUTOINCREMENT';
+    const textType = 'TEXT NOT NULL';
+    const boolType = 'INTEGER NOT NULL';
+    const integerType = 'INTEGER NOT NULL';
+    const realType = 'REAL NOT NULL';
+    const textNullable = 'TEXT';
+    const integerNullable = 'INTEGER';
+
+    await db.execute('''
+      CREATE TABLE subscriptions (
+        id $idType,
+        name $textType,
+        amount $realType,
+        categoryId $integerNullable,
+        billingCycle $integerType,
+        customDays $integerNullable,
+        startDate $textType,
+        nextDueDate $textType,
+        autoDeduct $boolType,
+        autoAddExpense $boolType,
+        repeatEnabled $boolType,
+        notifyBeforeDays $integerType,
+        icon $textNullable,
+        notes $textNullable,
+        subscriptionType $textNullable,
+        isPaused $boolType,
+        lastProcessedDate $textNullable,
+        createdAt $textType,
+        updatedAt $textType
+      )
+    ''');
+    
+    await db.execute('CREATE INDEX idx_subscriptions_nextDueDate ON subscriptions(nextDueDate);');
+  }
+
+  Future<void> _createBankingTables(Database db) async {
+    const idType = 'INTEGER PRIMARY KEY AUTOINCREMENT';
+    const textType = 'TEXT NOT NULL';
+    const integerType = 'INTEGER NOT NULL';
+    const realType = 'REAL NOT NULL';
+    const textNullable = 'TEXT';
+
+    // Bank Loans Table
+    await db.execute('''
+      CREATE TABLE bank_loans (
+        id $idType,
+        name $textType,
+        type $textType,
+        bankName $textType,
+        amount $realType,
+        interestRate $realType,
+        startDate $textType,
+        endDate $textType,
+        tenureMonths $integerType,
+        emiAmount $realType,
+        emiDueDay $integerType,
+        accountNumber $textNullable,
+        notes $textNullable,
+        status $textType,
+        createdAt $textType,
+        autoRecordExpense INTEGER DEFAULT 0,
+        takenDate $textNullable
+      )
+    ''');
+
+    // Loan Payments Table
+    await db.execute('''
+      CREATE TABLE loan_payments (
+        id $idType,
+        loanId $integerType,
+        amount $realType,
+        date $textType,
+        status $textType,
+        method $textType,
+        notes $textNullable
+      )
+    ''');
+
+    await db.execute('CREATE INDEX idx_bank_loans_status ON bank_loans(status);');
+    await db.execute('CREATE INDEX idx_loan_payments_loanId ON loan_payments(loanId);');
+  }
+
+  Future<void> _createSmsDetectionTables(Database db) async {
+    const idType = 'INTEGER PRIMARY KEY AUTOINCREMENT';
+    const textType = 'TEXT NOT NULL';
+    const integerType = 'INTEGER NOT NULL';
+    const realType = 'REAL NOT NULL';
+    const textNullable = 'TEXT';
+    const integerNullable = 'INTEGER';
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS sms_detected_transactions (
+        id $idType,
+        smsFingerprint $textType UNIQUE,
+        referenceNumber $textNullable,
+        sender $textType,
+        amount $realType,
+        currency $textType,
+        type $integerType,
+        categoryId $integerNullable,
+        categoryName $textNullable,
+        merchant $textNullable,
+        maskedAccount $textNullable,
+        date $textType,
+        confidenceScore $realType,
+        confidenceLevel $textType,
+        status $textType,
+        rawSnippet $textNullable,
+        transactionId $integerNullable,
+        createdAt $textType
+      )
+    ''');
+
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_sms_fingerprint ON sms_detected_transactions(smsFingerprint);');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_sms_status ON sms_detected_transactions(status);');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_sms_date ON sms_detected_transactions(date);');
   }
 
   Future<void> _ensureDefaultCategories(Database db) async {
@@ -135,5 +384,15 @@ class DatabaseHelper {
   Future<void> close() async {
     final db = await instance.database;
     db.close();
+  }
+
+  Future<void> resetDatabase() async {
+    if (_database != null) {
+      await _database!.close();
+      _database = null;
+    }
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, AppConstants.dbName);
+    await deleteDatabase(path);
   }
 }

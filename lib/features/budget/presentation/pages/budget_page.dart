@@ -10,7 +10,10 @@ import 'package:trust_tracker_flutter/features/categories/data/repositories/cate
 import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/repositories/transaction_repository.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
+import 'package:trust_tracker_flutter/features/transactions/presentation/providers/transaction_provider.dart';
 import 'package:trust_tracker_flutter/generated/app_localizations.dart';
+import 'package:trust_tracker_flutter/core/utils/financial_utils.dart';
+import 'package:intl/intl.dart' as intl;
 
 final _expenseCategoriesProvider =
     FutureProvider.autoDispose<List<CategoryModel>>((ref) {
@@ -19,10 +22,12 @@ final _expenseCategoriesProvider =
 
 final _monthSpendingProvider =
     FutureProvider.autoDispose<Map<int, double>>((ref) async {
-  final monthKey = DateTime.now().toMonthKey();
+  ref.watch(transactionChangeProvider);
+  final settings = ref.watch(settingsProvider);
+  final range = FinancialUtils.getCurrentCycleRange(settings.monthStartDay);
   return ref
       .watch(transactionRepositoryProvider)
-      .getCategorySpendingForMonth(monthKey, TransactionType.expense);
+      .getCategorySpendingInRange(range.start, range.end, TransactionType.expense);
 });
 
 class BudgetPage extends ConsumerWidget {
@@ -38,8 +43,11 @@ class BudgetPage extends ConsumerWidget {
     final tt = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context)!;
 
+    final cycleRange = FinancialUtils.getCurrentCycleRange(settings.monthStartDay);
+    final rangeText = '${intl.DateFormat('MMM d').format(cycleRange.start)} – ${intl.DateFormat('MMM d').format(cycleRange.end)}';
+
     return Scaffold(
-      appBar: AppBar(title: Text('${l10n.budgetLabel} — ${now.toMonthYear()}', style: tt.headlineSmall)),
+      appBar: AppBar(title: Text('${l10n.budgetLabel} ($rangeText)', style: tt.headlineSmall)),
       body: catsAsync.when(
         data: (cats) => budgetState.budgets.when(
           data: (budgets) {
@@ -296,12 +304,12 @@ class _BudgetSummaryCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(children: [
-          const Icon(Icons.info_outline, color: Colors.white),
+          Icon(Icons.info_outline, color: cs.onPrimary),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               AppLocalizations.of(context)!.tapToSetBudget,
-              style: tt.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w600),
+              style: tt.bodyMedium?.copyWith(color: cs.onPrimary, fontWeight: FontWeight.w600),
             ),
           ),
         ]),
@@ -333,13 +341,13 @@ class _BudgetSummaryCard extends StatelessWidget {
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(AppLocalizations.of(context)!.monthlyBudgetOverview,
-            style: tt.sectionLabel.copyWith(color: Colors.white.withOpacity(0.7))),
+            style: tt.sectionLabel.copyWith(color: (isOver ? cs.onError : cs.onPrimary).withOpacity(0.7))),
         const SizedBox(height: 8),
         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
           Text(totalSpent.toCurrency(currency),
-              style: tt.displaySmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
+              style: tt.displaySmall?.copyWith(color: isOver ? cs.onError : cs.onPrimary, fontWeight: FontWeight.w800)),
           Text(AppLocalizations.of(context)!.ofAmount(totalBudgeted.toCurrency(currency)),
-              style: tt.labelLarge?.copyWith(color: Colors.white.withOpacity(0.7))),
+              style: tt.labelLarge?.copyWith(color: (isOver ? cs.onError : cs.onPrimary).withOpacity(0.7))),
         ]),
         const SizedBox(height: 20),
         ClipRRect(
@@ -350,8 +358,8 @@ class _BudgetSummaryCard extends StatelessWidget {
             curve: Curves.easeOut,
             builder: (_, val, __) => LinearProgressIndicator(
               value: val,
-              backgroundColor: Colors.white.withOpacity(0.2),
-              color: isOver ? AppColors.warning : Colors.white,
+              backgroundColor: (isOver ? cs.onError : cs.onPrimary).withOpacity(0.2),
+              color: isOver ? AppColors.warning : cs.onPrimary,
               minHeight: 10,
             ),
           ),
@@ -361,7 +369,7 @@ class _BudgetSummaryCard extends StatelessWidget {
           isOver
               ? l10n.overBudgetBy((totalSpent - totalBudgeted).toCurrency(currency))
               : l10n.remainingAmount(remaining.toCurrency(currency)),
-          style: tt.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w700),
+          style: tt.bodyMedium?.copyWith(color: isOver ? cs.onError : cs.onPrimary, fontWeight: FontWeight.w700),
         ),
       ]),
     );

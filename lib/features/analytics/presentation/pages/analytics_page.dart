@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
 import 'package:trust_tracker_flutter/core/utils/extensions.dart';
+import 'package:trust_tracker_flutter/core/utils/financial_utils.dart';
 import 'package:trust_tracker_flutter/features/categories/data/models/category_model.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/repositories/transaction_repository.dart';
 import 'package:trust_tracker_flutter/features/categories/data/repositories/category_repository.dart';
@@ -46,56 +47,68 @@ final savingsRateTrendProvider =
 
 final monthlySummaryProvider =
     FutureProvider.autoDispose<Map<String, double>>((ref) {
-  ref.watch(transactionListProvider);
+  ref.watch(transactionChangeProvider);
   final month = ref.watch(selectedMonthProvider);
+  final settings = ref.watch(settingsProvider);
+  final range = FinancialUtils.getCycleRangeForMonth(month.year, month.month, settings.monthStartDay);
   return ref
       .watch(transactionRepositoryProvider)
-      .getMonthlySummary(month.toMonthKey());
+      .getRangeSummary(range.start, range.end);
 });
 
 final expenseSpendingProvider =
     FutureProvider.autoDispose<Map<int, double>>((ref) {
-  ref.watch(transactionListProvider);
+  ref.watch(transactionChangeProvider);
   final month = ref.watch(selectedMonthProvider);
+  final settings = ref.watch(settingsProvider);
+  final range = FinancialUtils.getCycleRangeForMonth(month.year, month.month, settings.monthStartDay);
   return ref
       .watch(transactionRepositoryProvider)
-      .getCategorySpendingForMonth(month.toMonthKey(), TransactionType.expense);
+      .getCategorySpendingInRange(range.start, range.end, TransactionType.expense);
 });
 
 final incomeSpendingProvider =
     FutureProvider.autoDispose<Map<int, double>>((ref) {
-  ref.watch(transactionListProvider);
+  ref.watch(transactionChangeProvider);
   final month = ref.watch(selectedMonthProvider);
+  final settings = ref.watch(settingsProvider);
+  final range = FinancialUtils.getCycleRangeForMonth(month.year, month.month, settings.monthStartDay);
   return ref
       .watch(transactionRepositoryProvider)
-      .getCategorySpendingForMonth(month.toMonthKey(), TransactionType.income);
+      .getCategorySpendingInRange(range.start, range.end, TransactionType.income);
 });
 
 final dailySpendingProvider =
     FutureProvider.autoDispose<Map<int, double>>((ref) {
-  ref.watch(transactionListProvider);
+  ref.watch(transactionChangeProvider);
   final month = ref.watch(selectedMonthProvider);
+  final settings = ref.watch(settingsProvider);
+  final range = FinancialUtils.getCycleRangeForMonth(month.year, month.month, settings.monthStartDay);
   return ref
       .watch(transactionRepositoryProvider)
-      .getDailySpending(month.toMonthKey(), TransactionType.expense);
+      .getDailySpendingInRange(range.start, range.end, TransactionType.expense);
 });
 
 final weekdaySpendingProvider =
     FutureProvider.autoDispose<Map<int, double>>((ref) {
-  ref.watch(transactionListProvider);
+  ref.watch(transactionChangeProvider);
   final month = ref.watch(selectedMonthProvider);
+  final settings = ref.watch(settingsProvider);
+  final range = FinancialUtils.getCycleRangeForMonth(month.year, month.month, settings.monthStartDay);
   return ref
       .watch(transactionRepositoryProvider)
-      .getWeekdaySpending(month.toMonthKey(), TransactionType.expense);
+      .getWeekdaySpendingInRange(range.start, range.end, TransactionType.expense);
 });
 
 final timeOfDaySpendingProvider =
     FutureProvider.autoDispose<Map<String, double>>((ref) {
-  ref.watch(transactionListProvider);
+  ref.watch(transactionChangeProvider);
   final month = ref.watch(selectedMonthProvider);
+  final settings = ref.watch(settingsProvider);
+  final range = FinancialUtils.getCycleRangeForMonth(month.year, month.month, settings.monthStartDay);
   return ref
       .watch(transactionRepositoryProvider)
-      .getTimeOfDaySpending(month.toMonthKey(), TransactionType.expense);
+      .getTimeOfDaySpendingInRange(range.start, range.end, TransactionType.expense);
 });
 
 final analyticsExpenseCatsProvider =
@@ -213,12 +226,11 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
   Future<void> _showReportOptions(BuildContext context) async {
     final now = DateTime.now();
     final selectedMonth = ref.read(selectedMonthProvider);
+    final settings = ref.read(settingsProvider);
+    final cycleRange = FinancialUtils.getCycleRangeForMonth(selectedMonth.year, selectedMonth.month, settings.monthStartDay);
     
     TransactionFilter currentFilter = TransactionFilter(
-      dateRange: DateTimeRange(
-        start: DateTime(selectedMonth.year, selectedMonth.month, 1),
-        end: DateTime(selectedMonth.year, selectedMonth.month, DateUtils.getDaysInMonth(selectedMonth.year, selectedMonth.month)),
-      ),
+      dateRange: cycleRange,
     );
 
     bool includeGraphs = true;
@@ -381,7 +393,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
       if (mounted) Navigator.of(context, rootNavigator: true).pop();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to generate report: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Failed to generate report: $e'), backgroundColor: Theme.of(context).colorScheme.error),
         );
       }
     }

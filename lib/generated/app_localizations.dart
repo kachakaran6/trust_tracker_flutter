@@ -1045,7 +1045,7 @@ abstract class AppLocalizations {
   /// No description provided for @selectDateRange.
   ///
   /// In en, this message translates to:
-  /// **'Select date range'**
+  /// **'Select Date Range'**
   String get selectDateRange;
 
   /// No description provided for @errorLoadingCategories.
@@ -1263,6 +1263,396 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reset Avatar'**
   String get resetAvatar;
+
+  /// No description provided for @monthStartDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Month Start Day'**
+  String get monthStartDay;
+
+  /// No description provided for @carryForward.
+  ///
+  /// In en, this message translates to:
+  /// **'Carry Forward Balance'**
+  String get carryForward;
+
+  /// No description provided for @carryForwardEnabledDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous balance continues to next month'**
+  String get carryForwardEnabledDesc;
+
+  /// No description provided for @carryForwardDisabledDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Fresh start every month'**
+  String get carryForwardDisabledDesc;
+
+  /// No description provided for @customStartDateDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Define custom start date (e.g., salary cycle)'**
+  String get customStartDateDesc;
+
+  /// No description provided for @smartMonthlyTracking.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Monthly Tracking'**
+  String get smartMonthlyTracking;
+
+  /// No description provided for @trackFinancesWay.
+  ///
+  /// In en, this message translates to:
+  /// **'Track finances your way, not the default way'**
+  String get trackFinancesWay;
+
+  /// No description provided for @financialPreferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Financial Preferences'**
+  String get financialPreferences;
+
+  /// No description provided for @continueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueLabel;
+
+  /// No description provided for @startTracking.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Tracking 🚀'**
+  String get startTracking;
+
+  /// No description provided for @welcomeTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Your private, offline-first\nfinancial companion'**
+  String get welcomeTagline;
+
+  /// No description provided for @lockPrivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Completely Private — no cloud, no servers'**
+  String get lockPrivate;
+
+  /// No description provided for @smartAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart analytics & budget tracking'**
+  String get smartAnalytics;
+
+  /// No description provided for @blazingFast.
+  ///
+  /// In en, this message translates to:
+  /// **'Blazing fast — all data lives on your phone'**
+  String get blazingFast;
+
+  /// No description provided for @whatsYourName.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s your name?'**
+  String get whatsYourName;
+
+  /// No description provided for @personalizeExperience.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll use this to personalize your experience.'**
+  String get personalizeExperience;
+
+  /// No description provided for @alexHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., Karan'**
+  String get alexHint;
+
+  /// No description provided for @chooseCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your currency'**
+  String get chooseCurrency;
+
+  /// No description provided for @detectedChangeSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'{code} detected · change anytime in Settings'**
+  String detectedChangeSettings(Object code);
+
+  /// No description provided for @swipeEditDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe left/right → Edit / Delete'**
+  String get swipeEditDelete;
+
+  /// No description provided for @tapViewDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap → View full details'**
+  String get tapViewDetails;
+
+  /// No description provided for @swipeLeftRightAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe Left or Right'**
+  String get swipeLeftRightAction;
+
+  /// No description provided for @readyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re Ready'**
+  String get readyTitle;
+
+  /// No description provided for @readyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your personalized financial companion is set up and ready to help you track with confidence.'**
+  String get readyDesc;
+
+  /// No description provided for @personalizedProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Personalized Profile'**
+  String get personalizedProfile;
+
+  /// No description provided for @globalCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Global Currency Support'**
+  String get globalCurrency;
+
+  /// No description provided for @smartMonthlyControls.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Monthly Controls'**
+  String get smartMonthlyControls;
+
+  /// No description provided for @quickEasyActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick & Easy Actions'**
+  String get quickEasyActions;
+
+  /// No description provided for @manageRecordsGestures.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your records in seconds with simple gestures'**
+  String get manageRecordsGestures;
+
+  /// No description provided for @preferredLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Your Preferred Language'**
+  String get preferredLanguage;
+
+  /// No description provided for @homeLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Make the app feel like home 🌍'**
+  String get homeLanguage;
+
+  /// No description provided for @languageSupportNote.
+  ///
+  /// In en, this message translates to:
+  /// **'App supports multiple languages. Can be changed anytime from settings.'**
+  String get languageSupportNote;
+
+  /// No description provided for @autoBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto Backup'**
+  String get autoBackup;
+
+  /// No description provided for @autoBackupDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically back up your data based on the interval'**
+  String get autoBackupDesc;
+
+  /// No description provided for @backupInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup Interval'**
+  String get backupInterval;
+
+  /// No description provided for @hours6.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 6 hours'**
+  String get hours6;
+
+  /// No description provided for @hours12.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 12 hours'**
+  String get hours12;
+
+  /// No description provided for @daily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get daily;
+
+  /// No description provided for @weekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get weekly;
+
+  /// No description provided for @lastBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Backup'**
+  String get lastBackup;
+
+  /// No description provided for @nextBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Next Backup'**
+  String get nextBackup;
+
+  /// No description provided for @backupNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup Now'**
+  String get backupNow;
+
+  /// No description provided for @backupSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup Successful'**
+  String get backupSuccess;
+
+  /// No description provided for @backupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup Failed'**
+  String get backupFailed;
+
+  /// No description provided for @backupPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending Upload'**
+  String get backupPending;
+
+  /// No description provided for @backupRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup in progress...'**
+  String get backupRunning;
+
+  /// No description provided for @never.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get never;
+
+  /// No description provided for @backupSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup Settings'**
+  String get backupSettings;
+
+  /// No description provided for @summaryNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary Notifications'**
+  String get summaryNotifications;
+
+  /// No description provided for @summaryNotificationsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Get automated insights about your income and spending'**
+  String get summaryNotificationsDesc;
+
+  /// No description provided for @monthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get monthly;
+
+  /// No description provided for @preferredTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred Time'**
+  String get preferredTime;
+
+  /// No description provided for @previewNotification.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview Notification'**
+  String get previewNotification;
+
+  /// No description provided for @noTransactionsToday.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions recorded today.'**
+  String get noTransactionsToday;
+
+  /// No description provided for @dailySummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Summary'**
+  String get dailySummary;
+
+  /// No description provided for @weeklyInsight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Insight'**
+  String get weeklyInsight;
+
+  /// No description provided for @monthlyReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly Report'**
+  String get monthlyReport;
+
+  /// No description provided for @dayOfWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Day of Week'**
+  String get dayOfWeek;
+
+  /// No description provided for @frequency.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequency'**
+  String get frequency;
+
+  /// No description provided for @createTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Transaction'**
+  String get createTransaction;
+
+  /// No description provided for @chooseCategoryPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Category'**
+  String get chooseCategoryPlaceholder;
+
+  /// No description provided for @saveTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Transaction'**
+  String get saveTransaction;
+
+  /// No description provided for @resetAllData.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset All Data'**
+  String get resetAllData;
+
+  /// No description provided for @activityPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity Page'**
+  String get activityPage;
+
+  /// No description provided for @noTransactionsPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'No Transactions Recorded'**
+  String get noTransactionsPlaceholder;
 }
 
 class _AppLocalizationsDelegate

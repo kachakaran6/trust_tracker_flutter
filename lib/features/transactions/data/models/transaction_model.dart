@@ -11,6 +11,15 @@ class TransactionModel {
   late String monthKey;
   late DateTime createdAt;
 
+  // Debt & Udhar tracking fields
+  bool isDebt = false;
+  String? debtType; // 'given' (money lent out / Udhar Aapyu) or 'taken' (money borrowed / Udhar Lidhu)
+  String? personName;
+  DateTime? dueDate;
+  bool isSettled = false;
+  DateTime? settledAt;
+  bool affectsBalance = true;
+
   TransactionModel();
 
   TransactionModel.create({
@@ -20,6 +29,13 @@ class TransactionModel {
     required this.type,
     this.categoryId,
     this.note,
+    this.isDebt = false,
+    this.debtType,
+    this.personName,
+    this.dueDate,
+    this.isSettled = false,
+    this.settledAt,
+    this.affectsBalance = true,
   }) {
     monthKey = '${date.year}-${date.month.toString().padLeft(2, '0')}';
     createdAt = date;
@@ -35,6 +51,13 @@ class TransactionModel {
         'note': note,
         'monthKey': monthKey,
         'createdAt': createdAt.toIso8601String(),
+        'isDebt': isDebt ? 1 : 0,
+        'debtType': debtType,
+        'personName': personName,
+        'dueDate': dueDate?.toIso8601String(),
+        'isSettled': isSettled ? 1 : 0,
+        'settledAt': settledAt?.toIso8601String(),
+        'affectsBalance': affectsBalance ? 1 : 0,
       };
 
   factory TransactionModel.fromMap(Map<String, dynamic> map) {
@@ -48,6 +71,13 @@ class TransactionModel {
     t.note = map['note'];
     t.monthKey = map['monthKey'];
     t.createdAt = DateTime.parse(map['createdAt']);
+    t.isDebt = (map['isDebt'] as int? ?? 0) == 1;
+    t.debtType = map['debtType'] as String?;
+    t.personName = map['personName'] as String?;
+    t.dueDate = map['dueDate'] != null ? DateTime.parse(map['dueDate']) : null;
+    t.isSettled = (map['isSettled'] as int? ?? 0) == 1;
+    t.settledAt = map['settledAt'] != null ? DateTime.parse(map['settledAt']) : null;
+    t.affectsBalance = (map['affectsBalance'] as int? ?? 1) == 1;
     return t;
   }
 

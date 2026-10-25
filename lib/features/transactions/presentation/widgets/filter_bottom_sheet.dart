@@ -250,8 +250,18 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                                     });
                                   },
                                   selectedColor: color.withOpacity(0.2),
-                                  checkmarkColor: color,
-                                  avatar: Icon(Icons.circle, size: 10, color: color),
+                                  showCheckmark: false,
+                                  avatar: SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: Center(
+                                      child: Icon(
+                                        isSelected ? Icons.check_rounded : Icons.circle,
+                                        size: isSelected ? 16 : 10,
+                                        color: color,
+                                      ),
+                                    ),
+                                  ),
                                   padding: EdgeInsets.zero,
                                   visualDensity: VisualDensity.compact,
                                 );

@@ -36,16 +36,16 @@ class AppLocalizationsGu extends AppLocalizations {
   String get addTransaction => 'વ્યવહાર ઉમેરો';
 
   @override
-  String get editTransaction => 'વ્યવહાર સુધારો';
+  String get editTransaction => 'વ્યવહાર સંપાદિત કરો';
 
   @override
   String get deleteTransaction => 'વ્યવહાર કાઢી નાખો';
 
   @override
-  String get categories => 'કેટેગરીઝ';
+  String get categories => 'શ્રેણીઓ';
 
   @override
-  String get manageCategories => 'કેટેગરીઝ મેનેજ કરો';
+  String get manageCategories => 'શ્રેણીઓ મેનેજ કરો';
 
   @override
   String get language => 'ભાષા';
@@ -61,12 +61,12 @@ class AppLocalizationsGu extends AppLocalizations {
 
   @override
   String goodMorning(Object name) {
-    return 'શુભ સવાર, $name';
+    return 'સુપ્રભાત, $name';
   }
 
   @override
   String goodAfternoon(Object name) {
-    return 'શુભ બપોર, $name';
+    return 'નમસ્કાર, $name';
   }
 
   @override
@@ -75,10 +75,10 @@ class AppLocalizationsGu extends AppLocalizations {
   }
 
   @override
-  String get noTransactions => 'કોઈ વ્યવહાર મળ્યા નથી';
+  String get noTransactions => 'કોઈ વ્યવહારો મળ્યા નથી';
 
   @override
-  String get selectCategory => 'કેટેગરી પસંદ કરો';
+  String get selectCategory => 'શ્રેણી પસંદ કરો';
 
   @override
   String get amount => 'રકમ';
@@ -99,16 +99,16 @@ class AppLocalizationsGu extends AppLocalizations {
   String get delete => 'કાઢી નાખો';
 
   @override
-  String get edit => 'સુધારો';
+  String get edit => 'સંપાદિત કરો';
 
   @override
-  String get welcomeBack => 'સ્વાગત છે';
+  String get welcomeBack => 'ફરી સ્વાગત છે';
 
   @override
-  String get seeAll => 'બધું જુઓ';
+  String get seeAll => 'બધા જુઓ';
 
   @override
-  String get netBalance => 'કુલ બેલેન્સ';
+  String get netBalance => 'ચોખ્ખી બેલેન્સ';
 
   @override
   String get thisMonth => 'આ મહિને';
@@ -120,11 +120,11 @@ class AppLocalizationsGu extends AppLocalizations {
   String get addFirstTransaction => 'પહેલો વ્યવહાર ઉમેરો';
 
   @override
-  String get deleteConfirmationTitle => 'વ્યવહાર કાઢી નાખવો?';
+  String get deleteConfirmationTitle => 'વ્યવહાર કાઢી નાખવો છે?';
 
   @override
   String deleteConfirmationMessage(Object description) {
-    return 'શું તમે ખરેખર \"$description\" ને કાઢી નાખવા માંગો છો?\nઆ પ્રક્રિયા પાછી ખેંચી શકાશે નહીં.';
+    return 'શું તમે ખરેખર \"$description\" કાઢી નાખવા માંગો છો?\nઆ ક્રિયા ઉલટાવી શકાશે નહીં.';
   }
 
   @override
@@ -152,13 +152,13 @@ class AppLocalizationsGu extends AppLocalizations {
   String get support => 'સપોર્ટ';
 
   @override
-  String get about => 'વિશે';
+  String get about => 'વિગત';
 
   @override
   String get data => 'ડેટા';
 
   @override
-  String get expenseBreakdown => 'ખર્ચનું વિવરણ';
+  String get expenseBreakdown => 'ખર્ચની વિગતવાર માહિતી';
 
   @override
   String get incomeSources => 'આવકના સ્ત્રોતો';
@@ -167,30 +167,30 @@ class AppLocalizationsGu extends AppLocalizations {
   String get trend6Month => '6-મહિનાનો ટ્રેન્ડ';
 
   @override
-  String get noTransactionsMonth => 'આ મહિના માટે કોઈ વ્યવહાર મળ્યા નથી.';
+  String get noTransactionsMonth => 'આ મહિના માટે કોઈ વ્યવહારો મળ્યા નથી.';
 
   @override
   String noDataFor(Object label) {
-    return 'પ્રદર્શિત કરવા માટે કોઈ $label ડેટા નથી';
+    return 'દર્શાવવા માટે કોઈ $label ડેટા નથી';
   }
 
   @override
-  String get newCategory => 'નવી કેટેગરી';
+  String get newCategory => 'નવી શ્રેણી';
 
   @override
-  String get editCategory => 'કેટેગરી સુધારો';
+  String get editCategory => 'શ્રેણી સંપાદિત કરો';
 
   @override
-  String get categoryName => 'કેટેગરીનું નામ';
+  String get categoryName => 'શ્રેણીનું નામ';
 
   @override
-  String get icon => 'આઈકન';
+  String get icon => 'આયકન';
 
   @override
   String get color => 'રંગ';
 
   @override
-  String get createCategory => 'કેટેગરી બનાવો';
+  String get createCategory => 'શ્રેણી બનાવો';
 
   @override
   String get update => 'અપડેટ કરો';
@@ -199,10 +199,10 @@ class AppLocalizationsGu extends AppLocalizations {
   String get defaultLabel => 'ડિફોલ્ટ';
 
   @override
-  String get noCategoriesYet => 'હજુ સુધી કોઈ કેટેગરી નથી.';
+  String get noCategoriesYet => 'હજુ સુધી કોઈ શ્રેણીઓ નથી.';
 
   @override
-  String get cantDeleteDefault => 'ડિફોલ્ટ કેટેગરીઝ કાઢી શકાતી નથી';
+  String get cantDeleteDefault => 'ડિફોલ્ટ શ્રેણીઓ કાઢી શકાતી નથી';
 
   @override
   String get type => 'પ્રકાર';
@@ -218,11 +218,11 @@ class AppLocalizationsGu extends AppLocalizations {
 
   @override
   String get tapToEdit =>
-      'સુધારવા માટે ટેપ કરો • કાઢી નાખવા માટે ✕ આઈકનનો ઉપયોગ કરો';
+      'સંપાદિત કરવા માટે ટેપ કરો • કાઢી નાખવા માટે ✕ આયકનનો ઉપયોગ કરો';
 
   @override
   String get swipeToEdit =>
-      'સુધારવા અથવા કાઢી નાખવા માટે સ્વાઇપ કરો • ડુપ્લિકેટ કરવા માટે આઈકન ટેપ કરો';
+      'સંપાદિત કરવા અથવા કાઢી નાખવા માટે સ્વાઇપ કરો • ડુપ્લિકેટ કરવા માટે આયકન ટેપ કરો';
 
   @override
   String get today => 'આજે';
@@ -237,7 +237,7 @@ class AppLocalizationsGu extends AppLocalizations {
   String get all => 'બધા';
 
   @override
-  String get allCaps => 'તમામ';
+  String get allCaps => 'બધુ';
 
   @override
   String get setName => 'તમારું નામ સેટ કરો';
@@ -249,12 +249,11 @@ class AppLocalizationsGu extends AppLocalizations {
   String get transactionActionMode => 'વ્યવહાર એક્શન મોડ';
 
   @override
-  String get tapModeDetails =>
-      'સુધારવા માટે ટેપ કરો • કાઢી નાખવાનું આઈકન દેખાશે';
+  String get tapModeDetails => 'સંપાદિત કરવા માટે ટેપ કરો • ડિલીટ આયકન દેખાશે';
 
   @override
   String get swipeModeDetails =>
-      'કાઢી નાખવા માટે જમણે સ્વાઇપ કરો • સુધારવા માટે ડાબે સ્વાઇપ કરો';
+      'કાઢી નાખવા માટે જમણે સ્વાઇપ કરો • સંપાદિત કરવા માટે ડાબે સ્વાઇપ કરો';
 
   @override
   String get swipeMode => 'સ્વાઇપ મોડ';
@@ -269,10 +268,10 @@ class AppLocalizationsGu extends AppLocalizations {
   String get changePin => 'પિન બદલો';
 
   @override
-  String get disablePin => 'પિન અક્ષમ કરો';
+  String get disablePin => 'પિન નિષ્ક્રિય કરો';
 
   @override
-  String get disablePinConfirm => 'પિન અક્ષમ કરો?';
+  String get disablePinConfirm => 'પિન નિષ્ક્રિય કરવો છે?';
 
   @override
   String get disablePinDetails =>
@@ -282,7 +281,7 @@ class AppLocalizationsGu extends AppLocalizations {
   String get biometricUnlock => 'બાયોમેટ્રિક અનલોક';
 
   @override
-  String get rateApp => 'એપ્લિકેશનને રેટ કરો';
+  String get rateApp => 'એપ્લિકેશન રેટ કરો';
 
   @override
   String get shareApp => 'એપ્લિકેશન શેર કરો';
@@ -294,7 +293,7 @@ class AppLocalizationsGu extends AppLocalizations {
   String get checkForUpdates => 'અપડેટ્સ માટે તપાસો';
 
   @override
-  String get latestVersion => 'તમે પહેલાથી જ નવીનતમ સંસ્કરણ પર છો';
+  String get latestVersion => 'તમે પહેલેથી જ નવીનતમ સંસ્કરણ પર છો';
 
   @override
   String get termsPrivacy => 'શરતો અને ગોપનીયતા';
@@ -307,16 +306,18 @@ class AppLocalizationsGu extends AppLocalizations {
   String get trustTrackerUser => 'ટ્રસ્ટ ટ્રેકર વપરાશકર્તા';
 
   @override
-  String get enterPinToDisable => 'સુરક્ષા અક્ષમ કરવા માટે તમારો પિન દાખલ કરો';
+  String get enterPinToDisable =>
+      'સુરક્ષા નિષ્ક્રિય કરવા માટે તમારો પિન દાખલ કરો';
 
   @override
   String get incorrectPin => 'ખોટો પિન. કૃપા કરીને ફરી પ્રયાસ કરો.';
 
   @override
-  String get incorrectPinDisable => 'ખોટો પિન. સુરક્ષા અક્ષમ કરવામાં આવી નથી.';
+  String get incorrectPinDisable =>
+      'ખોટો પિન. સુરક્ષા નિષ્ક્રિય કરવામાં આવી નથી.';
 
   @override
-  String get pinDisabledSuccess => 'સુરક્ષા પિન અક્ષમ કરવામાં આવ્યો';
+  String get pinDisabledSuccess => 'સુરક્ષા પિન નિષ્ક્રિય કર્યો';
 
   @override
   String get verifyCurrentPin => 'વર્તમાન પિન ચકાસો';
@@ -340,13 +341,13 @@ class AppLocalizationsGu extends AppLocalizations {
   String get reEnterPinToConfirm => 'પુષ્ટિ કરવા માટે તમારો પિન ફરીથી દાખલ કરો';
 
   @override
-  String get pinChangedSuccess => 'પિન સફળતાપૂર્વક બદલાયો';
+  String get pinChangedSuccess => 'પિન સફળતાપૂર્વક બદલાઈ ગયો';
 
   @override
-  String get pinSetSuccess => 'પિન સફળતાપૂર્વક સેટ થયો';
+  String get pinSetSuccess => 'પિન સફળતાપૂર્વક સેટ થઈ ગયો';
 
   @override
-  String get pinsDontMatch => 'પિન મેળ ખાતા નથી. ફરીથી શરૂ થાય છે।';
+  String get pinsDontMatch => 'પિન મેળ ખાતા નથી. ફરીથી શરૂ કરી રહ્યા છીએ.';
 
   @override
   String get overview => 'ઝાંખી';
@@ -382,7 +383,7 @@ class AppLocalizationsGu extends AppLocalizations {
   String get night => 'રાત';
 
   @override
-  String get topSpendingCategories => 'ટોચની ખર્ચ શ્રેણીઓ';
+  String get topSpendingCategories => 'ટોચના ખર્ચની શ્રેણીઓ';
 
   @override
   String get intensity => 'તીવ્રતા';
@@ -434,14 +435,14 @@ class AppLocalizationsGu extends AppLocalizations {
 
   @override
   String get exitConfirmMessage =>
-      'તમે ખરેખર એપ બંધ કરવા માંગો છો? કોઈપણ ન સેવ કરેલો ડેટા ખોવાઈ શકે છે.';
+      'શું તમે ખરેખર એપ્લિકેશન બંધ કરવા માંગો છો? કોઈપણ સાચવેલ ન હોય તેવો ડેટા ખોવાઈ શકે છે.';
 
   @override
   String get exit => 'બહાર નીકળો';
 
   @override
   String builtWithLove(Object name) {
-    return '$name દ્વારા ❤️ સાથે બનાવવામાં આવ્યું';
+    return '$name દ્વારા ❤️ થી બનાવેલ';
   }
 
   @override
@@ -466,7 +467,7 @@ class AppLocalizationsGu extends AppLocalizations {
       'માસિક બજેટ મર્યાદા સેટ કરવા માટે નીચેની કોઈપણ શ્રેણી પર ટેપ કરો.';
 
   @override
-  String get monthlyBudgetOverview => 'માસિક બજેટ વિહંગાવલોકન';
+  String get monthlyBudgetOverview => 'માસિક બજેટ ઝાંખી';
 
   @override
   String ofAmount(Object amount) {
@@ -475,7 +476,7 @@ class AppLocalizationsGu extends AppLocalizations {
 
   @override
   String overBudgetBy(Object amount) {
-    return '🚨 બજેટ કરતા $amount વધુ';
+    return '🚨 બજેટ કરતા $amount વધારે';
   }
 
   @override
@@ -488,7 +489,7 @@ class AppLocalizationsGu extends AppLocalizations {
 
   @override
   String spentAmount(Object amount) {
-    return '$amount ખર્ચ';
+    return '$amount ખર્ચ્યા';
   }
 
   @override
@@ -496,7 +497,7 @@ class AppLocalizationsGu extends AppLocalizations {
       'કોઈ બજેટ સેટ નથી — મર્યાદા ઉમેરવા માટે \"SET\" પર ટેપ કરો';
 
   @override
-  String get filterTransactions => 'ટ્રાન્ઝેક્શન ફિલ્ટર કરો';
+  String get filterTransactions => 'વ્યવહારો ફિલ્ટર કરો';
 
   @override
   String get reset => 'રીસેટ';
@@ -505,13 +506,13 @@ class AppLocalizationsGu extends AppLocalizations {
   String get sortBy => 'ક્રમમાં ગોઠવો';
 
   @override
-  String get ascending => 'ચઢતા ક્રમમાં';
+  String get ascending => 'ચડતા ક્રમ';
 
   @override
-  String get descending => 'ઉતરતા ક્રમમાં';
+  String get descending => 'ઉતરતા ક્રમ';
 
   @override
-  String get selectDateRange => 'તારીખ મર્યાદા પસંદ કરો';
+  String get selectDateRange => 'તારીખની મર્યાદા પસંદ કરો';
 
   @override
   String get errorLoadingCategories => 'શ્રેણીઓ લોડ કરવામાં ભૂલ';
@@ -561,13 +562,13 @@ class AppLocalizationsGu extends AppLocalizations {
 
   @override
   String get shareMessage =>
-      'ટ્રસ્ટ ટ્રેકર સાથે તમારા નાણાકીય વ્યવહાર પર નિયંત્રણ મેળવો.\n\nટ્રસ્ટ ટ્રેકર એ એક ખાનગી, ઓફલાઇન-પ્રથમ ખર્ચ ટ્રેકર છે જે તમને તમારી આવક, ખર્ચ અને બજેટને સરળતાથી સંચાલિત કરવામાં મદદ કરવા માટે રચાયેલ છે.\n\nમુખ્ય લાક્ષણિકતાઓ:\n• સરળ ખર્ચ અને આવક ટ્રેકિંગ\n• બજેટ મેનેજમેન્ટ અને નાણાકીય સમજ\n• સુરક્ષિત પિન અને બાયોમેટ્રિક સુરક્ષા\n• સંપૂર્ણપણે ઓફલાઇન અને ગોપનીયતા પર ધ્યાન કેન્દ્રિત\n• સ્વચ્છ અને વાપરવામાં સરળ ઇન્ટરફેસ\n\nGoogle Play Store પરથી એપ ડાઉનલોડ કરો:\nhttps://play.google.com/store/apps/details?id=com.trusttracker.trust_tracker_flutter\n\nતમારો પ્રતિસાદ અને સમર્થન ખૂબ મૂલ્યવાન છે.';
+      'ટ્રસ્ટ ટ્રેકર સાથે તમારા વ્યક્તિગત નાણાકીય વ્યવહાર પર નિયંત્રણ મેળવો.\n\nટ્રસ્ટ ટ્રેકર એ એક ખાનગી, ઓફલાઇન-પ્રથમ ખર્ચ ટ્રેકર છે જે તમને તમારી આવક, ખર્ચ અને બજેટને સરળતાથી સંચાલિત કરવામાં મદદ કરવા માટે રચાયેલ છે.\n\nમુખ્ય વિશેષતાઓ:\n• સરળ ખર્ચ અને આવક ટ્રેકિંગ\n• બજેટ મેનેજમેન્ટ અને નાણાકીય આંતરદૃષ્ટિ\n• સુરક્ષિત પિન અને બાયોમેટ્રિક સુરક્ષા\n• સંપૂર્ણપણે ઓફલાઇન અને ગોપનીયતા લક્ષી\n• સ્વચ્છ અને ઉપયોગમાં સરળ ઇન્ટરફેસ\n\nGoogle Play Store પરથી એપ્લિકેશન ડાઉનલોડ કરો:\nhttps://play.google.com/store/apps/details?id=com.trusttracker.trust_tracker_flutter\n\nતમારા પ્રતિસાદ અને સમર્થન ખૂબ મહત્વના છે.';
 
   @override
-  String get appTheme => 'એપ થીમ';
+  String get appTheme => 'એપ્લિકેશન થીમ';
 
   @override
-  String get selectAccentColor => 'એક્સેંટ કલર પસંદ કરો';
+  String get selectAccentColor => 'એક્સેન્ટ રંગ પસંદ કરો';
 
   @override
   String get selectFormat => 'ફોર્મેટ પસંદ કરો';
@@ -576,7 +577,7 @@ class AppLocalizationsGu extends AppLocalizations {
   String get pdfReport => 'PDF રિપોર્ટ';
 
   @override
-  String get pdfReportDesc => 'નાણાકીય રિપોર્ટ';
+  String get pdfReportDesc => 'નાણાકીય અહેવાલ';
 
   @override
   String get excelExport => 'Excel નિકાસ';
@@ -585,7 +586,7 @@ class AppLocalizationsGu extends AppLocalizations {
   String get excelExportDesc => 'સ્પ્રેડશીટ વિશ્લેષણ માટે';
 
   @override
-  String get dateRangeCaps => 'તારીખ મર્યાદા';
+  String get dateRangeCaps => 'તારીખ ગાળો';
 
   @override
   String get generateExport => 'નિકાસ કરો';
@@ -594,7 +595,7 @@ class AppLocalizationsGu extends AppLocalizations {
   String get exportTransactions => 'વ્યવહારો નિકાસ કરો';
 
   @override
-  String get exportDesc => 'તમારા ડેટાને શેર કરો';
+  String get exportDesc => 'તમારો ડેટા શેર કરો';
 
   @override
   String get lastMonth => 'ગયા મહિને';
@@ -603,7 +604,7 @@ class AppLocalizationsGu extends AppLocalizations {
   String get threeMonths => '3 મહિના';
 
   @override
-  String get allHistory => 'તમામ ઇતિહાસ';
+  String get allHistory => 'બધો ઇતિહાસ';
 
   @override
   String get custom => 'કસ્ટમ';
@@ -615,11 +616,216 @@ class AppLocalizationsGu extends AppLocalizations {
   String get user => 'ત્યાં';
 
   @override
-  String get categoriesCaps => 'કેટેગરીઝ';
+  String get categoriesCaps => 'શ્રેણીઓ';
 
   @override
   String get chooseAvatar => 'અવતાર પસંદ કરો';
 
   @override
-  String get resetAvatar => 'અવતાર ફરી સેટ કરો';
+  String get resetAvatar => 'અવતાર રીસેટ કરો';
+
+  @override
+  String get monthStartDay => 'મહિનાની શરૂઆતનો દિવસ';
+
+  @override
+  String get carryForward => 'બાકીની રકમ આગળ વધારો';
+
+  @override
+  String get carryForwardEnabledDesc => 'પાછલી બાકી રકમ આવતા મહિને ચાલુ રહેશે';
+
+  @override
+  String get carryForwardDisabledDesc => 'દર મહિને નવી શરૂઆત';
+
+  @override
+  String get customStartDateDesc =>
+      'તમારી જરૂરિયાત મુજબ તારીખ પસંદ કરો (દા.ત. પગારની તારીખ)';
+
+  @override
+  String get smartMonthlyTracking => 'સ્માર્ટ માસિક ટ્રેકિંગ';
+
+  @override
+  String get trackFinancesWay => 'તમારી રીતે ખર્ચને ટ્રેક કરો';
+
+  @override
+  String get financialPreferences => 'આર્થિક પસંદગીઓ';
+
+  @override
+  String get continueLabel => 'ચાલુ રાખો';
+
+  @override
+  String get startTracking => 'ટ્રેકિંગ શરૂ કરો 🚀';
+
+  @override
+  String get welcomeTagline => 'તમારો ખાનગી, ઓફલાઇન-પ્રથમ\nનાણાકીય સાથી';
+
+  @override
+  String get lockPrivate => 'સંપૂર્ણપણે ખાનગી — કોઈ ક્લાઉડ નથી, કોઈ સર્વર નથી';
+
+  @override
+  String get smartAnalytics => 'સ્માર્ટ વિશ્લેષણ અને બજેટ ટ્રેકિંગ';
+
+  @override
+  String get blazingFast => 'ખૂબ જ ઝડપી — બધો ડેટા તમારા ફોન પર રહે છે';
+
+  @override
+  String get whatsYourName => 'તમારું નામ શું છે?';
+
+  @override
+  String get personalizeExperience =>
+      'અમે તમારા અનુભવને વ્યક્તિગત કરવા માટે આનો ઉપયોગ કરીશું.';
+
+  @override
+  String get alexHint => 'દા.ત. અજય';
+
+  @override
+  String get chooseCurrency => 'તમારું ચલણ પસંદ કરો';
+
+  @override
+  String detectedChangeSettings(Object code) {
+    return '$code ચલણ મળ્યું છે · સેટિંગ્સમાં ગમે ત્યારે બદલો';
+  }
+
+  @override
+  String get swipeEditDelete =>
+      'ડાબે/જમણે સ્વાઇપ કરો → સંપાદિત કરો / કાઢી નાખો';
+
+  @override
+  String get tapViewDetails => 'ટેપ કરો → સંપૂર્ણ વિગત જુઓ';
+
+  @override
+  String get swipeLeftRightAction => 'ડાબે અથવા જમણે સ્વાઇપ કરો';
+
+  @override
+  String get readyTitle => 'તમે તૈયાર છો';
+
+  @override
+  String get readyDesc =>
+      'તમારો વ્યક્તિગત નાણાકીય સાથી હવે તૈયાર છે અને વિશ્વાસ સાથે ટ્રેકિંગ કરવામાં તમારી મદદ માટે સજ્જ છે.';
+
+  @override
+  String get personalizedProfile => 'વ્યક્તિગત પ્રોફાઇલ';
+
+  @override
+  String get globalCurrency => 'વૈશ્વિક ચલણ સપોર્ટ';
+
+  @override
+  String get smartMonthlyControls => 'સ્માર્ટ માસિક નિયંત્રણો';
+
+  @override
+  String get quickEasyActions => 'ઝડપી અને સરળ એક્શન્સ';
+
+  @override
+  String get manageRecordsGestures =>
+      'સરલ ઈશારા સાથે સેકન્ડોમાં તમારા રેકોર્ડને મેનેજ કરો';
+
+  @override
+  String get preferredLanguage => 'તમારી પસંદગીની ભાષા વાપરો';
+
+  @override
+  String get homeLanguage => 'એપ્લિકેશનને ઘર જેવું અનુભવો 🌍';
+
+  @override
+  String get languageSupportNote =>
+      'એપ્લિકેશન ઘણી ભાષાઓને સપોર્ટ કરે છે. સેટિંગ્સમાંથી ગમે ત્યારે બદલી શકાય છે.';
+
+  @override
+  String get autoBackup => 'ઓટો બેકઅપ';
+
+  @override
+  String get autoBackupDesc =>
+      'સમય અંતરાલના આધારે તમારા ડેટાનો આપમેળે બેકઅપ લો';
+
+  @override
+  String get backupInterval => 'બેકઅપ અંતરાલ';
+
+  @override
+  String get hours6 => 'દર 6 કલાકે';
+
+  @override
+  String get hours12 => 'દર 12 કલાકે';
+
+  @override
+  String get daily => 'દૈનિક';
+
+  @override
+  String get weekly => 'સાપ્તાહિક';
+
+  @override
+  String get lastBackup => 'છેલ્લો બેકઅપ';
+
+  @override
+  String get nextBackup => 'આગામી બેકઅપ';
+
+  @override
+  String get backupNow => 'હમણાં બેકઅપ લો';
+
+  @override
+  String get backupSuccess => 'બેકઅપ સફળ';
+
+  @override
+  String get backupFailed => 'બેકઅપ નિષ્ફળ';
+
+  @override
+  String get backupPending => 'બાકી અપલોડ';
+
+  @override
+  String get backupRunning => 'બેકઅપ ચાલુ છે...';
+
+  @override
+  String get never => 'ક્યારેય નહીં';
+
+  @override
+  String get backupSettings => 'બેકઅપ સેટિંગ્સ';
+
+  @override
+  String get summaryNotifications => 'સારાંશ સૂચનાઓ';
+
+  @override
+  String get summaryNotificationsDesc =>
+      'તમારી આવક અને ખર્ચ વિશે આપમેળે આંતરદૃષ્ટિ મેળવો';
+
+  @override
+  String get monthly => 'માસિક';
+
+  @override
+  String get preferredTime => 'પસંદગીનો સમય';
+
+  @override
+  String get previewNotification => 'સૂચનાનું પૂર્વાવલોકન કરો';
+
+  @override
+  String get noTransactionsToday => 'આજે કોઈ વ્યવહાર નોંધાયો નથી.';
+
+  @override
+  String get dailySummary => 'દૈનિક સારાંશ';
+
+  @override
+  String get weeklyInsight => 'સાપ્તાહિક આંતરદૃષ્ટિ';
+
+  @override
+  String get monthlyReport => 'માસિક અહેવાલ';
+
+  @override
+  String get dayOfWeek => 'અઠવાડિયાનો દિવસ';
+
+  @override
+  String get frequency => 'આવર્તન';
+
+  @override
+  String get createTransaction => 'ટ્રાન્ઝેક્શન બનાવો';
+
+  @override
+  String get chooseCategoryPlaceholder => 'શ્રેણી પસંદ કરો';
+
+  @override
+  String get saveTransaction => 'ટ્રાન્ઝેક્શન સાચવો';
+
+  @override
+  String get resetAllData => 'બધો ડેટા રીસેટ કરો';
+
+  @override
+  String get activityPage => 'પ્રવૃત્તિ પૃષ્ઠ';
+
+  @override
+  String get noTransactionsPlaceholder => 'કોઈ ટ્રાન્ઝેક્શન નોંધાયેલ નથી';
 }

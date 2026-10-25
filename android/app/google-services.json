@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1082013169241",
+    "project_id": "trust-tracker---app",
+    "storage_bucket": "trust-tracker---app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1082013169241:android:757515b1008f05e3dca348",
+        "android_client_info": {
+          "package_name": "com.trusttracker.trust_tracker_flutter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBRyTjqZKEBKMTkkHqxBGFIR5s1f4CF-n0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
