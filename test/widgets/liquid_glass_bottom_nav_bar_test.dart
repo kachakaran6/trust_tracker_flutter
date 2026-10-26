@@ -77,7 +77,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(tappedIndex, equals(4));
 
-    await tester.tap(find.text('Home').first);
+    await tester.tap(find.text('Home').first, warnIfMissed: false);
     await tester.pumpAndSettle();
     expect(tappedIndex, equals(0));
   });
@@ -94,6 +94,52 @@ void main() {
 
     expect(find.text('Debt / Lent'), findsWidgets);
     expect(find.byType(LiquidGlassBottomNavBar), findsOneWidget);
+  });
+
+  testWidgets('renders all five accent colors correctly in dark and light modes', (tester) async {
+    final accentColors = [
+      const Color(0xFF3B82F6), // Blue
+      const Color(0xFF16A34A), // Green
+      const Color(0xFFEC4899), // Pink
+      const Color(0xFFF59E0B), // Yellow / Amber
+      const Color(0xFF14B8A6), // Teal
+    ];
+
+    for (final accent in accentColors) {
+      for (final mode in [ThemeMode.dark, ThemeMode.light]) {
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: ThemeData(
+              brightness: Brightness.light,
+              colorScheme: ColorScheme.fromSeed(seedColor: accent, brightness: Brightness.light),
+            ),
+            darkTheme: ThemeData(
+              brightness: Brightness.dark,
+              colorScheme: ColorScheme.fromSeed(seedColor: accent, brightness: Brightness.dark),
+            ),
+            themeMode: mode,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Builder(
+              builder: (context) {
+                final cs = Theme.of(context).colorScheme;
+                final l10n = AppLocalizations.of(context)!;
+                return Scaffold(
+                  bottomNavigationBar: LiquidGlassBottomNavBar(
+                    selectedIndex: 1,
+                    onTap: (_) {},
+                    cs: cs,
+                    l10n: l10n,
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.byType(LiquidGlassBottomNavBar), findsOneWidget);
+      }
+    }
   });
 
   testWidgets('extra action button triggers onAddTap callback', (tester) async {

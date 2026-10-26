@@ -1,7 +1,7 @@
 name: trust_tracker_flutter
 description: Trust Tracker - Offline-first personal finance manager
 publish_to: 'none'
-version: 1.2.1+39
+version: 1.2.1+41
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -90,3 +90,4 @@ flutter:
     - assets/images/
     - assets/animations/
     - assets/avatars/
+    - assets/fonts/

@@ -3,9 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
-import 'package:printing/printing.dart';
 import 'package:trust_tracker_flutter/core/utils/extensions.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/models/export_transaction_row.dart';
+
+import 'package:trust_tracker_flutter/core/utils/pdf_font_helper.dart';
 
 class PdfGenerator {
   static Future<File> generate({
@@ -16,9 +17,9 @@ class PdfGenerator {
     final pdf = pw.Document();
     final now = DateTime.now();
 
-    // Load fonts for Unicode support
-    final fontRegular = await PdfGoogleFonts.hindRegular();
-    final fontBold = await PdfGoogleFonts.hindBold();
+    // Load fonts for Unicode support (offline-first from bundled assets)
+    final fontRegular = await PdfFontHelper.loadRegularFont();
+    final fontBold = await PdfFontHelper.loadBoldFont();
 
     // Summary data
     double totalIncome = 0;
@@ -56,7 +57,7 @@ class PdfGenerator {
         header: (context) => _buildHeader(logo, now, dateRange, rows.length),
         footer: (context) => _buildFooter(context),
         build: (context) => [
-          _buildSummarySection(currency, totalIncome, totalExpense, balance),
+          _buildSummarySection(currency, totalIncome, totalExpense, balance, fontRegular),
           pw.SizedBox(height: 32),
 
           pw.Text('TRANSACTION DETAILS',
@@ -67,7 +68,7 @@ class PdfGenerator {
           pw.SizedBox(height: 12),
 
           // Render tables in chunks to avoid single massive table logic failures
-          ...chunks.map((chunk) => _buildTransactionTable(chunk, currency)),
+          ...chunks.map((chunk) => _buildTransactionTable(chunk, currency, fontRegular)),
 
           pw.SizedBox(height: 48),
           pw.Divider(color: PdfColors.grey200),
@@ -76,7 +77,7 @@ class PdfGenerator {
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
               pw.Text('Trust Tracker - Privacy-first Finance Management',
-                  style: pw.TextStyle(fontSize: 8, color: PdfColors.grey500)),
+                  style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey500)),
             ],
           ),
         ],
@@ -109,12 +110,12 @@ class PdfGenerator {
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
                 pw.Text('Trust Tracker',
-                    style: pw.TextStyle(
+                    style: const pw.TextStyle(
                         fontSize: 28,
                         fontWeight: pw.FontWeight.bold,
                         color: PdfColors.blue900)),
                 pw.Text('Financial Activity Report',
-                    style: pw.TextStyle(fontSize: 14, color: PdfColors.grey700)),
+                    style: const pw.TextStyle(fontSize: 14, color: PdfColors.grey700)),
               ],
             ),
             if (logo != null)
@@ -199,24 +200,24 @@ class PdfGenerator {
   }
 
   static pw.Widget _buildSummarySection(
-      String currency, double income, double expense, double balance) {
+      String currency, double income, double expense, double balance, pw.Font font) {
     return pw.Row(
       children: [
         _buildSummaryCard(
             'Total Income',
-            income.toCurrency(currency),
+            PdfFontHelper.safeCurrencyText(income.toCurrency(currency), font),
             PdfColors.green800,
             PdfColors.green50),
         pw.SizedBox(width: 12),
         _buildSummaryCard(
             'Total Expense',
-            expense.toCurrency(currency),
+            PdfFontHelper.safeCurrencyText(expense.toCurrency(currency), font),
             PdfColors.red800,
             PdfColors.red50),
         pw.SizedBox(width: 12),
         _buildSummaryCard(
             'Net Balance',
-            balance.toCurrency(currency),
+            PdfFontHelper.safeCurrencyText(balance.toCurrency(currency), font),
             balance >= 0 ? PdfColors.blue800 : PdfColors.red800,
             balance >= 0 ? PdfColors.blue50 : PdfColors.red50),
       ],
@@ -224,7 +225,7 @@ class PdfGenerator {
   }
 
   static pw.Widget _buildTransactionTable(
-      List<ExportTransactionRow> chunk, String currency) {
+      List<ExportTransactionRow> chunk, String currency, pw.Font font) {
     return pw.Padding(
       padding: const pw.EdgeInsets.only(bottom: 12),
       child: pw.TableHelper.fromTextArray(
@@ -253,8 +254,9 @@ class PdfGenerator {
         },
         headers: ['Date & Time', 'Description', 'Category', 'Notes', 'Amount'],
         data: chunk.map((row) {
-          final amountStr =
+          final rawAmount =
               '${row.isIncome ? '+' : '-'}${row.amount.toCurrency(currency)}';
+          final amountStr = PdfFontHelper.safeCurrencyText(rawAmount, font);
           return [
             row.timestampLabel,
             row.title,

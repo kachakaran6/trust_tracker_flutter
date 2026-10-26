@@ -1,0 +1,4 @@
+• Chore(fastlane): update deployment and release lanes in Fastfile
+• Add automated widget tests for LiquidGlassBottomNavBar
+• Integrate liquid_glass_widgets with crystal-clear bottom navigation
+• Add parser unit tests, privacy safeguards, and consent flow tests
