@@ -1,0 +1,5 @@
+• Fixed Indian Rupee (₹) and international currency symbol rendering in all exported PDF reports.
+• Added transaction type filtering (All, Income, Expense) to report export.
+• Added dynamic category multi-select filter with an "All Categories" toggle.
+• Added live counter badge showing real-time count of matching transactions ready for export.
+• Performance optimizations and smooth navigation enhancements.

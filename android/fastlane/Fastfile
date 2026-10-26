@@ -122,6 +122,15 @@ platform :android do
     changelog_path = File.join(changelogs_dir, "#{build_num}.txt")
     default_changelog_path = File.join(changelogs_dir, "default.txt")
 
+    if File.exist?(changelog_path)
+      existing = File.read(changelog_path).strip
+      if !existing.empty?
+        UI.success("📝 Using existing custom release notes from #{changelog_path}:\n#{existing}")
+        File.write(default_changelog_path, existing)
+        return existing
+      end
+    end
+
     UI.message("🤖 Generating Google Play release notes for build ##{build_num}...")
 
     commits = []

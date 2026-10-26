@@ -1,4 +1,5 @@
-• Chore(fastlane): update deployment and release lanes in Fastfile
-• Add automated widget tests for LiquidGlassBottomNavBar
-• Integrate liquid_glass_widgets with crystal-clear bottom navigation
-• Add parser unit tests, privacy safeguards, and consent flow tests
+• Fixed Indian Rupee (₹) and international currency symbol rendering in all exported PDF reports.
+• Added transaction type filtering (All, Income, Expense) to report export.
+• Added dynamic category multi-select filter with an "All Categories" toggle.
+• Added live counter badge showing real-time count of matching transactions ready for export.
+• Performance optimizations and smooth navigation enhancements.
