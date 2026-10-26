@@ -81,14 +81,6 @@ class PdfGenerator {
             ],
           ),
         ],
-        footer: (context) => pw.Container(
-          alignment: pw.Alignment.centerRight,
-          margin: const pw.EdgeInsets.only(top: 20),
-          child: pw.Text(
-            'Generated via Trust Tracker App',
-            style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey400),
-          ),
-        ),
       ),
     );
 
