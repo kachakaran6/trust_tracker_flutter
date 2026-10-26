@@ -179,7 +179,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   void _onScroll() {
     if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
       final currentLimit = ref.read(_pagedLimitProvider);
-      final totalFetched = ref.read(transactionListProvider).valueOrNull?.length ?? 0;
+      final totalFetched = ref.read(transactionListProvider).valueOrNull?.transactions.length ?? 0;
       if (currentLimit < totalFetched) {
         ref.read(_pagedLimitProvider.notifier).state = currentLimit + 20;
       }
