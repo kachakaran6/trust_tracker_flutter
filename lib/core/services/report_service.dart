@@ -4,12 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
 import 'package:trust_tracker_flutter/features/categories/data/models/category_model.dart';
 import 'package:trust_tracker_flutter/core/utils/extensions.dart';
+import 'package:trust_tracker_flutter/core/utils/pdf_font_helper.dart';
 import 'package:intl/intl.dart';
 
 
@@ -28,9 +28,9 @@ class ReportService {
   }) async {
     final pdf = pw.Document();
 
-    // Load fonts for Unicode support
-    final fontRegular = await PdfGoogleFonts.hindRegular();
-    final fontBold = await PdfGoogleFonts.hindBold();
+    // Load fonts for Unicode support (offline-first from bundled assets)
+    final fontRegular = await PdfFontHelper.loadRegularFont();
+    final fontBold = await PdfFontHelper.loadBoldFont();
 
     // 1. Calculations
     double totalIncome = 0;
@@ -61,7 +61,7 @@ class ReportService {
         build: (context) => [
           _buildHeader(dateRange),
           pw.SizedBox(height: 24),
-          if (includeSummary) _buildSummary(totalIncome, totalExpense, netBalance, currency),
+          if (includeSummary) _buildSummary(totalIncome, totalExpense, netBalance, currency, fontRegular),
           if (includeGraphs && (pieChartImage != null || barChartImage != null)) ...[
             pw.SizedBox(height: 24),
             _buildGraphs(pieChartImage, barChartImage),
@@ -69,7 +69,7 @@ class ReportService {
           pw.SizedBox(height: 32),
           pw.Text('TRANSACTION LOG', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: PdfColors.blue900)),
           pw.SizedBox(height: 12),
-          _buildTransactionTable(transactions, categories, currency),
+          _buildTransactionTable(transactions, categories, currency, fontRegular),
         ],
         footer: (context) => _buildFooter(context),
       ),
@@ -93,14 +93,14 @@ class ReportService {
         pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            pw.Text('Trust Tracker', style: pw.TextStyle(fontSize: 28, fontWeight: pw.FontWeight.bold, color: PdfColors.blue900)),
-            pw.Text('Financial Activity Report', style: pw.TextStyle(fontSize: 14, color: PdfColors.grey700)),
+            pw.Text('Trust Tracker', style: const pw.TextStyle(fontSize: 28, fontWeight: pw.FontWeight.bold, color: PdfColors.blue900)),
+            pw.Text('Financial Activity Report', style: const pw.TextStyle(fontSize: 14, color: PdfColors.grey700)),
           ],
         ),
         pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.end,
           children: [
-            pw.Text('GENERATED ON', style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600, fontWeight: pw.FontWeight.bold)),
+            pw.Text('GENERATED ON', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600, fontWeight: pw.FontWeight.bold)),
             pw.Text(DateFormat('dd MMM yyyy').format(DateTime.now()), style: const pw.TextStyle(fontSize: 10)),
             pw.SizedBox(height: 4),
             pw.Text('PERIOD', style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600, fontWeight: pw.FontWeight.bold)),
@@ -112,16 +112,16 @@ class ReportService {
   }
 
   pw.Widget _buildSummary(
-      double income, double expense, double balance, String currencyCode) {
+      double income, double expense, double balance, String currencyCode, pw.Font font) {
     return pw.Row(
       children: [
-        _summaryItem('Total Income', income.toCurrency(currencyCode),
+        _summaryItem('Total Income', PdfFontHelper.safeCurrencyText(income.toCurrency(currencyCode), font),
             PdfColors.green800, PdfColors.green50),
         pw.SizedBox(width: 12),
-        _summaryItem('Total Expense', (-expense).toCurrency(currencyCode),
+        _summaryItem('Total Expense', PdfFontHelper.safeCurrencyText((-expense).toCurrency(currencyCode), font),
             PdfColors.red800, PdfColors.red50),
         pw.SizedBox(width: 12),
-        _summaryItem('Net Balance', balance.toCurrency(currencyCode),
+        _summaryItem('Net Balance', PdfFontHelper.safeCurrencyText(balance.toCurrency(currencyCode), font),
             balance >= 0 ? PdfColors.blue800 : PdfColors.red800,
             balance >= 0 ? PdfColors.blue50 : PdfColors.red50),
       ],
@@ -192,17 +192,18 @@ class ReportService {
   }
 
   pw.Widget _buildTransactionTable(
-      List<TransactionModel> txns, List<CategoryModel> categories, String currencyCode) {
+      List<TransactionModel> txns, List<CategoryModel> categories, String currencyCode, pw.Font font) {
     final headers = ['Date', 'Description', 'Category', 'Amount'];
     final data = txns.map((t) {
       final category = categories.where((c) => c.id == t.categoryId).firstOrNull;
       final amount = t.type == TransactionType.income ? t.amount : -t.amount;
+      final formattedAmount = PdfFontHelper.safeCurrencyText(amount.toCurrency(currencyCode), font);
       return [
         DateFormat('dd MMM').format(t.date),
         t.description,
         category?.name ?? 'Uncategorized',
         pw.Text(
-          amount.toCurrency(currencyCode),
+          formattedAmount,
           style: pw.TextStyle(
             fontWeight: pw.FontWeight.bold,
             color: t.type == TransactionType.income

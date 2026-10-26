@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart';
+import 'package:trust_tracker_flutter/core/utils/pdf_font_helper.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
 
 class DebtPdfResult {
@@ -67,30 +67,13 @@ class DebtPdfGenerator {
     final pdf = pw.Document();
     final now = DateTime.now();
 
-    // 1. Robust font loading with safe fallbacks
-    pw.Font fontRegular;
-    pw.Font fontBold;
-    bool isFallbackHelvetica = false;
+    // 1. Offline-first font loading with bundled assets
+    final fontRegular = await PdfFontHelper.loadRegularFont();
+    final fontBold = await PdfFontHelper.loadBoldFont();
 
-    try {
-      fontRegular = await PdfGoogleFonts.hindRegular();
-      fontBold = await PdfGoogleFonts.hindBold();
-    } catch (_) {
-      try {
-        fontRegular = await PdfGoogleFonts.robotoRegular();
-        fontBold = await PdfGoogleFonts.robotoBold();
-      } catch (_) {
-        fontRegular = pw.Font.helvetica();
-        fontBold = pw.Font.helveticaBold();
-        isFallbackHelvetica = true;
-      }
-    }
-
-    // In Helvetica, the Rupee glyph (U+20B9) is not supported and will throw an unhandled exception.
-    // When using the fallback Helvetica font, safely represent ₹ as 'Rs. ' to prevent PDF crashes.
-    final safeCurrency = (isFallbackHelvetica && currency.contains('₹'))
-        ? currency.replaceAll('₹', 'Rs. ')
-        : currency;
+    // In case of fallback to Helvetica (which lacks Unicode / ₹ support),
+    // safely format currency to prevent missing glyph (☒) boxes.
+    final safeCurrency = PdfFontHelper.safeCurrencyText(currency, fontRegular);
 
     // 2. Load logo if available
     pw.MemoryImage? logo;
@@ -738,7 +721,7 @@ class DebtPdfGenerator {
             ),
             children: [
               _td(person, bold: true, align: pw.TextAlign.left),
-              _td('${txns.length} (${active} active)', align: pw.TextAlign.center),
+              _td('${txns.length} ($active active)', align: pw.TextAlign.center),
               _td('$currency${_formatAmount(given, currency)}', align: pw.TextAlign.right, color: primaryBlue),
               _td('$currency${_formatAmount(taken, currency)}', align: pw.TextAlign.right, color: amberDark),
               _td(
