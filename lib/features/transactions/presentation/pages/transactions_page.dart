@@ -529,7 +529,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                       _FilterChip(
                         label: filter.type.toUpperCase(),
                         icon: filter.type == 'income' ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
-                        onRemove: () => ref.read(_txnFilterProvider.notifier).update((s) => s.copyWith(type: 'all')),
+                        onRemove: () => ref.read(transactionListProvider.notifier).applyFilter(filter.copyWith(type: 'all')),
                       ).animate().scale(duration: 200.ms).fadeIn(),
 
                     // --- Date Chip ---
@@ -537,7 +537,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                       _FilterChip(
                         label: '${DateFormat('MMM d').format(filter.dateRange!.start)} - ${DateFormat('MMM d').format(filter.dateRange!.end)}',
                         icon: Icons.calendar_today_rounded,
-                        onRemove: () => ref.read(_txnFilterProvider.notifier).update((s) => s.copyWith(clearDateRange: true)),
+                        onRemove: () => ref.read(transactionListProvider.notifier).applyFilter(filter.copyWith(clearDateRange: true)),
                       ).animate().scale(duration: 200.ms).fadeIn(),
 
                     // --- Category Chips ---
@@ -550,8 +550,8 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                               key: ValueKey('cat_$id'),
                               label: cat.name,
                               onRemove: () {
-                                final newIds = List<int>.from(filter.categoryIds)..remove(id!);
-                                ref.read(_txnFilterProvider.notifier).update((s) => s.copyWith(categoryIds: newIds));
+                                final newIds = List<int>.from(filter.categoryIds)..remove(id);
+                                ref.read(transactionListProvider.notifier).applyFilter(filter.copyWith(categoryIds: newIds));
                               },
                             ).animate().scale(duration: 200.ms).fadeIn();
                           });
@@ -565,7 +565,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                       _FilterChip(
                         label: '${filter.sortBy.name.toUpperCase()} ${filter.isAscending ? "↑" : "↓"}',
                         icon: Icons.sort_rounded,
-                        onRemove: () => ref.read(_txnFilterProvider.notifier).update((s) => s.copyWith(sortBy: TransactionSortBy.date, isAscending: false)),
+                        onRemove: () => ref.read(transactionListProvider.notifier).applyFilter(filter.copyWith(sortBy: TransactionSortBy.date, isAscending: false)),
                       ).animate().scale(duration: 200.ms).fadeIn(),
 
                     // --- Clear All Chip ---
@@ -574,7 +574,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                       icon: Icons.refresh_rounded,
                       onRemove: () {
                         _searchController.clear();
-                        ref.read(_txnFilterProvider.notifier).state = const TransactionFilter();
+                        ref.read(transactionListProvider.notifier).applyFilter(const TransactionFilter());
                       },
                     ).animate().scale(duration: 200.ms).fadeIn(),
                   ],
