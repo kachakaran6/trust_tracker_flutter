@@ -118,6 +118,8 @@ class SmsReceiver : BroadcastReceiver() {
                 lower.contains("revers") ||
                 lower.contains("inr") ||
                 lower.contains("rs.") ||
+                lower.contains("rs ") ||
+                lower.contains("₹") ||
                 lower.contains("upi")
 
         if (!hasFinancialKeywords) {

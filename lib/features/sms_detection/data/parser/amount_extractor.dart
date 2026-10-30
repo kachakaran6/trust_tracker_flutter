@@ -40,21 +40,27 @@ class AmountExtractor {
     caseSensitive: false,
   );
 
-  // Fallback pattern for action verb followed by amount without currency prefix
-  // e.g. "debited with 500.00", "credited 2500", "sent 50.00"
-  static final RegExp _actionVerbAmountPattern = RegExp(
-    r'\b(debited(?:\s+(?:by|with|for))?|credited(?:\s+(?:with|by))?|spent|paid|withdrawn|sent|purchase\s+of|refund\s+of|reversal\s+of)\s+([0-9]{1,3}(?:,[0-9]{2,3})+(?:\.[0-9]{1,2})?|[0-9]+(?:\.[0-9]{1,2})?)(?!\d)',
+  // Matches explicit labeled amount (e.g. "Amount: Rs 15000", "Amt: 15,000.00")
+  static final RegExp _labeledAmountPattern = RegExp(
+    r'\b(?:amount|amt|txnamt|txn\s*amount)\s*(?:debited|credited|transferred|spent|paid)?\s*(?:is|:|-)?\s*(inr|rs\.?|₹)?\s*([0-9]{1,3}(?:,[0-9]{2,3})+(?:\.[0-9]{1,2})?|[0-9]+(?:\.[0-9]{1,2})?)(?!\d)',
     caseSensitive: false,
   );
 
-  // Balance and limit clause patterns to scrub out
+  // Fallback pattern for action verb followed by amount (with optional currency)
+  // e.g. "debited with 500.00", "credited 2500", "sent 50.00", "payment of Rs 15000"
+  static final RegExp _actionVerbAmountPattern = RegExp(
+    r'\b(debited(?:\s+(?:by|with|for|from))?|credited(?:\s+(?:with|by|to))?|spent(?:\s+(?:on|at))?|paid(?:\s+(?:to|via|for|at))?|withdrawn(?:\s+from)?|sent|purchase\s+of|refund\s+of|reversal\s+of|payment\s+of|transfer\s+of|transaction\s+of|txn\s+of)\s+(inr|rs\.?|₹)?\s*([0-9]{1,3}(?:,[0-9]{2,3})+(?:\.[0-9]{1,2})?|[0-9]+(?:\.[0-9]{1,2})?)(?!\d)',
+    caseSensitive: false,
+  );
+
+  // Comprehensive balance clause patterns to scrub out across all Indian banks
   static final RegExp _balanceClausePattern = RegExp(
-    r'(?:avail(?:able)?\s*bal(?:ance)?|avl\s*bal|total\s*bal(?:ance)?|bal|a\/c\s*bal|net\s*bal(?:ance)?)\s*(?:is|:)?\s*(?:inr|rs\.?|₹)?\s*([0-9,]+(?:\.[0-9]{1,2})?)',
+    r'\b(?:avail(?:able)?\s*bal(?:ance)?|avl\s*bal|total\s*bal(?:ance)?|clear\s*bal(?:ance)?|clr\s*bal|closing\s*bal(?:ance)?|cls\s*bal|net\s*bal(?:ance)?|rem(?:aining)?\s*bal(?:ance)?|upd(?:ated)?\s*bal(?:ance)?|cur(?:rent)?\s*bal(?:ance)?|new\s*bal(?:ance)?|ledger\s*bal(?:ance)?|eff(?:ective)?\s*bal(?:ance)?|a\/?c\s*bal(?:ance)?|acct\s*bal(?:ance)?|\bbal(?:ance)?(?:\s+in\s+(?:your\s+)?a\/?c)?)\s*(?:is|:|-)?\s*(inr|rs\.?|₹)?\s*([0-9,]+(?:\.[0-9]{1,2})?)',
     caseSensitive: false,
   );
 
   static final RegExp _limitClausePattern = RegExp(
-    r'(?:credit\s*limit|available\s*limit|avail\s*limit|total\s*limit|limit)\s*(?:is|:)?\s*(?:inr|rs\.?|₹)?\s*([0-9,]+(?:\.[0-9]{1,2})?)',
+    r'\b(?:credit\s*limit|available\s*limit|avail\s*limit|total\s*limit|card\s*limit|\blimit\b)\s*(?:is|:|-)?\s*(inr|rs\.?|₹)?\s*([0-9,]+(?:\.[0-9]{1,2})?)',
     caseSensitive: false,
   );
 
@@ -164,25 +170,56 @@ class AmountExtractor {
       ));
     }
 
-    // 5. Fallback for verb-preceded amounts without explicit symbol (e.g. "debited with 500.00")
-    if (candidates.isEmpty) {
-      for (final match in _actionVerbAmountPattern.allMatches(scrubbed)) {
-        final valStr = match.group(2);
-        if (valStr == null) continue;
+    // 5. Explicit labeled amounts (e.g. "Amount: Rs 15000", "Amt: 15,000")
+    for (final match in _labeledAmountPattern.allMatches(scrubbed)) {
+      final cur = match.group(1) ?? 'INR';
+      final valStr = match.group(2);
+      if (valStr == null) continue;
 
-        final normalized = valStr.replaceAll(',', '').trim();
-        if (excludedStrings.contains(normalized)) continue;
+      final normalized = valStr.replaceAll(',', '').trim();
+      if (excludedStrings.contains(normalized)) continue;
 
-        final money = Money.tryParse(valStr);
-        if (money == null || !money.isPositive) continue;
+      final money = Money.tryParse(valStr, defaultCurrency: _normalizeCurrency(cur));
+      if (money == null || !money.isPositive) continue;
 
-        candidates.add(_AmountCandidate(
-          money: money,
-          rawMatch: match.group(0)!.trim(),
-          score: 80,
-          isPrefixed: false,
-        ));
-      }
+      final score = _scoreCandidateContext(
+        fullText: originalBody,
+        matchIndex: match.start,
+        matchLength: match.end - match.start,
+      ) + 30;
+
+      candidates.add(_AmountCandidate(
+        money: money,
+        rawMatch: match.group(0)!.trim(),
+        score: score,
+        isPrefixed: true,
+      ));
+    }
+
+    // 6. Action verb amounts (e.g. "debited with 500.00", "payment of Rs 15000")
+    for (final match in _actionVerbAmountPattern.allMatches(scrubbed)) {
+      final cur = match.group(2) ?? 'INR';
+      final valStr = match.group(3);
+      if (valStr == null) continue;
+
+      final normalized = valStr.replaceAll(',', '').trim();
+      if (excludedStrings.contains(normalized)) continue;
+
+      final money = Money.tryParse(valStr, defaultCurrency: _normalizeCurrency(cur));
+      if (money == null || !money.isPositive) continue;
+
+      final score = _scoreCandidateContext(
+        fullText: originalBody,
+        matchIndex: match.start,
+        matchLength: match.end - match.start,
+      ) + 20;
+
+      candidates.add(_AmountCandidate(
+        money: money,
+        rawMatch: match.group(0)!.trim(),
+        score: score,
+        isPrefixed: true,
+      ));
     }
 
     if (candidates.isEmpty) return null;
@@ -251,12 +288,23 @@ class AmountExtractor {
     // Direct prefix: e.g. "Sent Rs.10.00" or "debited with Rs."
     if (contextSnippet.contains('sent rs') ||
         contextSnippet.contains('sent inr') ||
+        contextSnippet.contains('sent ₹') ||
         contextSnippet.contains('credited to') ||
+        contextSnippet.contains('credited with') ||
+        contextSnippet.contains('credited by') ||
         contextSnippet.contains('debited by') ||
         contextSnippet.contains('debited with') ||
+        contextSnippet.contains('debited for') ||
         contextSnippet.contains('paid rs') ||
-        contextSnippet.contains('paid inr')) {
-      score += 25;
+        contextSnippet.contains('paid inr') ||
+        contextSnippet.contains('paid ₹') ||
+        contextSnippet.contains('payment of') ||
+        contextSnippet.contains('transfer of') ||
+        contextSnippet.contains('transaction of') ||
+        contextSnippet.contains('txn of') ||
+        contextSnippet.contains('amount debited') ||
+        contextSnippet.contains('amount credited')) {
+      score += 35;
     }
 
     return score;

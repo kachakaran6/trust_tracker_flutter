@@ -11,14 +11,14 @@ enum SmsTransactionCategory {
 class DirectionDetector {
   // Regex to detect explicit credit phrases
   static final RegExp _creditDirectPatterns = RegExp(
-    r'\b(credited\s*(with|to|by)?|deposited|received|added\s+to|refund(ed)?(\s+of)?|revers(ed|al)(\s+of)?|cashback\s+received|cr\.?)\b',
+    r'\b(credited\s*(with|to|by|for)?|deposited\s*(to|in|into)?|received\s*(from|for|in)?|added\s+(to|in)?|salary\s+credited|subsidy\s+credited|refund(ed)?(\s+of)?|revers(ed|al)(\s+of)?|cashback\s+received|cr\.?)\b',
     caseSensitive: false,
   );
 
   // Regex to detect explicit debit phrases
   // NOTE: Includes "sent" in patterns like "Sent Rs.10.00 from Kotak Bank..."
   static final RegExp _debitDirectPatterns = RegExp(
-    r'\b(sent\b|debited\s*(from|by|for|with)?|spent|paid\s*(to|via|for)?|withdrawn|purchase\s*(of|at)?|card\s*purchase|deducted\s*from|transferred\s*to|dr\.?)\b',
+    r'\b(sent\b|debited\s*(from|by|for|with)?|spent\s*(on|at)?|paid\s*(to|via|for|at)?|withdrawn|purchase\s*(of|at)?|card\s*purchase|deducted\s*from|transferred\s*(to|from)?|payment\s+(of|to|for)|transfer\s+(of|to)|transaction\s+(of|for|on)|txn\s+(of|for|on)|made\s+on\s+(?:\w+\s+)?card|done\s+on\s+(?:\w+\s+)?card|dr\.?)\b',
     caseSensitive: false,
   );
 
