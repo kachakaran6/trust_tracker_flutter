@@ -34,6 +34,7 @@ import 'package:trust_tracker_flutter/features/transactions/presentation/pages/d
 import 'package:trust_tracker_flutter/features/transactions/presentation/pages/person_debt_detail_page.dart';
 import 'package:trust_tracker_flutter/features/transactions/presentation/widgets/add_debt_bottom_sheet.dart';
 import 'package:trust_tracker_flutter/features/sms_detection/presentation/pages/sms_review_page.dart';
+import 'package:trust_tracker_flutter/features/sms_detection/presentation/pages/sms_activity_page.dart';
 import 'package:trust_tracker_flutter/core/widgets/liquid_glass_bottom_nav_bar.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -299,6 +300,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/sms-review',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const SmsReviewPage(),
+      ),
+      GoRoute(
+        path: '/sms-activity',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const SmsActivityPage(),
       ),
     ],
   );

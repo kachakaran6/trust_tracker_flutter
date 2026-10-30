@@ -1561,6 +1561,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
           label: 'Sync Past Bank SMS',
           onTap: () => SmsSyncHistorySheet.show(context),
         ),
+        const Divider(height: 1, indent: 16, endIndent: 16),
+        _SettingsTile(
+          icon: Icons.manage_history_rounded,
+          label: 'SMS Activity & History',
+          onTap: () => context.push('/sms-activity'),
+        ),
       ],
     );
   }
