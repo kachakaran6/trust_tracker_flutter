@@ -9,6 +9,18 @@ import 'package:trust_tracker_flutter/features/sms_detection/domain/repositories
 import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/repositories/transaction_repository.dart';
 
+class BulkApprovalResult {
+  final int approvedCount;
+  final int skippedUncertainCount;
+  final List<String> errors;
+
+  const BulkApprovalResult({
+    required this.approvedCount,
+    required this.skippedUncertainCount,
+    this.errors = const [],
+  });
+}
+
 class SmsProcessingService {
   final SmsTransactionRepository _smsRepository;
   final TransactionRepository _transactionRepository;
@@ -43,7 +55,7 @@ class SmsProcessingService {
 
     final detected = parseResult.transaction!;
 
-    // 2. Check for duplicate
+    // 2. Check for duplicate (idempotency guard)
     final isDup = await _dedupService.isDuplicate(detected);
     if (isDup) {
       return SmsParseResult.duplicate('Transaction already processed (duplicate detected)');
@@ -58,7 +70,22 @@ class SmsProcessingService {
     final resolvedTxn = detected.copyWith(categoryId: categoryId);
 
     // 4. Check if auto-approval applies
-    if (autoApproveHighConfidence && resolvedTxn.confidenceLevel == SmsConfidenceLevel.high) {
+    if (autoApproveHighConfidence && resolvedTxn.confidenceLevel == SmsConfidenceLevel.high && !resolvedTxn.isAmbiguous) {
+      // Build safe note
+      final noteParts = <String>[];
+      if (resolvedTxn.bankName != null && resolvedTxn.bankName!.isNotEmpty) {
+        noteParts.add(resolvedTxn.bankName!);
+      }
+      if (resolvedTxn.maskedAccount != null) {
+        noteParts.add(resolvedTxn.maskedAccount!);
+      }
+      if (resolvedTxn.referenceNumber != null) {
+        noteParts.add('Ref: ${resolvedTxn.referenceNumber}');
+      }
+      final note = noteParts.isNotEmpty
+          ? 'Auto-detected via SMS (${noteParts.join(', ')})'
+          : 'Auto-detected via SMS';
+
       // Create actual transaction directly
       final actualTxn = TransactionModel.create(
         amount: resolvedTxn.amount,
@@ -66,16 +93,15 @@ class SmsProcessingService {
         date: resolvedTxn.date,
         type: resolvedTxn.type,
         categoryId: resolvedTxn.categoryId,
-        note: resolvedTxn.maskedAccount != null
-            ? 'Auto-detected via SMS (${resolvedTxn.maskedAccount})'
-            : 'Auto-detected via SMS',
+        note: note,
       );
 
       final txnId = await _transactionRepository.addTransaction(actualTxn);
       resolvedTxn.status = 'approved';
       resolvedTxn.transactionId = txnId;
 
-      await _smsRepository.insertDetectedTransaction(resolvedTxn);
+      final insertedId = await _smsRepository.insertDetectedTransaction(resolvedTxn);
+      resolvedTxn.id = insertedId;
       return SmsParseResult.success(resolvedTxn);
     } else {
       // Store in pending review queue
@@ -86,28 +112,93 @@ class SmsProcessingService {
     }
   }
 
-  Future<void> approveDetectedTransaction({
+  Future<int?> approveDetectedTransaction({
     required DetectedSmsTransaction detected,
     int? customCategoryId,
+    String? customCategoryName,
     String? customDescription,
     double? customAmount,
+    TransactionType? customType,
     DateTime? customDate,
   }) async {
-    if (detected.id == null) return;
+    if (detected.id == null) return null;
+
+    // Idempotency: Avoid double approvals
+    if (detected.status == 'approved' && detected.transactionId != null) {
+      return detected.transactionId;
+    }
+
+    final finalAmount = customAmount ?? detected.amount;
+    final finalType = customType ?? detected.type;
+    final finalMerchant = customDescription ?? detected.merchant ?? detected.sender;
+    final finalDate = customDate ?? detected.date;
+    final finalCatId = customCategoryId ?? detected.categoryId;
+
+    final noteParts = <String>[];
+    if (detected.bankName != null && detected.bankName!.isNotEmpty) {
+      noteParts.add(detected.bankName!);
+    }
+    if (detected.maskedAccount != null) {
+      noteParts.add(detected.maskedAccount!);
+    }
+    if (detected.referenceNumber != null) {
+      noteParts.add('Ref: ${detected.referenceNumber}');
+    }
+    final note = noteParts.isNotEmpty
+        ? 'Imported via SMS (${noteParts.join(', ')})'
+        : 'Imported via SMS';
 
     final actualTxn = TransactionModel.create(
-      amount: customAmount ?? detected.amount,
-      description: customDescription ?? detected.merchant ?? detected.sender,
-      date: customDate ?? detected.date,
-      type: detected.type,
-      categoryId: customCategoryId ?? detected.categoryId,
-      note: detected.maskedAccount != null
-          ? 'Imported via SMS (${detected.maskedAccount})'
-          : 'Imported via SMS',
+      amount: finalAmount,
+      description: finalMerchant,
+      date: finalDate,
+      type: finalType,
+      categoryId: finalCatId,
+      note: note,
     );
 
     final txnId = await _transactionRepository.addTransaction(actualTxn);
-    await _smsRepository.updateStatus(detected.id!, 'approved', transactionId: txnId);
+
+    // Persist confirmed and corrected values into audit trail
+    final updatedRecord = detected.copyWith(
+      amount: finalAmount,
+      type: finalType,
+      merchant: finalMerchant,
+      date: finalDate,
+      categoryId: finalCatId,
+      categoryName: customCategoryName ?? detected.categoryName,
+      status: 'approved',
+      transactionId: txnId,
+    );
+    await _smsRepository.updateTransactionDetails(updatedRecord);
+
+    return txnId;
+  }
+
+  Future<BulkApprovalResult> bulkApprovePending(List<DetectedSmsTransaction> items) async {
+    int approved = 0;
+    int skippedUncertain = 0;
+    final List<String> errors = [];
+
+    for (final item in items) {
+      // High financial integrity rule: never bulk-approve ambiguous or low-confidence entries
+      if (item.isAmbiguous || item.confidenceLevel == SmsConfidenceLevel.low) {
+        skippedUncertain++;
+        continue;
+      }
+      try {
+        await approveDetectedTransaction(detected: item);
+        approved++;
+      } catch (e) {
+        errors.add('Failed to approve ${item.merchant ?? item.sender}: $e');
+      }
+    }
+
+    return BulkApprovalResult(
+      approvedCount: approved,
+      skippedUncertainCount: skippedUncertain,
+      errors: errors,
+    );
   }
 
   Future<void> rejectDetectedTransaction(int id) async {
