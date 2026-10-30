@@ -1,5 +1,4 @@
-• Fixed Indian Rupee (₹) and international currency symbol rendering in all exported PDF reports.
-• Added transaction type filtering (All, Income, Expense) to report export.
-• Added dynamic category multi-select filter with an "All Categories" toggle.
-• Added live counter badge showing real-time count of matching transactions ready for export.
-• Performance optimizations and smooth navigation enhancements.
+• Fixed transaction amount detection accuracy across Indian bank SMS alerts (Kotak, SBI, HDFC, ICICI, Axis).
+• Implemented exact integer-paise financial engine with Indian currency formatting (₹).
+• Redesigned Pending SMS approval screen with bank branding, confidence indicators, and inline editing.
+• Added SMS Activity Log to audit approved, rejected, and pending transactions with search and filters.

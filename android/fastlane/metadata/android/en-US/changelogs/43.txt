@@ -1,0 +1,4 @@
+• Fixed transaction amount detection accuracy across Indian bank SMS alerts (Kotak, SBI, HDFC, ICICI, Axis).
+• Implemented exact integer-paise financial engine with Indian currency formatting (₹).
+• Redesigned Pending SMS approval screen with bank branding, confidence indicators, and inline editing.
+• Added SMS Activity Log to audit approved, rejected, and pending transactions with search and filters.
