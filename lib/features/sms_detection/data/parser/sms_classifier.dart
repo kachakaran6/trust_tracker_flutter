@@ -6,7 +6,7 @@ class SmsClassifier {
   );
 
   static final RegExp _otpActionPattern = RegExp(
-    r'(is\s+your\s+(?:one\s*time\s*pass(word)?|otp)|use\s+otp|do\s+not\s+share|never\s+share|valid\s+for)',
+    r'(is\s+your\s+(?:one\s*time\s*pass(word)?|otp)|use\s+otp|do\s+not\s+share|never\s+share|valid\s+for|secret\s*otp)',
     caseSensitive: false,
   );
 
@@ -30,8 +30,13 @@ class SmsClassifier {
     caseSensitive: false,
   );
 
-  static final RegExp _balanceOnlyPattern = RegExp(
-    r'^(?=.*\b(balance|bal|avl\s*bal|available\s+bal)\b)(?!.*\b(debited|credited|spent|withdrawn|transferred|paid|purchase|received)\b).*$',
+  static final RegExp _balanceKeywords = RegExp(
+    r'\b(balance|bal|avl\s*bal|available\s+bal|a\/c\s*bal)\b',
+    caseSensitive: false,
+  );
+
+  static final RegExp _transactionVerbs = RegExp(
+    r'\b(debited|credited|sent|spent|withdrawn|transferred|paid|purchase|received|deposited|refund|reversal)\b',
     caseSensitive: false,
   );
 
@@ -55,9 +60,7 @@ class SmsClassifier {
     }
 
     // 2. Check for Promotional messages
-    if (_promotionalPattern.hasMatch(cleanBody) &&
-        !cleanBody.toLowerCase().contains('debited') &&
-        !cleanBody.toLowerCase().contains('credited')) {
+    if (_promotionalPattern.hasMatch(cleanBody) && !_transactionVerbs.hasMatch(cleanBody)) {
       return const ClassificationResult(
         isEligible: false,
         isNonTransaction: true,
@@ -66,9 +69,7 @@ class SmsClassifier {
     }
 
     // 3. Check for Credit Card Limit updates
-    if (_limitNotificationPattern.hasMatch(cleanBody) &&
-        !cleanBody.toLowerCase().contains('spent') &&
-        !cleanBody.toLowerCase().contains('debited')) {
+    if (_limitNotificationPattern.hasMatch(cleanBody) && !_transactionVerbs.hasMatch(cleanBody)) {
       return const ClassificationResult(
         isEligible: false,
         isNonTransaction: true,
@@ -80,7 +81,8 @@ class SmsClassifier {
     if (_pendingPattern.hasMatch(cleanBody) &&
         !cleanBody.toLowerCase().contains('debited from') &&
         !cleanBody.toLowerCase().contains('has been credited') &&
-        !cleanBody.toLowerCase().contains('is credited')) {
+        !cleanBody.toLowerCase().contains('is credited') &&
+        !cleanBody.toLowerCase().contains('sent rs')) {
       return const ClassificationResult(
         isEligible: false,
         isNonTransaction: true,
@@ -97,8 +99,8 @@ class SmsClassifier {
       );
     }
 
-    // 6. Check for Balance-only alerts (no debit/credit)
-    if (_balanceOnlyPattern.hasMatch(cleanBody)) {
+    // 6. Check for Balance-only alerts (no debit/credit/sent)
+    if (_balanceKeywords.hasMatch(cleanBody) && !_transactionVerbs.hasMatch(cleanBody)) {
       return const ClassificationResult(
         isEligible: false,
         isNonTransaction: true,

@@ -1,3 +1,5 @@
+import 'package:trust_tracker_flutter/core/utils/money.dart';
+import 'package:trust_tracker_flutter/features/sms_detection/data/parser/bank_detector.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
 import 'package:trust_tracker_flutter/features/sms_detection/domain/models/sms_confidence.dart';
 
@@ -21,6 +23,9 @@ class DetectedSmsTransaction {
   int? transactionId;
   final DateTime createdAt;
   final String? rejectionReason;
+  final String? bankName;
+  final bool isAmbiguous;
+  final String? parsingWarning;
 
   DetectedSmsTransaction({
     this.id,
@@ -42,7 +47,21 @@ class DetectedSmsTransaction {
     this.transactionId,
     DateTime? createdAt,
     this.rejectionReason,
-  }) : createdAt = createdAt ?? DateTime.now();
+    String? bankName,
+    this.isAmbiguous = false,
+    this.parsingWarning,
+  })  : createdAt = createdAt ?? DateTime.now(),
+        bankName = bankName ?? BankDetector.detect(sender: sender, body: rawSnippet).name;
+
+  /// Exact monetary representation in paise (1 INR = 100 paise)
+  int get amountPaise => (amount * 100.0).round();
+
+  Money get money => Money.fromPaise(amountPaise, currency: currency);
+
+  /// Safe display amount with exact Indian notation (e.g. ₹35,931.00)
+  String formattedAmount({bool showSymbol = true, bool showSign = false}) {
+    return money.formatIndian(showSymbol: showSymbol, showSign: showSign);
+  }
 
   Map<String, dynamic> toMap() => {
         'id': id,
@@ -66,11 +85,13 @@ class DetectedSmsTransaction {
       };
 
   factory DetectedSmsTransaction.fromMap(Map<String, dynamic> map) {
+    final s = map['sender'] as String? ?? 'Unknown';
+    final snip = map['rawSnippet'] as String?;
     return DetectedSmsTransaction(
       id: map['id'] as int?,
       smsFingerprint: map['smsFingerprint'] as String? ?? '',
       referenceNumber: map['referenceNumber'] as String?,
-      sender: map['sender'] as String? ?? 'Unknown',
+      sender: s,
       amount: (map['amount'] as num).toDouble(),
       currency: map['currency'] as String? ?? 'INR',
       type: TransactionType.values[map['type'] as int? ?? 1],
@@ -85,11 +106,12 @@ class DetectedSmsTransaction {
         orElse: () => SmsConfidenceLevel.medium,
       ),
       status: map['status'] as String? ?? 'pending_review',
-      rawSnippet: map['rawSnippet'] as String?,
+      rawSnippet: snip,
       transactionId: map['transactionId'] as int?,
       createdAt: map['createdAt'] != null
           ? DateTime.parse(map['createdAt'] as String)
           : DateTime.now(),
+      bankName: BankDetector.detect(sender: s, body: snip).name,
     );
   }
 
@@ -113,6 +135,9 @@ class DetectedSmsTransaction {
     int? transactionId,
     DateTime? createdAt,
     String? rejectionReason,
+    String? bankName,
+    bool? isAmbiguous,
+    String? parsingWarning,
   }) {
     return DetectedSmsTransaction(
       id: id ?? this.id,
@@ -134,6 +159,9 @@ class DetectedSmsTransaction {
       transactionId: transactionId ?? this.transactionId,
       createdAt: createdAt ?? this.createdAt,
       rejectionReason: rejectionReason ?? this.rejectionReason,
+      bankName: bankName ?? this.bankName,
+      isAmbiguous: isAmbiguous ?? this.isAmbiguous,
+      parsingWarning: parsingWarning ?? this.parsingWarning,
     );
   }
 }

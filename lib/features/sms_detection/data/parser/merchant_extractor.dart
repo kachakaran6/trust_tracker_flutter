@@ -1,43 +1,62 @@
 class MerchantExtractor {
-  // Regex to extract merchant name after prepositions (non-greedy, 1-3 words, stopping before prepositions/dates)
-  static final RegExp _merchantPattern = RegExp(
-    r'(?:at|to|info:?|vpa|paid to|transfer(?:red)? to)\s+([A-Za-z0-9.&_-]+(?:\s+(?!on\b|via\b|ref\b|upi\b|using\b|dated\b|bal\b)[A-Za-z0-9.&_-]+){0,2})',
+  // Regex for debit recipient / merchant
+  static final RegExp _debitMerchantPattern = RegExp(
+    r'\b(?:to|at|paid\s+to|transferred\s+to)\s+([A-Za-z0-9.&_/-]+(?:\s+[A-Za-z0-9.&_/-]+)*?)(?=\s*(?:\.|\b(?:on\s+\d{1,2}|via\b|using\b|ref\b|upi\b|utr\b|dated\b|bal\b|avail\b|not\s+done\b|tap\s+http)\b|$))',
     caseSensitive: false,
   );
 
+  // Regex for credit sender / beneficiary
+  static final RegExp _creditSourcePattern = RegExp(
+    r'\b(?:from\s+beneficiary|from\s+sender|received\s+from|credited\s+by)\s+([A-Za-z0-9.&_/-]+(?:\s+[A-Za-z0-9.&_/-]+)*?)(?=\s*(?:\.|\b(?:utr\b|ref\b|upi\b|via\b|dated\b|bal\b|avail\b|on\s+\d{1,2}|not\s+done\b)\b|$))',
+    caseSensitive: false,
+  );
+
+  // VPA handles: e.g. user@okaxis, swiggy.pay@icici
   static final RegExp _vpaPattern = RegExp(
     r'\b([a-zA-Z0-9.\-_]{2,30}@[a-zA-Z0-9]{2,15})\b',
     caseSensitive: false,
   );
 
+  // Bank reference numbers (UPI, UTR, IMPS, Txn ID, RRN)
   static final RegExp _refPattern = RegExp(
-    r'(?:upi\s*ref(?:\s*no\.?)?|ref(?:\s*no\.?)?|txn\s*id|utr|rrn|imps\s*ref)\s*[:\s-]*([a-zA-Z0-9]{6,22})',
+    r'(?:upi\s*ref(?:\s*no\.?)?|utr(?:\s*ref\.?)?|rrn|imps\s*ref|txn\s*id|ref(?:\s*no\.?)?)\s*[:\s-]*([a-zA-Z0-9]{6,25})',
     caseSensitive: false,
   );
 
-  static String? extractMerchant(String body) {
+  static String? extractMerchant(String body, {bool? isCredit}) {
     if (body.isEmpty) return null;
 
-    // First try to check VPA handles (e.g. swiggy@icici or merchant@okaxis)
+    // 1. If credit source pattern matches
+    final creditMatch = _creditSourcePattern.firstMatch(body);
+    if (creditMatch != null) {
+      final raw = creditMatch.group(1);
+      if (raw != null) {
+        final cleaned = _cleanEntityName(raw);
+        if (cleaned.isNotEmpty && !_isBoilerplateWord(cleaned)) {
+          return cleaned;
+        }
+      }
+    }
+
+    // 2. Check for VPA handles (e.g. swiggy@icici or user@okaxis)
     final vpaMatch = _vpaPattern.firstMatch(body);
     if (vpaMatch != null) {
       final vpa = vpaMatch.group(1);
       if (vpa != null) {
-        // If VPA contains readable name like swiggy.pay@icici, return Swiggy
         final namePart = vpa.split('@')[0].split('.')[0].split('-')[0];
         if (namePart.length >= 3 && !RegExp(r'^\d+$').hasMatch(namePart)) {
-          return _cleanMerchantName(namePart);
+          return _cleanEntityName(namePart);
         }
         return vpa;
       }
     }
 
-    // Try finding preposition-based merchant: "at SWIGGY on" or "to Amazon via"
-    final match = _merchantPattern.firstMatch(body);
-    if (match != null) {
+    // 3. Check for debit counterparty (e.g. "to BAMANIA SUNILKUMAR", "to Indian Railways", "at ZARA")
+    final debitMatches = _debitMerchantPattern.allMatches(body);
+    for (final match in debitMatches) {
       final raw = match.group(1);
       if (raw != null) {
-        final cleaned = _cleanMerchantName(raw);
+        final cleaned = _cleanEntityName(raw);
         if (cleaned.isNotEmpty && !_isBoilerplateWord(cleaned)) {
           return cleaned;
         }
@@ -53,34 +72,35 @@ class MerchantExtractor {
     return match?.group(1)?.trim();
   }
 
-  static String _cleanMerchantName(String raw) {
+  static String _cleanEntityName(String raw) {
     var s = raw.trim();
 
-    // Remove stop words that might be attached at the end
-    final stopWords = RegExp(r'\s+(?:on|via|ref|upi|bal|dated|using)$', caseSensitive: false);
+    // Strip out common preambles if caught
+    s = s.replaceAll(RegExp(r'^(?:beneficiary|sender|user)\s+', caseSensitive: false), '').trim();
+
+    // Remove stop words attached at end
+    final stopWords = RegExp(r'\s+(?:on|via|ref|upi|utr|bal|dated|using|not done)$', caseSensitive: false);
     while (stopWords.hasMatch(s)) {
       s = s.replaceAll(stopWords, '').trim();
     }
 
     // Remove leading/trailing punctuation
-    s = s.replaceAll(RegExp(r'^[\s.,:;/-]+|[\s.,:;/-]+$'), '');
+    s = s.replaceAll(RegExp(r'^[\s.,:;/-]+|[\s.,:;/-]+$'), '').trim();
 
-    if (s.isEmpty) return s;
-
-    // Capitalize words nicely
-    return s.split(' ').map((word) {
-      if (word.isEmpty) return word;
-      if (word.length <= 4 && word == word.toUpperCase()) return word; // Keep acronyms like PVR, KFC, ZARA
-      return word[0].toUpperCase() + word.substring(1).toLowerCase();
-    }).join(' ');
+    return s;
   }
 
   static bool _isBoilerplateWord(String word) {
     final lower = word.toLowerCase().trim();
     const boilerplate = {
       'your account', 'your a/c', 'account', 'bank', 'upi', 'branch',
-      'card', 'atm', 'pos', 'imps', 'neft', 'rtgs', 'transfer', 'inr', 'rs'
+      'card', 'atm', 'pos', 'imps', 'neft', 'rtgs', 'transfer', 'inr', 'rs',
+      'beneficiary', 'sender', 'someone', 'merchant', 'user'
     };
-    return boilerplate.contains(lower);
+    if (boilerplate.contains(lower)) return true;
+    if (lower.contains('your account') || lower.contains('your a/c')) return true;
+    if (lower.contains('bank a/c') || lower.contains('bank acct')) return true;
+    if (RegExp(r'^(?:kotak|hdfc|sbi|icici|axis)\s+bank', caseSensitive: false).hasMatch(lower)) return true;
+    return false;
   }
 }

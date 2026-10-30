@@ -11,13 +11,14 @@ enum SmsTransactionCategory {
 class DirectionDetector {
   // Regex to detect explicit credit phrases
   static final RegExp _creditDirectPatterns = RegExp(
-    r'\b(credited\s*(with|to|by)?|deposited|received|added\s+to|refund(ed)?(\s+of)?|revers(ed|al)(\s+of)?|cashback\s+received)\b',
+    r'\b(credited\s*(with|to|by)?|deposited|received|added\s+to|refund(ed)?(\s+of)?|revers(ed|al)(\s+of)?|cashback\s+received|cr\.?)\b',
     caseSensitive: false,
   );
 
   // Regex to detect explicit debit phrases
+  // NOTE: Includes "sent" in patterns like "Sent Rs.10.00 from Kotak Bank..."
   static final RegExp _debitDirectPatterns = RegExp(
-    r'\b(debited\s*(from|by|for)?|spent|paid\s*(to|via|for)?|withdrawn|purchase\s*(of|at)?|card\s*purchase|deducted\s*from|sent\s*to)\b',
+    r'\b(sent\b|debited\s*(from|by|for|with)?|spent|paid\s*(to|via|for)?|withdrawn|purchase\s*(of|at)?|card\s*purchase|deducted\s*from|transferred\s*to|dr\.?)\b',
     caseSensitive: false,
   );
 
@@ -35,12 +36,12 @@ class DirectionDetector {
   static DirectionResult detect(String body) {
     final lower = body.toLowerCase();
 
-    // Check for refunds first: "refund of INR 450 has been processed/credited"
+    // 1. Check for refunds or reversals first
     if (_refundPattern.hasMatch(lower) || _reversalPattern.hasMatch(lower)) {
-      // If it says "refund of Rs X credited" or "reversed to your account" -> credit
       if (lower.contains('credit') ||
           lower.contains('refund') ||
           lower.contains('reversed') ||
+          lower.contains('reversal') ||
           lower.contains('received') ||
           lower.contains('back to your')) {
         return const DirectionResult(
@@ -51,11 +52,10 @@ class DirectionDetector {
       }
     }
 
-    // Safeguard 1: "Request received for Rs 500 debited from a/c" -> Debit wins!
-    // If it has both "received" and "debited", check context.
     final hasDebit = _debitDirectPatterns.hasMatch(lower);
     final hasCredit = _creditDirectPatterns.hasMatch(lower);
 
+    // 2. Clear debit without credit
     if (hasDebit && !hasCredit) {
       return const DirectionResult(
         type: TransactionType.expense,
@@ -64,6 +64,7 @@ class DirectionDetector {
       );
     }
 
+    // 3. Clear credit without debit
     if (hasCredit && !hasDebit) {
       return const DirectionResult(
         type: TransactionType.income,
@@ -72,27 +73,30 @@ class DirectionDetector {
       );
     }
 
+    // 4. Both match: Resolve contextual ambiguity
     if (hasDebit && hasCredit) {
-      // Both match, resolve with strict context analysis:
       // Case A: "debited ... has been reversed / refunded" -> Income
       if (lower.contains('debited') &&
-          (lower.contains('reversed') || lower.contains('refunded'))) {
+          (lower.contains('reversed') || lower.contains('refunded') || lower.contains('reversal'))) {
         return const DirectionResult(
           type: TransactionType.income,
           category: SmsTransactionCategory.reversal,
-          confidence: 0.90,
+          confidence: 0.92,
         );
       }
 
       // Case B: "request received ... debited from your a/c" -> Expense
-      if (lower.contains('received') && lower.contains('debited')) {
+      if (lower.contains('received') && (lower.contains('debited') || lower.contains('sent'))) {
         final debitedIndex = lower.indexOf('debited');
         final receivedIndex = lower.indexOf('received');
-        if (lower.contains('request received') || lower.contains('mandate received') || debitedIndex > receivedIndex) {
+        if (lower.contains('request received') ||
+            lower.contains('mandate received') ||
+            debitedIndex > receivedIndex ||
+            lower.contains('sent rs')) {
           return const DirectionResult(
             type: TransactionType.expense,
             category: SmsTransactionCategory.debit,
-            confidence: 0.88,
+            confidence: 0.90,
           );
         }
       }
@@ -102,12 +106,21 @@ class DirectionDetector {
         return const DirectionResult(
           type: TransactionType.income,
           category: SmsTransactionCategory.credit,
-          confidence: 0.88,
+          confidence: 0.90,
         );
       }
 
-      // Default to debit if "debited from" appears
-      if (lower.contains('debited from') || lower.contains('card purchase')) {
+      // Case D: "Sent Rs.X from ... credited to" (e.g. sender alert) -> Expense
+      if (lower.startsWith('sent') || lower.contains('sent rs') || lower.contains('sent inr')) {
+        return const DirectionResult(
+          type: TransactionType.expense,
+          category: SmsTransactionCategory.debit,
+          confidence: 0.92,
+        );
+      }
+
+      // Default to debit if "debited from" or "spent" appears
+      if (lower.contains('debited from') || lower.contains('card purchase') || lower.contains('spent')) {
         return const DirectionResult(
           type: TransactionType.expense,
           category: SmsTransactionCategory.debit,
