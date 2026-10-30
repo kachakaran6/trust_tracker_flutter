@@ -1,0 +1,5 @@
+• Resolved transaction amount truncation where unpunctuated values (e.g. ₹15,000) dropped trailing zeros.
+• Added automatic database self-healing for legacy pending SMS records.
+• Expanded debit detection to capture card transactions and labeled amounts across all Indian banks.
+• Enhanced native background SMS receiver to catch unpunctuated currency formats.
+• General stability enhancements and transaction reliability.
