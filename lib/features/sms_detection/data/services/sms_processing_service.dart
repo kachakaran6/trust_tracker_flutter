@@ -58,6 +58,27 @@ class SmsProcessingService {
     // 2. Check for duplicate (idempotency guard)
     final isDup = await _dedupService.isDuplicate(detected);
     if (isDup) {
+      // Auto-heal check: if an existing record in pending_review has an older/truncated amount, heal it!
+      if (detected.referenceNumber != null && detected.referenceNumber!.isNotEmpty) {
+        final db = await _dbHelper.database;
+        final rows = await db.query(
+          'sms_detected_transactions',
+          where: 'referenceNumber = ? AND status = ?',
+          whereArgs: [detected.referenceNumber, 'pending_review'],
+          limit: 1,
+        );
+        if (rows.isNotEmpty) {
+          final existing = DetectedSmsTransaction.fromMap(rows.first);
+          if (existing.amount != detected.amount && detected.amount > 0) {
+            existing.amount = detected.amount;
+            existing.confidenceScore = detected.confidenceScore;
+            existing.isAmbiguous = detected.isAmbiguous;
+            existing.parsingWarning = detected.parsingWarning;
+            await _smsRepository.updateTransactionDetails(existing);
+            return SmsParseResult.success(existing);
+          }
+        }
+      }
       return SmsParseResult.duplicate('Transaction already processed (duplicate detected)');
     }
 

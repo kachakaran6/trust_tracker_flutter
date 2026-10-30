@@ -1,4 +1,5 @@
 import 'package:trust_tracker_flutter/core/database/database_helper.dart';
+import 'package:trust_tracker_flutter/features/sms_detection/data/parser/amount_extractor.dart';
 import 'package:trust_tracker_flutter/features/sms_detection/domain/models/detected_sms_transaction.dart';
 import 'package:trust_tracker_flutter/features/sms_detection/domain/repositories/sms_transaction_repository.dart';
 
@@ -57,7 +58,31 @@ class SmsTransactionRepositoryImpl implements SmsTransactionRepository {
       whereArgs: ['pending_review'],
       orderBy: 'date DESC',
     );
-    return result.map((e) => DetectedSmsTransaction.fromMap(e)).toList();
+    final list = result.map((e) => DetectedSmsTransaction.fromMap(e)).toList();
+
+    // Auto-heal any legacy corrupted or truncated amounts in pending review
+    for (final item in list) {
+      if (item.rawSnippet != null && item.rawSnippet!.isNotEmpty) {
+        final reExtracted = AmountExtractor.extract(item.rawSnippet!);
+        if (reExtracted != null && reExtracted.amount > 0 && reExtracted.amount != item.amount) {
+          item.amount = reExtracted.amount;
+          item.confidenceScore = reExtracted.confidence;
+          item.isAmbiguous = reExtracted.isAmbiguous;
+          item.parsingWarning = reExtracted.warning;
+          await db.update(
+            'sms_detected_transactions',
+            {
+              'amount': reExtracted.amount,
+              'confidenceScore': reExtracted.confidence,
+            },
+            where: 'id = ?',
+            whereArgs: [item.id],
+          );
+        }
+      }
+    }
+
+    return list;
   }
 
   @override
@@ -67,7 +92,31 @@ class SmsTransactionRepositoryImpl implements SmsTransactionRepository {
       'sms_detected_transactions',
       orderBy: 'date DESC',
     );
-    return result.map((e) => DetectedSmsTransaction.fromMap(e)).toList();
+    final list = result.map((e) => DetectedSmsTransaction.fromMap(e)).toList();
+
+    // Auto-heal pending items in all records
+    for (final item in list) {
+      if (item.status == 'pending_review' && item.rawSnippet != null && item.rawSnippet!.isNotEmpty) {
+        final reExtracted = AmountExtractor.extract(item.rawSnippet!);
+        if (reExtracted != null && reExtracted.amount > 0 && reExtracted.amount != item.amount) {
+          item.amount = reExtracted.amount;
+          item.confidenceScore = reExtracted.confidence;
+          item.isAmbiguous = reExtracted.isAmbiguous;
+          item.parsingWarning = reExtracted.warning;
+          await db.update(
+            'sms_detected_transactions',
+            {
+              'amount': reExtracted.amount,
+              'confidenceScore': reExtracted.confidence,
+            },
+            where: 'id = ?',
+            whereArgs: [item.id],
+          );
+        }
+      }
+    }
+
+    return list;
   }
 
   @override

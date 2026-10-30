@@ -8,7 +8,7 @@ class DetectedSmsTransaction {
   final String smsFingerprint;
   final String? referenceNumber;
   final String sender;
-  final double amount;
+  double amount;
   final String currency;
   final TransactionType type;
   final int? categoryId;
@@ -16,7 +16,7 @@ class DetectedSmsTransaction {
   final String? merchant;
   final String? maskedAccount;
   final DateTime date;
-  final double confidenceScore;
+  double confidenceScore;
   final SmsConfidenceLevel confidenceLevel;
   String status; // 'pending_review', 'approved', 'rejected', 'ignored'
   final String? rawSnippet;
@@ -24,8 +24,8 @@ class DetectedSmsTransaction {
   final DateTime createdAt;
   final String? rejectionReason;
   final String? bankName;
-  final bool isAmbiguous;
-  final String? parsingWarning;
+  bool isAmbiguous;
+  String? parsingWarning;
 
   DetectedSmsTransaction({
     this.id,
