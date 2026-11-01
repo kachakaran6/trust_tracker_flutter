@@ -13,9 +13,20 @@ import 'package:trust_tracker_flutter/features/sms_detection/data/parser/merchan
 import 'package:trust_tracker_flutter/features/sms_detection/data/parser/category_suggester.dart';
 
 class SmsTransactionParser {
-  // Regex to extract transaction dates from SMS (e.g. 22-10-26, 22/10/2026, 22-Oct-26)
+  // Regex for standard formatted dates (e.g. 22-10-26, 22/10/2026, 22-Oct-26, 22 Oct 2026)
   static final RegExp _datePattern = RegExp(
-    r'\b(\d{1,2})[-/.](\d{1,2}|[a-zA-Z]{3})[-/.](\d{2,4})\b',
+    r'\b(\d{1,2})[-/. ](\d{1,2}|[a-zA-Z]{3})[-/. ](\d{2,4})\b',
+  );
+
+  // Regex for compact alphanumeric dates (e.g. 29Oct26, 29OCT2026)
+  static final RegExp _compactAlphaDatePattern = RegExp(
+    r'\b(\d{1,2})([a-zA-Z]{3})(\d{2,4})\b',
+  );
+
+  // Regex for time extraction (e.g. 13:08, 13:08:24, 01:08 PM)
+  static final RegExp _timePattern = RegExp(
+    r'\b(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(am|pm)?\b',
+    caseSensitive: false,
   );
 
   static SmsParseResult parse({
@@ -39,6 +50,9 @@ class SmsTransactionParser {
     if (amountResult == null || amountResult.money.paise <= 0) {
       return SmsParseResult.rejected('No valid transaction amount identified');
     }
+
+    // Step 2.5: Extract Available Account Balance
+    final availableBalance = AmountExtractor.extractBalance(cleanBody);
 
     // Step 3: Direction Detection
     final directionResult = DirectionDetector.detect(cleanBody);
@@ -101,9 +115,6 @@ class SmsTransactionParser {
       date: txnDate,
     );
 
-    // Step 11: Privacy-Preserving Sanitized Snippet
-    final safeSnippet = _sanitizeMessageForDisplay(cleanBody);
-
     final transaction = DetectedSmsTransaction(
       smsFingerprint: fingerprint,
       referenceNumber: refNumber,
@@ -119,9 +130,10 @@ class SmsTransactionParser {
       confidenceScore: confidenceScore,
       confidenceLevel: confidenceLevel,
       status: 'pending_review',
-      rawSnippet: safeSnippet,
+      rawSnippet: cleanBody,
       createdAt: DateTime.now(),
       bankName: bankInfo.name,
+      availableBalance: availableBalance,
       isAmbiguous: amountResult.isAmbiguous,
       parsingWarning: amountResult.warning,
     );
@@ -150,7 +162,8 @@ class SmsTransactionParser {
   }
 
   static DateTime? _extractDate(String body) {
-    final match = _datePattern.firstMatch(body);
+    Match? match = _datePattern.firstMatch(body);
+    match ??= _compactAlphaDatePattern.firstMatch(body);
     if (match == null) return null;
 
     final dayStr = match.group(1);
@@ -181,8 +194,27 @@ class SmsTransactionParser {
       year += 2000;
     }
 
+    // Extract exact time if present (e.g. "13:08", "01:08 PM")
+    int hour = 0;
+    int minute = 0;
+    int second = 0;
+    final timeMatch = _timePattern.firstMatch(body);
+    if (timeMatch != null) {
+      final h = int.tryParse(timeMatch.group(1) ?? '');
+      final m = int.tryParse(timeMatch.group(2) ?? '');
+      final s = int.tryParse(timeMatch.group(3) ?? '');
+      final amPm = timeMatch.group(4)?.toLowerCase();
+      if (h != null && m != null) {
+        hour = h;
+        minute = m;
+        if (s != null) second = s;
+        if (amPm == 'pm' && hour < 12) hour += 12;
+        if (amPm == 'am' && hour == 12) hour = 0;
+      }
+    }
+
     try {
-      return DateTime(year, month, day);
+      return DateTime(year, month, day, hour, minute, second);
     } catch (_) {
       return null;
     }

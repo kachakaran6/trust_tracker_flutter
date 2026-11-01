@@ -106,6 +106,18 @@ class BankDetector {
       brandColor: Color(0xFF0C2074),
       initials: 'RBL',
     ),
+    'PHONEPE': BankInfo(
+      name: 'PhonePe',
+      code: 'PHONEPE',
+      brandColor: Color(0xFF5F259F),
+      initials: 'PP',
+    ),
+    'GPAY': BankInfo(
+      name: 'Google Pay',
+      code: 'GPAY',
+      brandColor: Color(0xFF4285F4),
+      initials: 'GP',
+    ),
   };
 
   static BankInfo detect({required String sender, String? body}) {
@@ -129,8 +141,12 @@ class BankDetector {
     if (cleanBody.contains('YES BANK')) return _knownBanks['YES']!;
     if (cleanBody.contains('INDUSIND')) return _knownBanks['INDUSIND']!;
     if (cleanBody.contains('PAYTM')) return _knownBanks['PAYTM']!;
-    if (cleanBody.contains('FEDERAL BANK')) return _knownBanks['FEDERAL']!;
+    if (cleanBody.contains('FEDERAL BANK') || cleanBody.contains('FEDERAL') || cleanBody.contains('FEDBNK') || cleanBody.contains('FDRL')) {
+      return _knownBanks['FEDERAL']!;
+    }
     if (cleanBody.contains('RBL BANK')) return _knownBanks['RBL']!;
+    if (cleanBody.contains('PHONEPE')) return _knownBanks['PHONEPE']!;
+    if (cleanBody.contains('GOOGLE PAY') || cleanBody.contains('GPAY')) return _knownBanks['GPAY']!;
 
     // 2. Check SMS Sender header
     // Senders often look like: AX-KOTAKB, VM-HDFCBK, AD-ICICIB, BZ-SBIINB, VK-AXISBK, etc.
@@ -147,8 +163,12 @@ class BankDetector {
     if (cleanSender.contains('YESB') || cleanSender.contains('YESBNK')) return _knownBanks['YES']!;
     if (cleanSender.contains('INDUS')) return _knownBanks['INDUSIND']!;
     if (cleanSender.contains('PAYTM')) return _knownBanks['PAYTM']!;
-    if (cleanSender.contains('FEDBNK')) return _knownBanks['FEDERAL']!;
+    if (cleanSender.contains('FEDBNK') || cleanSender.contains('FEDERAL') || cleanSender.contains('FDRL')) {
+      return _knownBanks['FEDERAL']!;
+    }
     if (cleanSender.contains('RBL')) return _knownBanks['RBL']!;
+    if (cleanSender.contains('PHONEPE')) return _knownBanks['PHONEPE']!;
+    if (cleanSender.contains('GPAY')) return _knownBanks['GPAY']!;
 
     // Generic fallback for unidentified banks
     final displayName = _formatSenderFallback(cleanSender);
