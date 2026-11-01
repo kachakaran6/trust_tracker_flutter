@@ -226,7 +226,43 @@ class _SmsReviewSheetState extends ConsumerState<SmsReviewSheet> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 12),
+                  ],
+
+                  // Available Account Balance (if detected)
+                  if (txn.availableBalance != null) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: cs.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: cs.primary.withValues(alpha: 0.22),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.account_balance_wallet_outlined, size: 18, color: cs.primary),
+                          const SizedBox(width: 10),
+                          Text(
+                            'Available Account Balance:',
+                            style: tt.labelSmall?.copyWith(
+                              color: cs.onSurface.withValues(alpha: 0.7),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            txn.formattedBalance() ?? '',
+                            style: tt.labelMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: cs.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
                   ],
 
                   // Direction Segmented Button

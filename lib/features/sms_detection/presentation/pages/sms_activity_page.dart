@@ -527,8 +527,10 @@ class _SmsActivityPageState extends ConsumerState<SmsActivityPage> {
             _buildDetailRow('Account', item.maskedAccount ?? 'Not specified'),
             _buildDetailRow('Merchant / Source', item.merchant ?? item.sender),
             _buildDetailRow('Reference Number', item.referenceNumber ?? 'None'),
+            if (item.availableBalance != null)
+              _buildDetailRow('Available Balance', item.formattedBalance() ?? ''),
             _buildDetailRow('Transaction Date', DateFormat('d MMMM yyyy, h:mm a').format(item.date)),
-            _buildDetailRow('Created At', DateFormat('d MMMM yyyy, h:mm a').format(item.createdAt)),
+            _buildDetailRow('Detection Processed', DateFormat('d MMMM yyyy, h:mm a').format(item.createdAt)),
 
             if (item.rawSnippet != null && item.rawSnippet!.isNotEmpty) ...[
               const SizedBox(height: 12),
