@@ -11,6 +11,9 @@ class SmsSettingsState {
   final bool autoApproveHighConfidence;
   final int pendingCount;
   final bool isPermanentlyDenied;
+  final bool notificationsEnabled;
+  final bool expenseNotificationsEnabled;
+  final bool incomeNotificationsEnabled;
 
   const SmsSettingsState({
     this.isEnabled = false,
@@ -18,6 +21,9 @@ class SmsSettingsState {
     this.autoApproveHighConfidence = false,
     this.pendingCount = 0,
     this.isPermanentlyDenied = false,
+    this.notificationsEnabled = true,
+    this.expenseNotificationsEnabled = true,
+    this.incomeNotificationsEnabled = true,
   });
 
   SmsSettingsState copyWith({
@@ -26,6 +32,9 @@ class SmsSettingsState {
     bool? autoApproveHighConfidence,
     int? pendingCount,
     bool? isPermanentlyDenied,
+    bool? notificationsEnabled,
+    bool? expenseNotificationsEnabled,
+    bool? incomeNotificationsEnabled,
   }) {
     return SmsSettingsState(
       isEnabled: isEnabled ?? this.isEnabled,
@@ -34,6 +43,11 @@ class SmsSettingsState {
           autoApproveHighConfidence ?? this.autoApproveHighConfidence,
       pendingCount: pendingCount ?? this.pendingCount,
       isPermanentlyDenied: isPermanentlyDenied ?? this.isPermanentlyDenied,
+      notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
+      expenseNotificationsEnabled:
+          expenseNotificationsEnabled ?? this.expenseNotificationsEnabled,
+      incomeNotificationsEnabled:
+          incomeNotificationsEnabled ?? this.incomeNotificationsEnabled,
     );
   }
 }
@@ -44,11 +58,17 @@ class SmsSettingsNotifier extends StateNotifier<SmsSettingsState> {
 
   static const String prefKeyEnabled = 'sms_detection_enabled';
   static const String prefKeyAutoApprove = 'sms_auto_approve_high_confidence';
+  static const String prefKeyNotifications = 'sms_notifications_enabled';
+  static const String prefKeyExpenseNotifications = 'sms_expense_notifications_enabled';
+  static const String prefKeyIncomeNotifications = 'sms_income_notifications_enabled';
 
   SmsSettingsNotifier(this._prefs, this._smsRepo)
       : super(SmsSettingsState(
           isEnabled: _prefs.getBool(prefKeyEnabled) ?? false,
           autoApproveHighConfidence: _prefs.getBool(prefKeyAutoApprove) ?? false,
+          notificationsEnabled: _prefs.getBool(prefKeyNotifications) ?? true,
+          expenseNotificationsEnabled: _prefs.getBool(prefKeyExpenseNotifications) ?? true,
+          incomeNotificationsEnabled: _prefs.getBool(prefKeyIncomeNotifications) ?? true,
         )) {
     _init();
   }
@@ -106,6 +126,21 @@ class SmsSettingsNotifier extends StateNotifier<SmsSettingsState> {
   Future<void> setAutoApprove(bool auto) async {
     await _prefs.setBool(prefKeyAutoApprove, auto);
     state = state.copyWith(autoApproveHighConfidence: auto);
+  }
+
+  Future<void> setNotificationsEnabled(bool enabled) async {
+    await _prefs.setBool(prefKeyNotifications, enabled);
+    state = state.copyWith(notificationsEnabled: enabled);
+  }
+
+  Future<void> setExpenseNotificationsEnabled(bool enabled) async {
+    await _prefs.setBool(prefKeyExpenseNotifications, enabled);
+    state = state.copyWith(expenseNotificationsEnabled: enabled);
+  }
+
+  Future<void> setIncomeNotificationsEnabled(bool enabled) async {
+    await _prefs.setBool(prefKeyIncomeNotifications, enabled);
+    state = state.copyWith(incomeNotificationsEnabled: enabled);
   }
 
   Future<void> refreshPendingCount() async {

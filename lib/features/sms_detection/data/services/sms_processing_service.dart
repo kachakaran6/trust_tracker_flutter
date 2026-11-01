@@ -1,4 +1,5 @@
 import 'package:trust_tracker_flutter/core/database/database_helper.dart';
+import 'package:trust_tracker_flutter/core/services/sms_notification_service.dart';
 import 'package:trust_tracker_flutter/features/categories/data/models/category_model.dart';
 import 'package:trust_tracker_flutter/features/sms_detection/data/parser/sms_transaction_parser.dart';
 import 'package:trust_tracker_flutter/features/sms_detection/data/services/sms_deduplication_service.dart';
@@ -41,6 +42,7 @@ class SmsProcessingService {
     required String sender,
     DateTime? receivedTime,
     bool autoApproveHighConfidence = false,
+    bool notify = true,
   }) async {
     // 1. Parse SMS
     final parseResult = SmsTransactionParser.parse(
@@ -123,12 +125,18 @@ class SmsProcessingService {
 
       final insertedId = await _smsRepository.insertDetectedTransaction(resolvedTxn);
       resolvedTxn.id = insertedId;
+      if (notify) {
+        await SmsNotificationService.showTransactionNotification(resolvedTxn);
+      }
       return SmsParseResult.success(resolvedTxn);
     } else {
       // Store in pending review queue
       resolvedTxn.status = 'pending_review';
       final insertedId = await _smsRepository.insertDetectedTransaction(resolvedTxn);
       resolvedTxn.id = insertedId;
+      if (notify) {
+        await SmsNotificationService.showTransactionNotification(resolvedTxn);
+      }
       return SmsParseResult.success(resolvedTxn);
     }
   }
@@ -286,6 +294,7 @@ class SmsProcessingService {
         sender: sender,
         receivedTime: dt,
         autoApproveHighConfidence: autoApproveHighConfidence,
+        notify: false,
       );
 
       if (result.isTransaction) {

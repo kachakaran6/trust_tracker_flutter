@@ -20,6 +20,7 @@ import 'package:trust_tracker_flutter/features/transactions/presentation/widgets
 
 import 'package:flutter/foundation.dart';
 import 'package:trust_tracker_flutter/core/services/debt_notification_service.dart';
+import 'package:trust_tracker_flutter/core/services/sms_notification_service.dart';
 import 'package:trust_tracker_flutter/features/sms_detection/presentation/providers/sms_settings_provider.dart';
 import 'package:trust_tracker_flutter/features/sms_detection/presentation/providers/sms_detection_provider.dart';
 import 'package:trust_tracker_flutter/features/sms_detection/data/services/sms_channel_service.dart';
@@ -71,6 +72,7 @@ Future<void> main() async {
 
   try {
     await DebtNotificationService.init();
+    await SmsNotificationService.init();
   } catch (e) {
     debugPrint("DebtNotificationService init skipped: $e");
   }
@@ -84,7 +86,10 @@ Future<void> main() async {
       initSettings,
       onDidReceiveNotificationResponse: (response) {
         final id = response.id;
-        if (id != null && id >= 50000) {
+        final payload = response.payload;
+        if (payload != null && payload.startsWith('sms_')) {
+          rootNavigatorKey.currentState?.context.push('/sms-pending');
+        } else if (id != null && id >= 50000) {
           rootNavigatorKey.currentState?.context.push('/debt-manager');
         } else if (id == 100 || id == 999) {
           rootNavigatorKey.currentState?.context.push('/summary');
