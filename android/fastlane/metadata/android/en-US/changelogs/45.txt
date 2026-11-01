@@ -1,0 +1,5 @@
+• Fixed transaction amount detection: amounts like ₹15,000 no longer drop zeros.
+• Correct sign display: debit shows −₹ and credit shows +₹.
+• Added available account balance extraction & activity view.
+• Added real-time SMS transaction alerts & notification preferences.
+• Expanded bank coverage: Federal Bank, Google Pay, PhonePe & major Indian banks.
