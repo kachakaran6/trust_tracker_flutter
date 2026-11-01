@@ -86,6 +86,31 @@ class AmountExtractor {
     r'\b(?:\+91[\s-]?)?[6-9]\d{9}\b|1800\s*\d{3}\s*\d{4}',
   );
 
+  /// Centralized financial amount normalization function.
+  /// Converts any raw numeric string or currency string into exact Money.
+  static Money? normalizeAmount(String? raw, {String defaultCurrency = 'INR'}) {
+    return Money.tryParse(raw, defaultCurrency: defaultCurrency);
+  }
+
+  /// Extracts the available account balance from bank SMS if present.
+  /// Example: "Bal Rs 8327.22" -> 8327.22
+  /// Example: "Avl Bal Rs 5,432.10" -> 5432.10
+  /// Example: "Bal: Rs 45000.00" -> 45000.00
+  static double? extractBalance(String body) {
+    if (body.trim().isEmpty) return null;
+    final match = _balanceClausePattern.firstMatch(body);
+    if (match != null) {
+      final valStr = match.group(2);
+      if (valStr != null) {
+        final parsed = Money.tryParse(valStr);
+        if (parsed != null && parsed.isPositive) {
+          return parsed.toRupeesDouble();
+        }
+      }
+    }
+    return null;
+  }
+
   static AmountResult? extract(String body) {
     if (body.trim().isEmpty) return null;
 
@@ -95,10 +120,10 @@ class AmountExtractor {
     final Set<String> excludedStrings = {};
 
     for (final m in _balanceClausePattern.allMatches(originalBody)) {
-      if (m.group(1) != null) excludedStrings.add(m.group(1)!.replaceAll(',', ''));
+      if (m.group(2) != null) excludedStrings.add(m.group(2)!.replaceAll(',', ''));
     }
     for (final m in _limitClausePattern.allMatches(originalBody)) {
-      if (m.group(1) != null) excludedStrings.add(m.group(1)!.replaceAll(',', ''));
+      if (m.group(2) != null) excludedStrings.add(m.group(2)!.replaceAll(',', ''));
     }
     for (final m in _refNumberPattern.allMatches(originalBody)) {
       if (m.group(1) != null) excludedStrings.add(m.group(1)!.replaceAll(',', ''));

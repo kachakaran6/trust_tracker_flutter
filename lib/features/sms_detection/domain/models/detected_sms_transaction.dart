@@ -24,6 +24,7 @@ class DetectedSmsTransaction {
   final DateTime createdAt;
   final String? rejectionReason;
   final String? bankName;
+  final double? availableBalance;
   bool isAmbiguous;
   String? parsingWarning;
 
@@ -48,6 +49,7 @@ class DetectedSmsTransaction {
     DateTime? createdAt,
     this.rejectionReason,
     String? bankName,
+    this.availableBalance,
     this.isAmbiguous = false,
     this.parsingWarning,
   })  : createdAt = createdAt ?? DateTime.now(),
@@ -58,9 +60,27 @@ class DetectedSmsTransaction {
 
   Money get money => Money.fromPaise(amountPaise, currency: currency);
 
-  /// Safe display amount with exact Indian notation (e.g. ₹35,931.00)
+  /// Signed financial model: Negative ledger impact for Expense, Positive for Income
+  Money get signedMoney {
+    final signedPaise = (type == TransactionType.expense) ? -amountPaise : amountPaise;
+    return Money.fromPaise(signedPaise, currency: currency);
+  }
+
+  /// Safe display amount with exact Indian notation (e.g. ₹35,931.00).
+  /// Never displays '+₹15,000.00' for an Expense.
   String formattedAmount({bool showSymbol = true, bool showSign = false}) {
-    return money.formatIndian(showSymbol: showSymbol, showSign: showSign);
+    if (showSign) {
+      final signStr = (type == TransactionType.expense) ? '−' : '+';
+      return '$signStr${money.formatIndian(showSymbol: showSymbol, showSign: false)}';
+    }
+    return money.formatIndian(showSymbol: showSymbol, showSign: false);
+  }
+
+  /// Safe display of extracted available account balance (e.g. ₹8,327.22)
+  String? formattedBalance({bool showSymbol = true}) {
+    if (availableBalance == null) return null;
+    final balPaise = (availableBalance! * 100.0).round();
+    return Money.fromPaise(balPaise, currency: currency).formatIndian(showSymbol: showSymbol);
   }
 
   Map<String, dynamic> toMap() => {
@@ -82,6 +102,7 @@ class DetectedSmsTransaction {
         'rawSnippet': rawSnippet,
         'transactionId': transactionId,
         'createdAt': createdAt.toIso8601String(),
+        'balance': availableBalance,
       };
 
   factory DetectedSmsTransaction.fromMap(Map<String, dynamic> map) {
@@ -112,6 +133,7 @@ class DetectedSmsTransaction {
           ? DateTime.parse(map['createdAt'] as String)
           : DateTime.now(),
       bankName: BankDetector.detect(sender: s, body: snip).name,
+      availableBalance: (map['balance'] as num?)?.toDouble(),
     );
   }
 
@@ -136,6 +158,7 @@ class DetectedSmsTransaction {
     DateTime? createdAt,
     String? rejectionReason,
     String? bankName,
+    double? availableBalance,
     bool? isAmbiguous,
     String? parsingWarning,
   }) {
@@ -160,6 +183,7 @@ class DetectedSmsTransaction {
       createdAt: createdAt ?? this.createdAt,
       rejectionReason: rejectionReason ?? this.rejectionReason,
       bankName: bankName ?? this.bankName,
+      availableBalance: availableBalance ?? this.availableBalance,
       isAmbiguous: isAmbiguous ?? this.isAmbiguous,
       parsingWarning: parsingWarning ?? this.parsingWarning,
     );
