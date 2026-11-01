@@ -7,17 +7,14 @@ void main() {
     // Example 1
     const sms1 = 'Debited Rs 15000.00 from a/c X7181 on 29Oct26 13:08 via UPI to CHANDANI JAY. Ref 630249477227. Bal Rs 8327.22.';
     final res1 = SmsTransactionParser.parse(body: sms1, sender: 'FEDBNK');
-    print('Res1: eligible=${res1.isEligible}, txn=${res1.isTransaction}, amt=${res1.transaction?.amount}, type=${res1.transaction?.type}, merchant=${res1.transaction?.merchant}, bank=${res1.transaction?.bankName}, ref=${res1.transaction?.referenceNumber}, maskedAcc=${res1.transaction?.maskedAccount}');
     
     // Example 2
     const sms2 = 'Debited Rs 8300.00 from a/c X7181 on 29Oct26 13:09 via UPI to Mr KARAN CHA. Ref 630243969147. Bal Rs 27.22.';
     final res2 = SmsTransactionParser.parse(body: sms2, sender: 'FEDBNK');
-    print('Res2: eligible=${res2.isEligible}, txn=${res2.isTransaction}, amt=${res2.transaction?.amount}, type=${res2.transaction?.type}, merchant=${res2.transaction?.merchant}, bank=${res2.transaction?.bankName}, ref=${res2.transaction?.referenceNumber}, maskedAcc=${res2.transaction?.maskedAccount}');
 
     // Example 3
     const sms3 = 'Debited Rs 16000.00 from a/c X6214 on 29Oct26 13:15 via UPI to Mr KARAN CHA. Ref 630256293846. Bal Rs 246.54.';
     final res3 = SmsTransactionParser.parse(body: sms3, sender: 'FEDBNK');
-    print('Res3: eligible=${res3.isEligible}, txn=${res3.isTransaction}, amt=${res3.transaction?.amount}, type=${res3.transaction?.type}, merchant=${res3.transaction?.merchant}, bank=${res3.transaction?.bankName}, ref=${res3.transaction?.referenceNumber}, maskedAcc=${res3.transaction?.maskedAccount}');
 
     expect(res1.isTransaction, isTrue);
     expect(res1.transaction?.amount, 15000.0);
