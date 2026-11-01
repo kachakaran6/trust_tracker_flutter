@@ -22,12 +22,15 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 11,
+      version: 12,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
       onOpen: (db) async {
         try {
           await db.execute('ALTER TABLE transactions ADD COLUMN affectsBalance INTEGER DEFAULT 1;');
+        } catch (_) {}
+        try {
+          await db.execute('ALTER TABLE sms_detected_transactions ADD COLUMN balance REAL;');
         } catch (_) {}
         await _ensureDefaultCategories(db);
         await _ensureDefaultBudgets(db);
@@ -113,6 +116,11 @@ class DatabaseHelper {
     }
     if (oldVersion < 11) {
       await _createSmsDetectionTables(db);
+    }
+    if (oldVersion < 12) {
+      try {
+        await db.execute('ALTER TABLE sms_detected_transactions ADD COLUMN balance REAL;');
+      } catch (_) {}
     }
   }
 

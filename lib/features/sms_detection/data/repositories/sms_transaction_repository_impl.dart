@@ -79,6 +79,15 @@ class SmsTransactionRepositoryImpl implements SmsTransactionRepository {
             whereArgs: [item.id],
           );
         }
+        final reExtractedBal = AmountExtractor.extractBalance(item.rawSnippet!);
+        if (reExtractedBal != null && item.availableBalance == null) {
+          await db.update(
+            'sms_detected_transactions',
+            {'balance': reExtractedBal},
+            where: 'id = ?',
+            whereArgs: [item.id],
+          );
+        }
       }
     }
 
@@ -109,6 +118,15 @@ class SmsTransactionRepositoryImpl implements SmsTransactionRepository {
               'amount': reExtracted.amount,
               'confidenceScore': reExtracted.confidence,
             },
+            where: 'id = ?',
+            whereArgs: [item.id],
+          );
+        }
+        final reExtractedBal = AmountExtractor.extractBalance(item.rawSnippet!);
+        if (reExtractedBal != null && item.availableBalance == null) {
+          await db.update(
+            'sms_detected_transactions',
+            {'balance': reExtractedBal},
             where: 'id = ?',
             whereArgs: [item.id],
           );

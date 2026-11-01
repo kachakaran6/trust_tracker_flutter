@@ -115,6 +115,9 @@ class SmsTransactionParser {
       date: txnDate,
     );
 
+    // Step 11: Privacy-Preserving Sanitized Snippet
+    final safeSnippet = _sanitizeMessageForDisplay(cleanBody);
+
     final transaction = DetectedSmsTransaction(
       smsFingerprint: fingerprint,
       referenceNumber: refNumber,
@@ -130,7 +133,7 @@ class SmsTransactionParser {
       confidenceScore: confidenceScore,
       confidenceLevel: confidenceLevel,
       status: 'pending_review',
-      rawSnippet: cleanBody,
+      rawSnippet: safeSnippet,
       createdAt: DateTime.now(),
       bankName: bankInfo.name,
       availableBalance: availableBalance,
