@@ -15,13 +15,18 @@ class BudgetModel {
     createdAt = DateTime.now();
   }
 
-  Map<String, dynamic> toMap() => {
-        'id': id,
-        'categoryId': categoryId,
-        'amount': amount,
-        'monthKey': monthKey,
-        'createdAt': createdAt.toIso8601String(),
-      };
+  Map<String, dynamic> toMap() {
+    final map = <String, dynamic>{
+      'categoryId': categoryId,
+      'amount': amount,
+      'monthKey': monthKey,
+      'createdAt': createdAt.toIso8601String(),
+    };
+    if (id != null) {
+      map['id'] = id;
+    }
+    return map;
+  }
 
   factory BudgetModel.fromMap(Map<String, dynamic> map) {
     final b = BudgetModel();

@@ -39,15 +39,15 @@ class BudgetNotifier extends StateNotifier<BudgetState> {
   /// Returns the saved budget so the caller can close the sheet afterwards.
   Future<void> setBudget(BudgetModel budget) async {
     // 1. Write to DB (safe — no provider interaction here)
-    await _repo.setbudget(budget);
+    final saved = await _repo.setbudget(budget);
 
     // 2. Update in-memory list — one atomic state update, no invalidation
     if (!mounted) return;
     state.budgets.whenData((list) {
       final updated = [
         for (final b in list)
-          if (b.categoryId != budget.categoryId) b,
-        budget, // replace or append
+          if (b.categoryId != saved.categoryId) b,
+        saved, // replace or append with valid id
       ];
       state = state.copyWith(budgets: AsyncValue.data(updated));
     });

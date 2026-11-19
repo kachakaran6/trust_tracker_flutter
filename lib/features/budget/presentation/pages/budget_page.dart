@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
@@ -47,7 +48,33 @@ class BudgetPage extends ConsumerWidget {
     final rangeText = '${intl.DateFormat('MMM d').format(cycleRange.start)} – ${intl.DateFormat('MMM d').format(cycleRange.end)}';
 
     return Scaffold(
-      appBar: AppBar(title: Text('${l10n.budgetLabel} ($rangeText)', style: tt.headlineSmall)),
+      appBar: AppBar(
+        title: Text('${l10n.budgetLabel} ($rangeText)', style: tt.headlineSmall),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_rounded),
+            tooltip: 'Add Budget',
+            onPressed: () => _openSelectCategorySheet(
+              context,
+              ref,
+              catsAsync.valueOrNull ?? [],
+              budgetState.budgets.valueOrNull ?? [],
+              settings.currency,
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _openSelectCategorySheet(
+          context,
+          ref,
+          catsAsync.valueOrNull ?? [],
+          budgetState.budgets.valueOrNull ?? [],
+          settings.currency,
+        ),
+        icon: const Icon(Icons.add_rounded),
+        label: const Text('Add Budget'),
+      ),
       body: catsAsync.when(
         data: (cats) => budgetState.budgets.when(
           data: (budgets) {
@@ -104,6 +131,86 @@ class BudgetPage extends ConsumerWidget {
     );
   }
 
+  static Future<void> _openSelectCategorySheet(
+    BuildContext pageContext,
+    WidgetRef pageRef,
+    List<CategoryModel> cats,
+    List<BudgetModel> budgets,
+    String currency,
+  ) async {
+    if (cats.isEmpty) return;
+
+    final budgetCatIds = budgets.map((b) => b.categoryId).toSet();
+    final sortedCats = List<CategoryModel>.from(cats)
+      ..sort((a, b) {
+        final aHas = budgetCatIds.contains(a.id);
+        final bHas = budgetCatIds.contains(b.id);
+        if (aHas == bHas) return a.name.compareTo(b.name);
+        return aHas ? 1 : -1;
+      });
+
+    await showModalBottomSheet<void>(
+      context: pageContext,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        final theme = Theme.of(ctx);
+        final tt = theme.textTheme;
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Select Category for Budget',
+                style: tt.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(ctx).size.height * 0.45,
+                ),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: sortedCats.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (_, i) {
+                    final cat = sortedCats[i];
+                    final existing = budgets.where((b) => b.categoryId == cat.id).firstOrNull;
+                    final catColor = Color(cat.colorHex.toColorInt());
+                    return ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      leading: CircleAvatar(
+                        backgroundColor: catColor.withOpacity(0.15),
+                        child: Text(
+                          cat.name[0].toUpperCase(),
+                          style: TextStyle(color: catColor, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      title: Text(cat.name, style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
+                      subtitle: existing != null
+                          ? Text('Current: ${existing.amount.toCurrency(currency)}')
+                          : const Text('No budget set'),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _openBudgetSheet(pageContext, pageRef, cat, existing, currency);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   static Future<void> _openBudgetSheet(
     BuildContext pageContext,
     WidgetRef pageRef,
@@ -144,12 +251,18 @@ class _BudgetSheet extends ConsumerStatefulWidget {
 class _BudgetSheetState extends ConsumerState<_BudgetSheet> {
   late final TextEditingController _controller;
   bool _isSaving = false;
+  String? _errorText;
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(
         text: widget.existing?.amount.toStringAsFixed(0) ?? '');
+    _controller.addListener(() {
+      if (_errorText != null) {
+        setState(() => _errorText = null);
+      }
+    });
   }
 
   @override
@@ -159,16 +272,37 @@ class _BudgetSheetState extends ConsumerState<_BudgetSheet> {
   }
 
   Future<void> _save() async {
-    final amount = double.tryParse(_controller.text.trim()) ?? 0;
-    if (amount <= 0) return;
+    final text = _controller.text.trim();
+    if (text.isEmpty) {
+      setState(() => _errorText = 'Please enter an amount');
+      return;
+    }
 
-    setState(() => _isSaving = true);
+    final amount = double.tryParse(text.replaceAll(',', ''));
+    if (amount == null) {
+      setState(() => _errorText = 'Please enter a valid number');
+      return;
+    }
+
+    if (amount <= 0) {
+      setState(() => _errorText = 'Amount must be greater than 0');
+      return;
+    }
+
+    setState(() {
+      _errorText = null;
+      _isSaving = true;
+    });
+
     try {
       final budget = BudgetModel.create(
         categoryId: widget.cat.id!,
         amount: amount,
         monthKey: DateTime.now().toMonthKey(),
       );
+      if (widget.existing != null) {
+        budget.id = widget.existing!.id;
+      }
       await ref.read(budgetNotifierProvider.notifier).setBudget(budget);
       if (mounted) Navigator.pop(context);
     } catch (e) {
@@ -243,12 +377,16 @@ class _BudgetSheetState extends ConsumerState<_BudgetSheet> {
             style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
             keyboardType:
                 const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+            ],
             autofocus: true,
             enabled: !_isSaving,
             decoration: InputDecoration(
               hintText: '0.00',
               prefixText: '${widget.currency} ',
               labelText: AppLocalizations.of(context)!.monthlyLimit,
+              errorText: _errorText,
             ),
           ),
           const SizedBox(height: 24),
@@ -455,7 +593,7 @@ class _BudgetCategoryCard extends StatelessWidget {
               padding:
                   const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
-            child: Text(budget == null ? AppLocalizations.of(context)!.setBudget.split(' ')[0].toUpperCase() : AppLocalizations.of(context)!.updateBudget.split(' ')[0].toUpperCase(),
+            child: Text(budget == null ? 'ADD BUDGET' : 'UPDATE',
                 style: tt.labelLarge?.copyWith(color: cs.primary, fontWeight: FontWeight.w800)),
           ),
         ]),
@@ -489,12 +627,15 @@ class _BudgetCategoryCard extends StatelessWidget {
                   l10n.overBudgetBy((spent - budgetAmt).toCurrency(currency)),
                   style: tt.labelSmall?.copyWith(color: cs.error, fontWeight: FontWeight.w700)),
             )
-          else if (isWarning)
+          else
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Text(
                   l10n.remainingAmount((budgetAmt - spent).toCurrency(currency)),
-                  style: tt.labelSmall?.copyWith(color: AppColors.warning, fontWeight: FontWeight.w700)),
+                  style: tt.labelSmall?.copyWith(
+                    color: isWarning ? AppColors.warning : AppColors.success,
+                    fontWeight: FontWeight.w700,
+                  )),
             ),
         ] else ...[
           const SizedBox(height: 8),

@@ -30,19 +30,23 @@ class BudgetRepository {
     return null;
   }
 
-  Future<void> setbudget(BudgetModel b) async {
+  Future<BudgetModel> setbudget(BudgetModel b) async {
     final db = await _dbHelper.database;
     final existing = await getByCategoryAndMonth(b.categoryId, b.monthKey);
+    final map = b.toMap()..remove('id');
     if (existing != null) {
+      b.id = existing.id;
       await db.update(
         'budgets',
-        b.toMap(),
+        map,
         where: 'id = ?',
         whereArgs: [existing.id],
       );
     } else {
-      await db.insert('budgets', b.toMap());
+      final id = await db.insert('budgets', map);
+      b.id = id;
     }
+    return b;
   }
 
   Future<void> deleteBudget(int id) async {
