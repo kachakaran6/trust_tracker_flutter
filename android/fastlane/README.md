@@ -79,6 +79,14 @@ Build and upload AAB to Google Play Production track with Git archiving
 
 Promote an existing Internal build to Closed testing without rebuilding
 
+### android internal_and_closed
+
+```sh
+[bundle exec] fastlane android internal_and_closed
+```
+
+Build and upload AAB to both Internal and Closed Testing tracks
+
 ----
 
 This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.
