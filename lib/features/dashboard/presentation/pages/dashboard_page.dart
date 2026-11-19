@@ -11,6 +11,7 @@ import 'package:trust_tracker_flutter/core/utils/greeting_helper.dart';
 import 'package:trust_tracker_flutter/features/categories/data/repositories/category_repository.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
+import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_filter.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/repositories/transaction_repository.dart';
 import 'package:trust_tracker_flutter/features/transactions/presentation/providers/transaction_provider.dart';
 import 'package:trust_tracker_flutter/features/subscriptions/presentation/providers/subscription_provider.dart';
