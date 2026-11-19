@@ -40,10 +40,28 @@ class _QuickAddBottomSheetState extends ConsumerState<QuickAddBottomSheet> {
 
   void _save() async {
     final amountText = _amountController.text.trim();
-    if (amountText.isEmpty) return;
+    if (amountText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please enter an amount'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+      return;
+    }
     
     final amount = double.tryParse(amountText.replaceAll(',', ''));
-    if (amount == null || amount <= 0) return;
+    if (amount == null || amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Amount must be greater than 0'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+      return;
+    }
 
     setState(() => _isSaving = true);
 
@@ -137,6 +155,9 @@ class _QuickAddBottomSheetState extends ConsumerState<QuickAddBottomSheet> {
               controller: _amountController,
               autofocus: true,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+              ],
               style: theme.textTheme.displayMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: cs.primary,

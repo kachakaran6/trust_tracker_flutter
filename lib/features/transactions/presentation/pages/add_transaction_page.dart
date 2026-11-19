@@ -177,9 +177,22 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
       return;
     }
 
+    final amountText = _amountController.text.trim().replaceAll(',', '');
+    final amount = double.tryParse(amountText);
+    if (amount == null || amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Amount must be greater than 0'),
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
     final notifier = ref.read(transactionListProvider.notifier);
-    final amount = double.tryParse(_amountController.text.trim()) ?? 0;
 
     try {
       if (_isEditMode) {
@@ -316,6 +329,23 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
                         child: TextFormField(
                           controller: _amountController,
                           keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                          ],
+                          validator: (val) {
+                            final text = val?.trim() ?? '';
+                            if (text.isEmpty) {
+                              return 'Please enter an amount';
+                            }
+                            final amt = double.tryParse(text.replaceAll(',', ''));
+                            if (amt == null) {
+                              return 'Please enter a valid amount';
+                            }
+                            if (amt <= 0) {
+                              return 'Amount must be greater than 0';
+                            }
+                            return null;
+                          },
                           style: tt.displayLarge?.copyWith(
                             fontSize: 64, // Slightly reduced for tightness
                             fontWeight: FontWeight.w900,
