@@ -754,7 +754,7 @@ class _FintechHeaderRow extends StatelessWidget {
   }
 }
 
-class _UnifiedSummaryCard extends StatelessWidget {
+class _UnifiedSummaryCard extends ConsumerWidget {
   final double balance, openingBalance, income, expense;
   final String currency;
   final bool carryForwardEnabled;
@@ -772,7 +772,7 @@ class _UnifiedSummaryCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final tt = theme.textTheme;
@@ -876,6 +876,12 @@ class _UnifiedSummaryCard extends StatelessWidget {
                   currency,
                   AppColors.success,
                   Icons.arrow_upward_rounded,
+                  onTap: () {
+                    ref.read(transactionListProvider.notifier).applyFilter(
+                      const TransactionFilter(type: 'income'),
+                    );
+                    context.go('/transactions');
+                  },
                 ),
               ),
               Container(
@@ -892,6 +898,12 @@ class _UnifiedSummaryCard extends StatelessWidget {
                   currency,
                   AppColors.error,
                   Icons.arrow_downward_rounded,
+                  onTap: () {
+                    ref.read(transactionListProvider.notifier).applyFilter(
+                      const TransactionFilter(type: 'expense'),
+                    );
+                    context.go('/transactions');
+                  },
                 ),
               ),
             ],
@@ -907,52 +919,60 @@ class _UnifiedSummaryCard extends StatelessWidget {
     double value,
     String currency,
     Color color,
-    IconData icon,
-  ) {
+    IconData icon, {
+    VoidCallback? onTap,
+  }) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final tt = theme.textTheme;
 
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(7),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(9),
-          ),
-          child: Icon(icon, color: color, size: 15),
-        ),
-        const SizedBox(width: 9),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                label,
-                style: tt.labelSmall?.copyWith(
-                  color: cs.onSurfaceVariant,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(9),
               ),
-              const SizedBox(height: 1),
-              Text(
-                value.toCurrencyCompact(currency),
-                style: tt.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 14.5,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              child: Icon(icon, color: color, size: 15),
+            ),
+            const SizedBox(width: 9),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    label,
+                    style: tt.labelSmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    value.toCurrencyCompact(currency),
+                    style: tt.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14.5,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

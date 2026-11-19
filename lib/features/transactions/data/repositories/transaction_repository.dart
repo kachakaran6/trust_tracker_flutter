@@ -120,7 +120,7 @@ class TransactionRepository {
     final db = await _dbHelper.database;
     String? where;
     List<dynamic> whereArgs = [];
-    final List<String> conditions = ['(isDebt = 0 OR (affectsBalance IS NOT NULL AND affectsBalance = 1))'];
+    final List<String> conditions = ['(isDebt IS NULL OR isDebt = 0 OR (affectsBalance IS NOT NULL AND affectsBalance = 1))'];
 
     if (filter != null) {
       if (filter.type == 'income') {
@@ -166,7 +166,7 @@ class TransactionRepository {
     final db = await _dbHelper.database;
     String? where;
     List<dynamic>? whereArgs = [];
-    final List<String> conditions = ['(isDebt = 0 OR (affectsBalance IS NOT NULL AND affectsBalance = 1))'];
+    final List<String> conditions = ['(isDebt IS NULL OR isDebt = 0 OR (affectsBalance IS NOT NULL AND affectsBalance = 1))'];
     
     if (filter != null) {
       if (filter.type == 'income') {
@@ -221,7 +221,7 @@ class TransactionRepository {
     final db = await _dbHelper.database;
     String? where;
     List<dynamic>? whereArgs = [];
-    final List<String> conditions = ['(isDebt = 0 OR (affectsBalance IS NOT NULL AND affectsBalance = 1))'];
+    final List<String> conditions = ['(isDebt IS NULL OR isDebt = 0 OR (affectsBalance IS NOT NULL AND affectsBalance = 1))'];
     if (filter.type == 'income') {
       conditions.add('type = ?');
       whereArgs.add(TransactionType.income.index);

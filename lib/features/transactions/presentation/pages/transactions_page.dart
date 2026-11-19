@@ -473,48 +473,52 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
             onChanged: (newFilter) => ref.read(transactionListProvider.notifier).applyFilter(newFilter),
           ),
           const SizedBox(height: 16),
-          // Container(
-          //   height: 44,
-          //   padding: const EdgeInsets.all(4),
-          //   decoration: BoxDecoration(
-          //     color: cs.surfaceVariant.withOpacity(0.5),
-          //     borderRadius: BorderRadius.circular(12),
-          //   ),
-          //   child: Row(
-          //     children: ['all', 'income', 'expense'].map((f) {
-          //       final isSelected = filter.type == f;
-          //       String label;
-          //       if (f == 'all') label = AppLocalizations.of(context)!.all;
-          //       else if (f == 'income') label = AppLocalizations.of(context)!.income;
-          //       else label = AppLocalizations.of(context)!.expense;
+          Container(
+            height: 44,
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: cs.surfaceContainerHighest.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: ['all', 'income', 'expense'].map((f) {
+                final isSelected = filter.type == f;
+                String label;
+                if (f == 'all') {
+                  label = AppLocalizations.of(context)!.all;
+                } else if (f == 'income') {
+                  label = AppLocalizations.of(context)!.income;
+                } else {
+                  label = AppLocalizations.of(context)!.expense;
+                }
 
-          //       return Expanded(
-          //         child: GestureDetector(
-          //           onTap: () => ref.read(_txnFilterProvider.notifier).update((s) => s.copyWith(type: f)),
-          //           child: AnimatedContainer(
-          //             duration: const Duration(milliseconds: 200),
-          //             decoration: BoxDecoration(
-          //               color: isSelected ? cs.primary : Colors.transparent,
-          //               borderRadius: BorderRadius.circular(10),
-          //               boxShadow: isSelected
-          //                   ? [BoxShadow(color: cs.primary.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))]
-          //                   : null,
-          //             ),
-          //             child: Center(
-          //               child: Text(
-          //                 label,
-          //                 style: tt.labelLarge?.copyWith(
-          //                   color: isSelected ? cs.onPrimary : cs.onSurfaceVariant,
-          //                   fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-          //                 ),
-          //               ),
-          //             ),
-          //           ),
-          //         ),
-          //       );
-          //     }).toList(),
-          //   ),
-          // ),
+                return Expanded(
+                  child: GestureDetector(
+                    onTap: () => ref.read(transactionListProvider.notifier).applyFilter(filter.copyWith(type: f)),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      decoration: BoxDecoration(
+                        color: isSelected ? cs.primary : Colors.transparent,
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: isSelected
+                            ? [BoxShadow(color: cs.primary.withOpacity(0.15), blurRadius: 4, offset: const Offset(0, 2))]
+                            : null,
+                      ),
+                      child: Center(
+                        child: Text(
+                          label,
+                          style: tt.labelLarge?.copyWith(
+                            color: isSelected ? cs.onPrimary : cs.onSurfaceVariant,
+                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
           if (!filter.isDefault) ...[
             const SizedBox(height: 12),
             SizedBox(
@@ -785,8 +789,12 @@ class _CategoryQuickFilters extends ConsumerWidget {
     final tt = Theme.of(context).textTheme;
     final categories = ref.watch(allCategoriesProvider).valueOrNull ?? [];
     
-    // Sort categories by importance or use common ones
-    final commonCats = categories.where((c) => ['Food', 'Health', 'Transport', 'Shopping', 'Entertainment'].contains(c.name)).toList();
+    final relevantCats = activeFilter.type == 'income'
+        ? categories.where((c) => c.type == CategoryType.income).toList()
+        : activeFilter.type == 'expense'
+            ? categories.where((c) => c.type == CategoryType.expense).toList()
+            : categories;
+    final displayCats = relevantCats.take(10).toList();
     
     return SizedBox(
       height: 36,
@@ -800,7 +808,7 @@ class _CategoryQuickFilters extends ConsumerWidget {
             activeFilter.categoryIds.isEmpty,
             () => onChanged(activeFilter.copyWith(categoryIds: [])),
           ),
-          ...commonCats.map((cat) {
+          ...displayCats.map((cat) {
             final isSelected = activeFilter.categoryIds.contains(cat.id);
             return _buildChip(
               context,
