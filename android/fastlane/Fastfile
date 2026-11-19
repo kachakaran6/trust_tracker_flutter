@@ -507,4 +507,69 @@ platform :android do
     )
     UI.success("🎉 Successfully promoted build from Internal to #{target_track}!")
   end
+
+  desc "Build and upload AAB to both Internal and Closed Testing tracks"
+  lane :internal_and_closed do |options|
+    build_num = get_target_build_number(options)
+
+    # 1. Generate release notes and save to metadata directory
+    generate_google_play_release_notes(build_num)
+
+    # 2. Build release AAB
+    aab_path = build_flutter_aab(build_num)
+    json_key = resolve_json_key
+    metadata_dir = File.expand_path("metadata/android", __dir__)
+
+    # 3. Upload to Internal Testing track
+    UI.message("🚀 Step 1/2: Uploading build ##{build_num} to Internal Testing track...")
+    upload_to_play_store(
+      json_key: json_key,
+      package_name: "com.trusttracker.trust_tracker_flutter",
+      track: "internal",
+      aab: aab_path,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      skip_upload_changelogs: true,
+      release_status: "completed"
+    )
+    UI.success("✅ Step 1/2 Complete: Uploaded to Internal Testing!")
+
+    # 4. Upload / Promote to Closed Testing (alpha) track with changelogs
+    UI.message("🚀 Step 2/2: Publishing build ##{build_num} to Closed Testing (alpha) track...")
+    track_name = options[:track] || 'alpha'
+    begin
+      upload_to_play_store(
+        json_key: json_key,
+        package_name: "com.trusttracker.trust_tracker_flutter",
+        track: "internal",
+        track_promote_to: track_name,
+        metadata_path: metadata_dir,
+        skip_upload_metadata: true,
+        skip_upload_images: true,
+        skip_upload_screenshots: true,
+        skip_upload_changelogs: false,
+        release_status: "completed"
+      )
+      UI.success("✅ Step 2/2 Complete: Successfully published to Closed Testing (#{track_name})!")
+    rescue => e
+      UI.important("Track promotion encountered: #{e.message}. Uploading directly to #{track_name} track...")
+      upload_to_play_store(
+        json_key: json_key,
+        package_name: "com.trusttracker.trust_tracker_flutter",
+        track: track_name,
+        aab: aab_path,
+        metadata_path: metadata_dir,
+        skip_upload_metadata: true,
+        skip_upload_images: true,
+        skip_upload_screenshots: true,
+        skip_upload_changelogs: false,
+        release_status: "completed"
+      )
+      UI.success("✅ Step 2/2 Complete: Directly uploaded to Closed Testing (#{track_name})!")
+    end
+
+    # 5. Git archiving & backup
+    git_version_backup(build_num, "Internal & Closed")
+  end
 end

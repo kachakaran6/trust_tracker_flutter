@@ -1,5 +1,4 @@
-• Fixed transaction amount detection: amounts like ₹15,000 no longer drop zeros.
-• Correct sign display: debit shows −₹ and credit shows +₹.
-• Added available account balance extraction & activity view.
-• Added real-time SMS transaction alerts & notification preferences.
-• Expanded bank coverage: Federal Bank, Google Pay, PhonePe & major Indian banks.
+• Budget Management: Added quick "Add Budget" action, seamless monthly budget creation, and always-visible remaining balance tracking.
+• Enhanced Input Validation: Added strict validation rejecting empty or negative budget and expense values.
+• Income Tracking: Restored interactive All / Income / Expense filter bar and direct navigation to income history.
+• SMS Detection & Stability: Improved financial transaction parsing accuracy and overall system reliability.
