@@ -275,7 +275,7 @@ class BankingDashboardPage extends ConsumerWidget {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                  days == 0 ? '⏰ Due Today' : 'Due in $days day(s)',
+                                  days == 0 ? 'Due Today' : 'Due in $days day(s)',
                                   style: TextStyle(
                                     color: alertColor,
                                     fontSize: 11,

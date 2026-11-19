@@ -657,7 +657,7 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
                                     Padding(
                                       padding: const EdgeInsets.only(top: 4),
                                       child: Text(
-                                        '⚠️ Amount cannot exceed $currency${totalToSettle.toStringAsFixed(2)}',
+                                        'Amount cannot exceed $currency${totalToSettle.toStringAsFixed(2)}',
                                         style: TextStyle(fontSize: 11, color: errorColor, fontWeight: FontWeight.w600),
                                       ),
                                     ),
@@ -665,7 +665,7 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
                                     Padding(
                                       padding: const EdgeInsets.only(top: 4),
                                       child: Text(
-                                        '⚠️ Enter an amount greater than 0',
+                                        'Enter an amount greater than 0',
                                         style: TextStyle(fontSize: 11, color: errorColor, fontWeight: FontWeight.w600),
                                       ),
                                     ),
@@ -848,8 +848,8 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
           SnackBar(
             content: Text(
               isPartialDone
-                  ? '🎉 Payment of $currency${result.amount.toStringAsFixed(2)} recorded for $person! Remaining: $currency${(totalToSettle - result.amount).toStringAsFixed(2)}'
-                  : '🎉 All debt with $person settled successfully!',
+                  ? 'Payment of $currency${result.amount.toStringAsFixed(2)} recorded for $person! Remaining: $currency${(totalToSettle - result.amount).toStringAsFixed(2)}'
+                  : 'All debt with $person settled successfully!',
             ),
             backgroundColor: Theme.of(context).colorScheme.primary,
             behavior: SnackBarBehavior.floating,
@@ -1301,7 +1301,7 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
                                     Padding(
                                       padding: const EdgeInsets.only(top: 4),
                                       child: Text(
-                                        '⚠️ Amount cannot exceed $currency${debt.amount.toStringAsFixed(2)}',
+                                        'Amount cannot exceed $currency${debt.amount.toStringAsFixed(2)}',
                                         style: TextStyle(fontSize: 11, color: errorColor, fontWeight: FontWeight.w600),
                                       ),
                                     ),
@@ -1309,7 +1309,7 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
                                     Padding(
                                       padding: const EdgeInsets.only(top: 4),
                                       child: Text(
-                                        '⚠️ Enter an amount greater than 0',
+                                        'Enter an amount greater than 0',
                                         style: TextStyle(fontSize: 11, color: errorColor, fontWeight: FontWeight.w600),
                                       ),
                                     ),
@@ -1477,8 +1477,8 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
           SnackBar(
             content: Text(
               isPartialDone
-                  ? '🎉 Partial recovery of $currency${result.amount.toStringAsFixed(2)} recorded for $person! Remaining: $currency${(debt.amount - result.amount).toStringAsFixed(2)}'
-                  : '🎉 Debt with $person settled successfully!',
+                  ? 'Partial recovery of $currency${result.amount.toStringAsFixed(2)} recorded for $person! Remaining: $currency${(debt.amount - result.amount).toStringAsFixed(2)}'
+                  : 'Debt with $person settled successfully!',
             ),
             backgroundColor: successColor,
             behavior: SnackBarBehavior.floating,
@@ -2209,7 +2209,7 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
-                                  '⚠️ ${group.overdueCount} overdue',
+                                  '${group.overdueCount} overdue',
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w700,

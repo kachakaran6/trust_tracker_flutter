@@ -11,17 +11,23 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 
-// Subscription type templates with emoji icons
-const List<Map<String, String>> kSubscriptionTypes = [
-  {'name': 'OTT Subscription', 'icon': '📺'},
-  {'name': 'Music Subscription', 'icon': '🎵'},
-  {'name': 'Mobile Recharge', 'icon': '📱'},
-  {'name': 'DTH Recharge', 'icon': '📡'},
-  {'name': 'Cloud Storage', 'icon': '☁️'},
-  {'name': 'Software', 'icon': '💻'},
-  {'name': 'Insurance Renewal', 'icon': '🛡️'},
-  {'name': 'Internet / WiFi Plan', 'icon': '🌐'},
-  {'name': 'Custom', 'icon': '⚙️'},
+// Subscription type templates with Material icons
+class SubscriptionTemplate {
+  final String name;
+  final IconData icon;
+  const SubscriptionTemplate({required this.name, required this.icon});
+}
+
+const List<SubscriptionTemplate> kSubscriptionTypes = [
+  SubscriptionTemplate(name: 'OTT Subscription', icon: Icons.tv_rounded),
+  SubscriptionTemplate(name: 'Music Subscription', icon: Icons.music_note_rounded),
+  SubscriptionTemplate(name: 'Mobile Recharge', icon: Icons.phone_android_rounded),
+  SubscriptionTemplate(name: 'DTH Recharge', icon: Icons.satellite_alt_rounded),
+  SubscriptionTemplate(name: 'Cloud Storage', icon: Icons.cloud_outlined),
+  SubscriptionTemplate(name: 'Software', icon: Icons.laptop_mac_rounded),
+  SubscriptionTemplate(name: 'Insurance Renewal', icon: Icons.shield_outlined),
+  SubscriptionTemplate(name: 'Internet / WiFi Plan', icon: Icons.wifi_rounded),
+  SubscriptionTemplate(name: 'Custom', icon: Icons.tune_rounded),
 ];
 
 class AddSubscriptionPage extends ConsumerStatefulWidget {
@@ -190,13 +196,13 @@ class _AddSubscriptionPageState extends ConsumerState<AddSubscriptionPage> {
                   separatorBuilder: (_, __) => const SizedBox(width: 8),
                   itemBuilder: (context, index) {
                     final type = kSubscriptionTypes[index];
-                    final isSelected = _subscriptionType == type['name'];
+                    final isSelected = _subscriptionType == type.name;
                     return GestureDetector(
                       onTap: () {
                         HapticFeedback.selectionClick();
-                        setState(() => _subscriptionType = type['name']);
-                        if (type['name'] != 'Custom' && _nameController.text.isEmpty) {
-                          _nameController.text = type['name']!;
+                        setState(() => _subscriptionType = type.name);
+                        if (type.name != 'Custom' && _nameController.text.isEmpty) {
+                          _nameController.text = type.name;
                         }
                       },
                       child: AnimatedContainer(
@@ -212,10 +218,14 @@ class _AddSubscriptionPageState extends ConsumerState<AddSubscriptionPage> {
                         ),
                         child: Row(
                           children: [
-                            Text(type['icon']!, style: const TextStyle(fontSize: 16)),
+                            Icon(
+                              type.icon,
+                              size: 16,
+                              color: isSelected ? cs.onPrimaryContainer : cs.onSurface.withOpacity(0.7),
+                            ),
                             const SizedBox(width: 6),
                             Text(
-                              type['name']!.split(' ').first,
+                              type.name.split(' ').first,
                               style: tt.labelMedium?.copyWith(
                                 color: isSelected ? cs.onPrimaryContainer : cs.onSurface.withOpacity(0.7),
                                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,

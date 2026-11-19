@@ -60,8 +60,8 @@ class DebtNotificationService {
         : 'Person';
 
     final title = isGiven
-        ? '🏷️ Udhar Reminder (Debt Receivable)'
-        : '🏷️ Udhar Reminder (Debt Payable)';
+        ? 'Udhar Reminder (Debt Receivable)'
+        : 'Udhar Reminder (Debt Payable)';
 
     final body = isGiven
         ? 'Reminder: You gave debt of ₹${transaction.amount.toStringAsFixed(0)} to $person. Time period is completed today! Tap to settle.'

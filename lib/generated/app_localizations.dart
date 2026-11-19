@@ -499,7 +499,7 @@ abstract class AppLocalizations {
   /// No description provided for @tapToEdit.
   ///
   /// In en, this message translates to:
-  /// **'Tap to edit  •  Use ✕ icon to delete'**
+  /// **'Tap to edit • Tap delete icon to remove'**
   String get tapToEdit;
 
   /// No description provided for @swipeToEdit.
@@ -931,7 +931,7 @@ abstract class AppLocalizations {
   /// No description provided for @builtWithLove.
   ///
   /// In en, this message translates to:
-  /// **'Built with ❤️ by {name}'**
+  /// **'Built with love by {name}'**
   String builtWithLove(Object name);
 
   /// No description provided for @budgetFor.
@@ -985,13 +985,13 @@ abstract class AppLocalizations {
   /// No description provided for @overBudgetBy.
   ///
   /// In en, this message translates to:
-  /// **'🚨 Over budget by {amount}'**
+  /// **'Over budget by {amount}'**
   String overBudgetBy(Object amount);
 
   /// No description provided for @remainingAmount.
   ///
   /// In en, this message translates to:
-  /// **'✅ {amount} remaining'**
+  /// **'{amount} remaining'**
   String remainingAmount(Object amount);
 
   /// No description provided for @over.
@@ -1009,7 +1009,7 @@ abstract class AppLocalizations {
   /// No description provided for @noBudgetSet.
   ///
   /// In en, this message translates to:
-  /// **'No budget set — tap \"SET\" to add a limit'**
+  /// **'No budget set — tap \"ADD BUDGET\" to add a limit'**
   String get noBudgetSet;
 
   /// No description provided for @filterTransactions.
@@ -1321,7 +1321,7 @@ abstract class AppLocalizations {
   /// No description provided for @startTracking.
   ///
   /// In en, this message translates to:
-  /// **'Start Tracking 🚀'**
+  /// **'Start Tracking'**
   String get startTracking;
 
   /// No description provided for @welcomeTagline.
@@ -1447,7 +1447,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeLanguage.
   ///
   /// In en, this message translates to:
-  /// **'Make the app feel like home 🌍'**
+  /// **'Make the app feel like home'**
   String get homeLanguage;
 
   /// No description provided for @languageSupportNote.

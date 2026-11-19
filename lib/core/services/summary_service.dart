@@ -78,6 +78,6 @@ class SummaryService {
     
     final symbol = NumberFormat.simpleCurrency(name: currencyCode).currencySymbol;
     
-    return "This week: $symbol ${income.toStringAsFixed(0)} earned, $symbol ${expense.toStringAsFixed(0)} spent. Net: $symbol ${balance.toStringAsFixed(0)} 📈";
+    return "This week: $symbol ${income.toStringAsFixed(0)} earned, $symbol ${expense.toStringAsFixed(0)} spent. Net: $symbol ${balance.toStringAsFixed(0)}";
   }
 }

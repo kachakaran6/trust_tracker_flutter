@@ -217,7 +217,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get add => 'Add';
 
   @override
-  String get tapToEdit => 'Tap to edit  •  Use ✕ icon to delete';
+  String get tapToEdit => 'Tap to edit • Tap delete icon to remove';
 
   @override
   String get swipeToEdit => 'Swipe for Edit or Delete • Tap icon to Duplicate';
@@ -437,7 +437,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String builtWithLove(Object name) {
-    return 'Built with ❤️ by $name';
+    return 'Built with love by $name';
   }
 
   @override
@@ -471,12 +471,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String overBudgetBy(Object amount) {
-    return '🚨 Over budget by $amount';
+    return 'Over budget by $amount';
   }
 
   @override
   String remainingAmount(Object amount) {
-    return '✅ $amount remaining';
+    return '$amount remaining';
   }
 
   @override
@@ -488,7 +488,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get noBudgetSet => 'No budget set — tap \"SET\" to add a limit';
+  String get noBudgetSet => 'No budget set — tap \"ADD BUDGET\" to add a limit';
 
   @override
   String get filterTransactions => 'Filter Transactions';
@@ -648,7 +648,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get continueLabel => 'Continue';
 
   @override
-  String get startTracking => 'Start Tracking 🚀';
+  String get startTracking => 'Start Tracking';
 
   @override
   String get welcomeTagline =>
@@ -717,7 +717,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get preferredLanguage => 'Use Your Preferred Language';
 
   @override
-  String get homeLanguage => 'Make the app feel like home 🌍';
+  String get homeLanguage => 'Make the app feel like home';
 
   @override
   String get languageSupportNote =>

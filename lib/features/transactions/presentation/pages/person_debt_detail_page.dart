@@ -751,8 +751,8 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
           SnackBar(
             content: Text(
               isPartialDone
-                  ? '🎉 Payment of $currency${result.amount.toStringAsFixed(2)} recorded! Remaining: $currency${(totalToSettle - result.amount).toStringAsFixed(2)}'
-                  : '🎉 All debt with $person settled successfully!',
+                  ? 'Payment of $currency${result.amount.toStringAsFixed(2)} recorded! Remaining: $currency${(totalToSettle - result.amount).toStringAsFixed(2)}'
+                  : 'All debt with $person settled successfully!',
             ),
             backgroundColor: Theme.of(context).colorScheme.primary,
             behavior: SnackBarBehavior.floating,

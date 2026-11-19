@@ -218,7 +218,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get tapToEdit =>
-      'संपादित करने के लिए टैप करें • हटाने के लिए ✕ आइकन का उपयोग करें';
+      'संपादित करने के लिए टैप करें • हटाने के लिए डिलीट आइकन का उपयोग करें';
 
   @override
   String get swipeToEdit =>
@@ -440,7 +440,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String builtWithLove(Object name) {
-    return '$name द्वारा ❤️ के साथ बनाया गया';
+    return '$name द्वारा बनाया गया';
   }
 
   @override
@@ -455,7 +455,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get removeBudget => 'बजट हटाएं';
 
   @override
-  String get setBudget => 'बजટ सेट करें';
+  String get setBudget => 'बजट सेट करें';
 
   @override
   String get updateBudget => 'बजट अपडेट करें';
@@ -474,12 +474,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String overBudgetBy(Object amount) {
-    return '🚨 बजट से $amount अधिक';
+    return 'बजट से $amount अधिक';
   }
 
   @override
   String remainingAmount(Object amount) {
-    return '✅ $amount शेष है';
+    return '$amount शेष है';
   }
 
   @override
@@ -492,7 +492,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get noBudgetSet =>
-      'कोई बजट सेट नहीं है — सीमा जोड़ने के लिए \"SET\" पर टैप करें';
+      'कोई बजट सेट नहीं है — सीमा जोड़ने के लिए \"ADD BUDGET\" पर टैप करें';
 
   @override
   String get filterTransactions => 'लेनदेन फ़िल्टर करें';
@@ -652,7 +652,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get continueLabel => 'जारी रखें';
 
   @override
-  String get startTracking => 'ट्रैकिंग शुरू करें 🚀';
+  String get startTracking => 'ट्रैकिंग शुरू करें';
 
   @override
   String get welcomeTagline => 'आपका निजी, केवल ऑफलाइन वाला\nवित्तीय साथी';
@@ -721,7 +721,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get preferredLanguage => 'अपनी पसंदीदा भाषा का उपयोग करें';
 
   @override
-  String get homeLanguage => 'ऐप को घर जैसा महसूस कराएं 🌍';
+  String get homeLanguage => 'ऐप को घर जैसा महसूस कराएं';
 
   @override
   String get languageSupportNote =>

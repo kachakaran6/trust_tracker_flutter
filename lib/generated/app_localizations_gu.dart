@@ -218,7 +218,7 @@ class AppLocalizationsGu extends AppLocalizations {
 
   @override
   String get tapToEdit =>
-      'સંપાદિત કરવા માટે ટેપ કરો • કાઢી નાખવા માટે ✕ આયકનનો ઉપયોગ કરો';
+      'સંપાદિત કરવા માટે ટેપ કરો • કાઢી નાખવા માટે ડિલીટ આયકનનો ઉપયોગ કરો';
 
   @override
   String get swipeToEdit =>
@@ -442,7 +442,7 @@ class AppLocalizationsGu extends AppLocalizations {
 
   @override
   String builtWithLove(Object name) {
-    return '$name દ્વારા ❤️ થી બનાવેલ';
+    return '$name દ્વારા બનાવેલ';
   }
 
   @override
@@ -476,12 +476,12 @@ class AppLocalizationsGu extends AppLocalizations {
 
   @override
   String overBudgetBy(Object amount) {
-    return '🚨 બજેટ કરતા $amount વધારે';
+    return 'બજેટ કરતા $amount વધારે';
   }
 
   @override
   String remainingAmount(Object amount) {
-    return '✅ $amount બાકી છે';
+    return '$amount બાકી છે';
   }
 
   @override
@@ -494,7 +494,7 @@ class AppLocalizationsGu extends AppLocalizations {
 
   @override
   String get noBudgetSet =>
-      'કોઈ બજેટ સેટ નથી — મર્યાદા ઉમેરવા માટે \"SET\" પર ટેપ કરો';
+      'કોઈ બજેટ સેટ નથી — મર્યાદા ઉમેરવા માટે \"ADD BUDGET\" પર ટેપ કરો';
 
   @override
   String get filterTransactions => 'વ્યવહારો ફિલ્ટર કરો';
@@ -653,7 +653,7 @@ class AppLocalizationsGu extends AppLocalizations {
   String get continueLabel => 'ચાલુ રાખો';
 
   @override
-  String get startTracking => 'ટ્રેકિંગ શરૂ કરો 🚀';
+  String get startTracking => 'ટ્રેકિંગ શરૂ કરો';
 
   @override
   String get welcomeTagline => 'તમારો ખાનગી, ઓફલાઇન-પ્રથમ\nનાણાકીય સાથી';
@@ -722,7 +722,7 @@ class AppLocalizationsGu extends AppLocalizations {
   String get preferredLanguage => 'તમારી પસંદગીની ભાષા વાપરો';
 
   @override
-  String get homeLanguage => 'એપ્લિકેશનને ઘર જેવું અનુભવો 🌍';
+  String get homeLanguage => 'એપ્લિકેશનને ઘર જેવું અનુભવો';
 
   @override
   String get languageSupportNote =>

@@ -377,7 +377,7 @@ class _AddLoanPageState extends ConsumerState<AddLoanPage> {
                 Padding(
                   padding: const EdgeInsets.only(left: 4.0),
                   child: Text(
-                    '💡 Estimated EMI: $currency${_emiAmount.toStringAsFixed(0)} / month',
+                    'Estimated EMI: $currency${_emiAmount.toStringAsFixed(0)} / month',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,

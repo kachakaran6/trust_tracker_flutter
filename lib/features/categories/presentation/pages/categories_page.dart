@@ -81,7 +81,7 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        t == CategoryType.income ? '💰 ${l10n.income}' : '💸 ${l10n.expense}',
+                        t == CategoryType.income ? l10n.income : l10n.expense,
                         textAlign: TextAlign.center,
                         style: isSelected 
                           ? tt.labelLarge?.copyWith(color: t == CategoryType.income ? Colors.white : cs.onError)

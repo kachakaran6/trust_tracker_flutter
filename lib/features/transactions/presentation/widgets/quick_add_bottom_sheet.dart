@@ -92,7 +92,7 @@ class _QuickAddBottomSheetState extends ConsumerState<QuickAddBottomSheet> {
               children: [
                 const Icon(Icons.check_circle, color: Colors.white),
                 const SizedBox(width: 8),
-                Text('✓ ${widget.type == TransactionType.expense ? "Expense" : "Income"} Saved: ₹${amount.toStringAsFixed(0)}'),
+                Text('${widget.type == TransactionType.expense ? "Expense" : "Income"} Saved: ₹${amount.toStringAsFixed(0)}'),
               ],
             ),
             behavior: SnackBarBehavior.floating,

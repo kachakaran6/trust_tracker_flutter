@@ -421,9 +421,9 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
 
   Widget _buildLanguagePage(TextTheme tt) {
     final languages = [
-      {'code': 'en', 'name': 'English', 'flag': '🇺🇸'},
-      {'code': 'gu', 'name': 'ગુજરાતી', 'flag': '🇮🇳'},
-      {'code': 'hi', 'name': 'हिन्दी', 'flag': '🇮🇳'},
+      {'code': 'en', 'name': 'English'},
+      {'code': 'gu', 'name': 'ગુજરાતી'},
+      {'code': 'hi', 'name': 'हिन्दी'},
     ];
 
     return Padding(
@@ -466,7 +466,11 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(lang['flag']!, style: const TextStyle(fontSize: 24)),
+                        Icon(
+                          Icons.translate_rounded,
+                          size: 26,
+                          color: isSelected ? const Color(0xFF0D6EFD) : Colors.white,
+                        ),
                         const SizedBox(height: 8),
                         Text(
                           lang['name']!,
@@ -612,7 +616,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
               shape: BoxShape.circle,
             ),
             child: const Center(
-              child: Text("🚀", style: TextStyle(fontSize: 64)),
+              child: Icon(Icons.rocket_launch_rounded, size: 64, color: Colors.white),
             ),
           ),
           const SizedBox(height: 48),
