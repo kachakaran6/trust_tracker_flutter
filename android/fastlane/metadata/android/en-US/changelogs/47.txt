@@ -1,0 +1,4 @@
+• Budget Experience: Centered and elevated "Add Budget" quick action with zero card overlap.
+• UI Polish: Completely removed emojis across the application, replaced with sleek Material vector icons.
+• Language & Subscriptions: Modernized language selector and subscription categories with native icons.
+• Performance & Stability: Enhanced overall layout responsiveness and financial tracking accuracy.

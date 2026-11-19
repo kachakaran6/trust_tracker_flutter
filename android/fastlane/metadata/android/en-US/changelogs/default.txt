@@ -1,4 +1,4 @@
-• Budget Management: Added quick "Add Budget" action, seamless monthly budget creation, and always-visible remaining balance tracking.
-• Enhanced Input Validation: Added strict validation rejecting empty or negative budget and expense values.
-• Income Tracking: Restored interactive All / Income / Expense filter bar and direct navigation to income history.
-• SMS Detection & Stability: Improved financial transaction parsing accuracy and overall system reliability.
+• Budget Experience: Centered and elevated "Add Budget" quick action with zero card overlap.
+• UI Polish: Completely removed emojis across the application, replaced with sleek Material vector icons.
+• Language & Subscriptions: Modernized language selector and subscription categories with native icons.
+• Performance & Stability: Enhanced overall layout responsiveness and financial tracking accuracy.
