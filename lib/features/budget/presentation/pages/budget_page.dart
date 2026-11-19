@@ -64,16 +64,31 @@ class BudgetPage extends ConsumerWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openSelectCategorySheet(
-          context,
-          ref,
-          catsAsync.valueOrNull ?? [],
-          budgetState.budgets.valueOrNull ?? [],
-          settings.currency,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: Container(
+        height: 48,
+        margin: const EdgeInsets.only(bottom: 8),
+        child: FloatingActionButton.extended(
+          elevation: 4,
+          highlightElevation: 8,
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          foregroundColor: Theme.of(context).colorScheme.onPrimary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          onPressed: () => _openSelectCategorySheet(
+            context,
+            ref,
+            catsAsync.valueOrNull ?? [],
+            budgetState.budgets.valueOrNull ?? [],
+            settings.currency,
+          ),
+          icon: const Icon(Icons.add_rounded, size: 20),
+          label: const Text(
+            'Add Budget',
+            style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 0.3),
+          ),
         ),
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Add Budget'),
       ),
       body: catsAsync.when(
         data: (cats) => budgetState.budgets.when(
@@ -91,7 +106,7 @@ class BudgetPage extends ConsumerWidget {
                 }
 
                 return ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
                   itemCount: cats.length + 1,
                   separatorBuilder: (_, i) => i == 0
                       ? const SizedBox(height: 16)
@@ -503,11 +518,24 @@ class _BudgetSummaryCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        Text(
-          isOver
-              ? l10n.overBudgetBy((totalSpent - totalBudgeted).toCurrency(currency))
-              : l10n.remainingAmount(remaining.toCurrency(currency)),
-          style: tt.bodyMedium?.copyWith(color: isOver ? cs.onError : cs.onPrimary, fontWeight: FontWeight.w700),
+        Row(
+          children: [
+            Icon(
+              isOver ? Icons.warning_amber_rounded : Icons.check_circle_rounded,
+              color: isOver ? cs.onError : cs.onPrimary,
+              size: 16,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              isOver
+                  ? l10n.overBudgetBy((totalSpent - totalBudgeted).toCurrency(currency))
+                  : l10n.remainingAmount(remaining.toCurrency(currency)),
+              style: tt.bodyMedium?.copyWith(
+                color: isOver ? cs.onError : cs.onPrimary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
         ),
       ]),
     );
@@ -620,23 +648,28 @@ class _BudgetCategoryCard extends StatelessWidget {
               ),
             ),
           ),
-          if (isOver)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                  l10n.overBudgetBy((spent - budgetAmt).toCurrency(currency)),
-                  style: tt.labelSmall?.copyWith(color: cs.error, fontWeight: FontWeight.w700)),
-            )
-          else
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                  l10n.remainingAmount((budgetAmt - spent).toCurrency(currency)),
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Row(
+              children: [
+                Icon(
+                  isOver ? Icons.warning_amber_rounded : Icons.check_circle_rounded,
+                  size: 14,
+                  color: progressColor,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  isOver
+                      ? l10n.overBudgetBy((spent - budgetAmt).toCurrency(currency))
+                      : l10n.remainingAmount((budgetAmt - spent).toCurrency(currency)),
                   style: tt.labelSmall?.copyWith(
-                    color: isWarning ? AppColors.warning : AppColors.success,
+                    color: progressColor,
                     fontWeight: FontWeight.w700,
-                  )),
+                  ),
+                ),
+              ],
             ),
+          ),
         ] else ...[
           const SizedBox(height: 8),
           Text(AppLocalizations.of(context)!.noBudgetSet,
