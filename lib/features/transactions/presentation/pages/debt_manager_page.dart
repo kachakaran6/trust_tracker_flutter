@@ -2200,14 +2200,16 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
                           '${isNetPositive ? '+' : '-'}$currency${group.netBalance.abs().toStringAsFixed(0)}',
                           style: tt.titleMedium?.copyWith(
                             fontWeight: FontWeight.w800,
-                            fontSize: 16,
+                            fontSize: 15,
                             color: isNetPositive ? positiveColor : errorColor,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         Text(
                           isNetPositive ? 'To receive' : 'To pay',
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 10,
                             fontWeight: FontWeight.w600,
                             color: (isNetPositive ? positiveColor : errorColor).withOpacity(0.85),
                           ),
@@ -2218,12 +2220,12 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
 
                   // Settle Button
                   if (group.activeCount > 0) ...[
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     InkWell(
                       onTap: () => _settlePersonGroupDialog(group),
                       borderRadius: BorderRadius.circular(10),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
                           color: cs.primary.withValues(alpha: 0.10),
                           borderRadius: BorderRadius.circular(10),
