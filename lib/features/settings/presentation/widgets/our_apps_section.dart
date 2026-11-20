@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
@@ -187,7 +188,7 @@ class _OurAppsSectionState extends State<OurAppsSection> {
               if (_isOffline)
                 Chip(
                   label: Text('Offline', style: tt.labelSmall),
-                  avatar: const Icon(Icons.cloud_off_rounded, size: 14),
+                  avatar: const Icon(LucideIcons.cloudOff, size: 14),
                   padding: EdgeInsets.zero,
                   labelPadding: const EdgeInsets.symmetric(horizontal: 4),
                 ),
@@ -225,7 +226,7 @@ class _OurAppsSectionState extends State<OurAppsSection> {
         ),
         child: Column(
           children: [
-            Icon(Icons.cloud_off_rounded, color: cs.onSurface.withOpacity(0.3), size: 40),
+            Icon(LucideIcons.cloudOff, color: cs.onSurface.withOpacity(0.3), size: 40),
             const SizedBox(height: 8),
             Text(
               'Unable to load apps. Check your connection.',
@@ -488,7 +489,7 @@ class _OurAppCard extends StatelessWidget {
 
   Widget _buildIcon(String url) {
     if (url.isEmpty) {
-      return const Icon(Icons.apps_rounded, size: 32, color: Colors.grey);
+      return const Icon(LucideIcons.grid, size: 32, color: Colors.grey);
     }
 
     var finalUrl = url;
@@ -502,7 +503,7 @@ class _OurAppCard extends StatelessWidget {
       height: 64,
       fit: BoxFit.cover,
       errorBuilder: (_, __, ___) {
-        return const Icon(Icons.android_rounded, size: 32, color: Colors.grey);
+        return const Icon(LucideIcons.smartphone, size: 32, color: Colors.grey);
       },
     );
   }
@@ -515,7 +516,7 @@ class _OurAppCard extends StatelessWidget {
         color: cs.primaryContainer,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Icon(Icons.apps_rounded, color: cs.onPrimaryContainer, size: 28),
+      child: Icon(LucideIcons.grid, color: cs.onPrimaryContainer, size: 28),
     );
   }
 }

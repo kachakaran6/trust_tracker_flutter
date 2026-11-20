@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:trust_tracker_flutter/core/theme/app_shadows.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:trust_tracker_flutter/core/theme/app_colors.dart';
@@ -38,7 +40,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                   color: cs.primary.withOpacity(0.12),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.payment_rounded, color: cs.primary, size: 22),
+                child: Icon(LucideIcons.creditCard, color: cs.primary, size: 20),
               ),
               const SizedBox(width: 10),
               const Text('Record EMI Payment'),
@@ -122,7 +124,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
         actions: [
           if (widget.loan.status == 'active')
             IconButton(
-              icon: const Icon(Icons.archive_outlined),
+              icon: const Icon(LucideIcons.archive, size: 20),
               tooltip: 'Close & Archive Loan',
               onPressed: () {
                 final closedLoan = widget.loan.copyWith(status: 'archived');
@@ -141,23 +143,10 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
             Container(
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    cs.primary.withOpacity(0.14),
-                    cs.primary.withOpacity(0.04),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: cs.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: cs.primary.withOpacity(0.2)),
-                boxShadow: [
-                  BoxShadow(
-                    color: cs.primary.withOpacity(0.06),
-                    blurRadius: 18,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
+                border: Border.all(color: cs.outline.withOpacity(0.12)),
+                boxShadow: AppShadows.subtle,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -234,7 +223,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.check_circle, color: AppColors.getSuccess(context)),
+                        Icon(LucideIcons.checkCircle, color: AppColors.getSuccess(context), size: 18),
                         const SizedBox(width: 8),
                         Text(
                           'Loan Closed & Completed',
@@ -364,7 +353,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
                     contentPadding: EdgeInsets.zero,
                     leading: CircleAvatar(
                       backgroundColor: cs.primary.withOpacity(0.12),
-                      child: Icon(Icons.check, color: cs.primary, size: 18),
+                      child: Icon(LucideIcons.check, color: cs.primary, size: 18),
                     ),
                     title: Text('EMI Paid', style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
                     subtitle: Text(DateFormat.yMMMd().format(p.date), style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
@@ -389,7 +378,7 @@ class _LoanDetailPageState extends ConsumerState<LoanDetailPage> {
               foregroundColor: cs.onPrimary,
               elevation: 3,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              icon: const Icon(Icons.payment_rounded, size: 20),
+              icon: const Icon(LucideIcons.creditCard, size: 20),
               label: const Text('Record EMI Payment', style: TextStyle(fontWeight: FontWeight.bold)),
             )
           : null,

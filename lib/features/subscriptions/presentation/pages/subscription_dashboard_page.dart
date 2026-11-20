@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:trust_tracker_flutter/core/theme/app_shadows.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:trust_tracker_flutter/core/database/database_helper.dart';
@@ -30,7 +32,7 @@ class SubscriptionDashboardPage extends ConsumerWidget {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(LucideIcons.rotateCcw, size: 20),
             tooltip: 'Run Background Check Now',
             onPressed: () async {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -67,7 +69,7 @@ class SubscriptionDashboardPage extends ConsumerWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.event_repeat, size: 56, color: cs.surfaceContainerHighest),
+                    Icon(LucideIcons.repeat, size: 56, color: cs.surfaceContainerHighest),
                     const SizedBox(height: 14),
                     Text(
                       'No subscriptions yet',
@@ -82,7 +84,7 @@ class SubscriptionDashboardPage extends ConsumerWidget {
                     const SizedBox(height: 18),
                     FilledButton.icon(
                       onPressed: () => context.push('/add-subscription'),
-                      icon: const Icon(Icons.add_rounded),
+                      icon: const Icon(LucideIcons.plus, size: 20),
                       label: const Text('Add Subscription', style: TextStyle(fontWeight: FontWeight.bold)),
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -305,12 +307,10 @@ class _SummaryCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [cs.primary, cs.tertiary],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: cs.primaryContainer,
         borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: cs.outline.withOpacity(0.12)),
+        boxShadow: AppShadows.subtle,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -318,7 +318,7 @@ class _SummaryCard extends StatelessWidget {
           Text(
             'Monthly Spending',
             style: tt.labelLarge?.copyWith(
-              color: cs.onPrimary.withOpacity(0.82),
+              color: cs.onPrimaryContainer.withOpacity(0.82),
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -326,7 +326,7 @@ class _SummaryCard extends StatelessWidget {
           Text(
             monthlyTotal.toCurrency(currency),
             style: tt.headlineMedium?.copyWith(
-              color: cs.onPrimary,
+              color: cs.onPrimaryContainer,
               fontWeight: FontWeight.w800,
               height: 1.0,
             ),
@@ -336,10 +336,10 @@ class _SummaryCard extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _StatChip(icon: Icons.autorenew_rounded, label: '$activeCount Active', cs: cs),
-              _StatChip(icon: Icons.calendar_today_rounded, label: '${yearlyTotal.toCurrencyCompact(currency)}/yr', cs: cs),
+              _StatChip(icon: LucideIcons.repeat, label: '$activeCount Active', cs: cs),
+              _StatChip(icon: LucideIcons.calendar, label: '${yearlyTotal.toCurrencyCompact(currency)}/yr', cs: cs),
               if (dueSoonCount > 0)
-                _StatChip(icon: Icons.notifications_active_rounded, label: '$dueSoonCount Due soon', cs: cs, isAlert: true),
+                _StatChip(icon: LucideIcons.bell, label: '$dueSoonCount Due soon', cs: cs, isAlert: true),
             ],
           ),
         ],
@@ -374,7 +374,7 @@ class _UpcomingRenewalTile extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.event_available_rounded, size: 18, color: cs.error),
+          Icon(LucideIcons.alertTriangle, size: 18, color: cs.error),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -415,8 +415,8 @@ class _StatChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = isAlert ? cs.errorContainer.withOpacity(0.92) : cs.onPrimary.withOpacity(0.15);
-    final fgColor = isAlert ? cs.onErrorContainer : cs.onPrimary;
+    final bgColor = isAlert ? cs.errorContainer : cs.onPrimaryContainer.withOpacity(0.12);
+    final fgColor = isAlert ? cs.onErrorContainer : cs.onPrimaryContainer;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),

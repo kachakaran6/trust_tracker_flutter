@@ -4,7 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:trust_tracker_flutter/core/theme/app_colors.dart';
+import 'package:trust_tracker_flutter/core/theme/app_shadows.dart';
+import 'package:trust_tracker_flutter/core/theme/app_dimensions.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/repositories/transaction_repository.dart';
@@ -229,6 +232,7 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
         return StatefulBuilder(
@@ -287,28 +291,14 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
                                 width: 44,
                                 height: 44,
                                 decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      cs.primary,
-                                      cs.primary.withOpacity(0.8),
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
+                                  color: cs.primaryContainer,
                                   borderRadius: BorderRadius.circular(14),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: cs.primary.withOpacity(0.25),
-                                      blurRadius: 6,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
                                 ),
                                 child: Center(
                                   child: Text(
                                     person.isNotEmpty ? person[0].toUpperCase() : '?',
                                     style: TextStyle(
-                                      color: cs.onPrimary,
+                                      color: cs.onPrimaryContainer,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 19,
                                     ),
@@ -342,7 +332,7 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
                               ),
                               IconButton(
                                 onPressed: () => Navigator.pop(context, null),
-                                icon: const Icon(Icons.close_rounded),
+                                icon: const Icon(LucideIcons.x, size: 18),
                                 style: IconButton.styleFrom(
                                   backgroundColor: cs.onSurface.withOpacity(0.06),
                                   foregroundColor: cs.onSurfaceVariant,
@@ -476,7 +466,7 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
                                           shape: BoxShape.circle,
                                         ),
                                         child: Icon(
-                                          isNetPositive ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
+                                          isNetPositive ? LucideIcons.arrowDownLeft : LucideIcons.arrowUpRight,
                                           color: cs.primary,
                                           size: 16,
                                         ),
@@ -692,7 +682,7 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Icon(
-                                    Icons.account_balance_wallet_rounded,
+                                    LucideIcons.wallet,
                                     color: cs.primary,
                                     size: 20,
                                   ),
@@ -788,7 +778,7 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
                                               ),
                                             )
                                         : null,
-                                    icon: const Icon(Icons.check_rounded, size: 18),
+                                    icon: const Icon(LucideIcons.check, size: 18),
                                     label: Text(
                                       isPartial && remaining > 0
                                           ? 'Settle $currency${settleAmount.toStringAsFixed(0)}'
@@ -873,6 +863,7 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
         return StatefulBuilder(
@@ -931,28 +922,14 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
                                 width: 44,
                                 height: 44,
                                 decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      cs.primary,
-                                      cs.primary.withOpacity(0.8),
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
+                                  color: cs.primaryContainer,
                                   borderRadius: BorderRadius.circular(14),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: cs.primary.withOpacity(0.25),
-                                      blurRadius: 6,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
                                 ),
                                 child: Center(
                                   child: Text(
                                     person.isNotEmpty ? person[0].toUpperCase() : '?',
                                     style: TextStyle(
-                                      color: cs.onPrimary,
+                                      color: cs.onPrimaryContainer,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 19,
                                     ),
@@ -986,7 +963,7 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
                               ),
                               IconButton(
                                 onPressed: () => Navigator.pop(context, null),
-                                icon: const Icon(Icons.close_rounded),
+                                icon: const Icon(LucideIcons.x, size: 18),
                                 style: IconButton.styleFrom(
                                   backgroundColor: cs.onSurface.withOpacity(0.06),
                                   foregroundColor: cs.onSurfaceVariant,
@@ -1119,7 +1096,7 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
                                           color: cs.primary.withOpacity(0.15),
                                           shape: BoxShape.circle,
                                         ),
-                                        child: Icon(Icons.check_rounded, color: cs.primary, size: 16),
+                                        child: Icon(LucideIcons.check, color: cs.primary, size: 16),
                                       ),
                                       const SizedBox(width: 10),
                                       Column(
@@ -1336,7 +1313,7 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Icon(
-                                    Icons.account_balance_wallet_rounded,
+                                    LucideIcons.wallet,
                                     size: 18,
                                     color: recordSettlement ? cs.primary : cs.onSurfaceVariant,
                                   ),
@@ -1432,7 +1409,7 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
                                               ),
                                             )
                                         : null,
-                                    icon: const Icon(Icons.check_rounded, size: 18),
+                                    icon: const Icon(LucideIcons.check, size: 18),
                                     label: Text(
                                       isPartial && remaining > 0
                                           ? 'Settle $currency${settleAmount.toStringAsFixed(0)}'
@@ -1548,7 +1525,7 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
                   color: errorColor.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.delete_outline_rounded, color: errorColor, size: 22),
+                child: Icon(LucideIcons.trash2, color: errorColor, size: 20),
               ),
               const SizedBox(width: 12),
               const Expanded(
@@ -1665,12 +1642,12 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
         centerTitle: false,
         actions: [
           IconButton(
-            icon: const Icon(Icons.picture_as_pdf_rounded),
+            icon: const Icon(LucideIcons.fileText, size: 20),
             onPressed: () => _openExportPdfSheet(context),
             tooltip: 'Export Statement PDF',
           ),
           IconButton(
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(LucideIcons.rotateCcw, size: 20),
             onPressed: _loadData,
             tooltip: 'Refresh',
           ),
@@ -1713,8 +1690,8 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
-                          Icons.handshake_outlined,
-                          size: 48,
+                          LucideIcons.handshake,
+                          size: 40,
                           color: cs.primary,
                         ),
                       ),
@@ -1744,7 +1721,7 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
                         const SizedBox(height: 20),
                         FilledButton.icon(
                           onPressed: () => AddDebtBottomSheet.show(context, onSaved: _loadData),
-                          icon: const Icon(Icons.add_rounded, size: 20),
+                          icon: const Icon(LucideIcons.plus, size: 18),
                           label: const Text(
                             'Add Debt / Lent Record',
                             style: TextStyle(fontWeight: FontWeight.bold),
@@ -1848,7 +1825,7 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
             ),
             child: Row(
               children: [
-                Icon(Icons.warning_amber_rounded, color: errorColor, size: 20),
+                Icon(LucideIcons.alertTriangle, color: errorColor, size: 18),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -1874,13 +1851,7 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
                   border: Border.all(
                     color: cs.outline.withOpacity(0.12),
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: cs.shadow.withOpacity(0.02),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                  boxShadow: AppShadows.subtle,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1893,7 +1864,7 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
                             color: positiveColor.withOpacity(0.12),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: Icon(Icons.arrow_upward_rounded, color: positiveColor, size: 16),
+                          child: Icon(LucideIcons.arrowUpRight, color: positiveColor, size: 16),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -1940,13 +1911,7 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
                   border: Border.all(
                     color: cs.outline.withOpacity(0.12),
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: cs.shadow.withOpacity(0.02),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                  boxShadow: AppShadows.subtle,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1959,7 +1924,7 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
                             color: errorColor.withOpacity(0.12),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: Icon(Icons.arrow_downward_rounded, color: errorColor, size: 16),
+                          child: Icon(LucideIcons.arrowDownLeft, color: errorColor, size: 16),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -2013,7 +1978,7 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
                 Row(
                   children: [
                     Icon(
-                      isNetPositive ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+                      isNetPositive ? LucideIcons.trendingUp : LucideIcons.trendingDown,
                       size: 16,
                       color: isNetPositive ? positiveColor : errorColor,
                     ),
@@ -2043,10 +2008,10 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
     final activeTab = ref.watch(debtFilterTabProvider);
 
     final tabs = [
-      {'label': 'All Active', 'icon': Icons.all_inbox_rounded},
-      {'label': 'Given', 'icon': Icons.call_made_rounded},
-      {'label': 'Taken', 'icon': Icons.call_received_rounded},
-      {'label': 'Settled History', 'icon': Icons.history_rounded},
+      {'label': 'All Active', 'icon': LucideIcons.inbox},
+      {'label': 'Given', 'icon': LucideIcons.arrowUpRight},
+      {'label': 'Taken', 'icon': LucideIcons.arrowDownLeft},
+      {'label': 'Settled History', 'icon': LucideIcons.history},
     ];
 
     return SingleChildScrollView(
@@ -2145,28 +2110,14 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          cs.primary,
-                          cs.primary.withOpacity(0.8),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      color: cs.primaryContainer,
                       borderRadius: BorderRadius.circular(14),
-                      boxShadow: [
-                        BoxShadow(
-                          color: cs.primary.withOpacity(0.25),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
                     ),
                     child: Center(
                       child: Text(
                         group.personName.isNotEmpty ? group.personName[0].toUpperCase() : '?',
                         style: TextStyle(
-                          color: cs.onPrimary,
+                          color: cs.onPrimaryContainer,
                           fontWeight: FontWeight.bold,
                           fontSize: 19,
                         ),
@@ -2232,7 +2183,7 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.check_circle_rounded, size: 14, color: positiveColor),
+                            Icon(LucideIcons.checkCircle, size: 14, color: positiveColor),
                             const SizedBox(width: 4),
                             Text(
                               'All Settled',
@@ -2284,7 +2235,7 @@ class _DebtManagerPageState extends ConsumerState<DebtManagerPage> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.check_rounded, size: 14, color: cs.primary),
+                            Icon(LucideIcons.check, size: 14, color: cs.primary),
                             const SizedBox(width: 4),
                             Text(
                               'Settle',

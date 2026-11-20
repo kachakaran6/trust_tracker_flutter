@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:trust_tracker_flutter/core/constants/app_constants.dart';
@@ -155,7 +156,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                 color: Colors.white.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(32),
               ),
-              child: const Icon(Icons.account_balance_wallet_rounded,
+              child: const Icon(LucideIcons.wallet,
                   size: 60, color: Colors.white),
             ),
             const SizedBox(height: 40),
@@ -171,13 +172,13 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                   fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 48),
-            _featureRow(Icons.lock_outline_rounded,
+            _featureRow(LucideIcons.lock,
                 l10n.lockPrivate, tt),
             const SizedBox(height: 16),
-            _featureRow(Icons.bar_chart_rounded,
+            _featureRow(LucideIcons.barChart2,
                 l10n.smartAnalytics, tt),
             const SizedBox(height: 16),
-            _featureRow(Icons.bolt_rounded,
+            _featureRow(LucideIcons.zap,
                 l10n.blazingFast, tt),
           ],
         ),
@@ -212,7 +213,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-          const Icon(Icons.waving_hand_rounded, color: Colors.white, size: 56),
+          const Icon(LucideIcons.hand, color: Colors.white, size: 56),
           const SizedBox(height: 32),
           Text(l10n.whatsYourName,
               style: tt.displaySmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
@@ -250,13 +251,13 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 20),
-          const Icon(Icons.currency_exchange_rounded, color: Colors.white, size: 56),
+          const Icon(LucideIcons.coins, color: Colors.white, size: 56),
           const SizedBox(height: 32),
           Text(l10n.chooseCurrency,
               style: tt.displaySmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
           const SizedBox(height: 12),
           Row(children: [
-            const Icon(Icons.location_on_rounded, color: Colors.white70, size: 16),
+            const Icon(LucideIcons.mapPin, color: Colors.white70, size: 16),
             const SizedBox(width: 6),
             Expanded(
               child: Text(
@@ -319,7 +320,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                         ),
                       ),
                       if (isSelected)
-                        Icon(Icons.check_circle_rounded, color: cs.primary, size: 24),
+                        Icon(LucideIcons.checkCircle, color: cs.primary, size: 24),
                     ]),
                   ),
                 );
@@ -337,7 +338,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.touch_app_rounded, color: Colors.white, size: 56),
+          const Icon(LucideIcons.pointer, color: Colors.white, size: 56),
           const SizedBox(height: 32),
           Text(l10n.quickEasyActions,
               style: tt.displaySmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
@@ -365,7 +366,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                           color: Colors.white.withOpacity(0.2),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.shopping_bag_rounded, color: Colors.white),
+                        child: const Icon(LucideIcons.shoppingBag, color: Colors.white),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -386,7 +387,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white54, size: 20),
+                    const Icon(LucideIcons.chevronLeft, color: Colors.white54, size: 20),
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -396,23 +397,23 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.swipe_rounded, color: Colors.white, size: 20),
+                          const Icon(LucideIcons.moveHorizontal, color: Colors.white, size: 20),
                           const SizedBox(width: 8),
                           Text(l10n.swipeLeftRightAction, style: tt.labelLarge?.copyWith(color: Colors.white)),
                         ],
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 20),
+                    const Icon(LucideIcons.chevronRight, color: Colors.white54, size: 20),
                   ],
                 ),
               ],
             ),
           ),
           const Spacer(),
-          _featureRow(Icons.edit_rounded, l10n.swipeEditDelete, tt),
+          _featureRow(LucideIcons.pencil, l10n.swipeEditDelete, tt),
           const SizedBox(height: 16),
-          _featureRow(Icons.ads_click_rounded, l10n.tapViewDetails, tt),
+          _featureRow(LucideIcons.mousePointer, l10n.tapViewDetails, tt),
           const SizedBox(height: 16),
         ],
       ),
@@ -431,7 +432,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.public_rounded, color: Colors.white, size: 56),
+          const Icon(LucideIcons.globe, color: Colors.white, size: 56),
           const SizedBox(height: 32),
           Text(l10n.preferredLanguage,
               style: tt.displaySmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
@@ -467,7 +468,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          Icons.translate_rounded,
+                          LucideIcons.languages,
                           size: 26,
                           color: isSelected ? const Color(0xFF0D6EFD) : Colors.white,
                         ),
@@ -503,7 +504,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.calendar_month_rounded, color: Colors.white, size: 56),
+          const Icon(LucideIcons.calendar, color: Colors.white, size: 56),
           const SizedBox(height: 32),
           Text(l10n.smartMonthlyTracking,
               style: tt.displaySmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
@@ -616,7 +617,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
               shape: BoxShape.circle,
             ),
             child: const Center(
-              child: Icon(Icons.rocket_launch_rounded, size: 64, color: Colors.white),
+              child: Icon(LucideIcons.rocket, size: 64, color: Colors.white),
             ),
           ),
           const SizedBox(height: 48),
@@ -642,11 +643,11 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
             ),
             child: Column(
               children: [
-                _summaryRow(Icons.check_circle_outline_rounded, l10n.personalizedProfile),
+                _summaryRow(LucideIcons.checkCircle, l10n.personalizedProfile),
                 const SizedBox(height: 12),
-                _summaryRow(Icons.check_circle_outline_rounded, l10n.globalCurrency),
+                _summaryRow(LucideIcons.checkCircle, l10n.globalCurrency),
                 const SizedBox(height: 12),
-                _summaryRow(Icons.check_circle_outline_rounded, l10n.smartMonthlyControls),
+                _summaryRow(LucideIcons.checkCircle, l10n.smartMonthlyControls),
               ],
             ),
           ),

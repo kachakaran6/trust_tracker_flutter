@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
@@ -195,7 +196,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.calendar_today_rounded, size: 18, color: cs.primary),
+                                Icon(LucideIcons.calendar, size: 18, color: cs.primary),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
@@ -213,7 +214,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                                   GestureDetector(
                                     onTap: () => setState(() =>
                                         _currentFilter = _currentFilter.copyWith(clearDateRange: true)),
-                                    child: Icon(Icons.close, size: 18, color: cs.onSurface.withOpacity(0.4)),
+                                    child: Icon(LucideIcons.x, size: 16, color: cs.onSurface.withOpacity(0.4)),
                                   ),
                               ],
                             ),
@@ -256,7 +257,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                                     height: 18,
                                     child: Center(
                                       child: Icon(
-                                        isSelected ? Icons.check_rounded : Icons.circle,
+                                        isSelected ? LucideIcons.check : LucideIcons.circle,
                                         size: isSelected ? 16 : 10,
                                         color: color,
                                       ),
@@ -318,7 +319,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            isAsc ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+            isAsc ? LucideIcons.arrowUp : LucideIcons.arrowDown,
             size: 16,
             color: isSelected ? cs.onPrimary : cs.primary,
           ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:trust_tracker_flutter/features/categories/data/models/category_model.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
 import 'package:trust_tracker_flutter/features/transactions/presentation/providers/transaction_provider.dart';
@@ -294,7 +295,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, color: cs.onSurface, size: 20),
+          icon: Icon(LucideIcons.arrowLeft, color: cs.onSurface, size: 20),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -408,12 +409,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
                 indicator: BoxDecoration(
                   color: isDark ? activeAccent.withOpacity(0.1) : cs.surface,
                   borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                        color: activeAccent.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4))
-                  ],
+                  boxShadow: AppShadows.subtle,
                 ),
                 indicatorSize: TabBarIndicatorSize.tab,
                 labelColor: activeAccent,
@@ -469,7 +465,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
               style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
               decoration: InputDecoration(
                 hintText: l10n.whatWasThisFor,
-                prefixIcon: Icon(Icons.edit_note_rounded, color: labelColor.withOpacity(0.6), size: 22),
+                prefixIcon: Icon(LucideIcons.fileText, color: labelColor.withOpacity(0.6), size: 18),
                 enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: inputBorderColor)),
                 focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: activeAccent, width: 2)),
                 fillColor: Colors.transparent,
@@ -498,7 +494,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.calendar_today_rounded, color: labelColor.withOpacity(0.6), size: 18),
+                              Icon(LucideIcons.calendar, color: labelColor.withOpacity(0.6), size: 18),
                               const SizedBox(width: spSmall),
                               Text(
                                 DateFormat('MMM dd, yyyy').format(_selectedDate),
@@ -527,7 +523,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.access_time_filled_rounded, color: labelColor.withOpacity(0.6), size: 18),
+                              Icon(LucideIcons.clock, color: labelColor.withOpacity(0.6), size: 18),
                               const SizedBox(width: spSmall),
                               Text(
                                 _selectedTime.format(context),
@@ -556,7 +552,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
               style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
               decoration: InputDecoration(
                 hintText: 'Add a quick note...',
-                prefixIcon: Icon(Icons.subject_rounded, color: labelColor.withOpacity(0.6), size: 20),
+                prefixIcon: Icon(LucideIcons.alignLeft, color: labelColor.withOpacity(0.6), size: 18),
                 enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: inputBorderColor)),
                 focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: activeAccent, width: 2)),
                 fillColor: Colors.transparent,
@@ -584,7 +580,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
             //     child: Row(
             //       mainAxisAlignment: MainAxisAlignment.center,
             //       children: [
-            //         Icon(Icons.add_a_photo_outlined, color: labelColor.withOpacity(0.7), size: 16),
+            //         Icon(LucideIcons.camera, color: labelColor.withOpacity(0.7), size: 16),
             //         const SizedBox(width: spTight),
             //         Text(
             //           'Attach Receipt',
@@ -613,7 +609,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
                     : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(widget.editTransaction != null ? Icons.save_rounded : Icons.check_circle_rounded),
+                          Icon(widget.editTransaction != null ? LucideIcons.check : LucideIcons.checkCircle, size: 18),
                           const SizedBox(width: 8),
                           Text(
                             widget.editTransaction != null ? l10n.update : l10n.addTransaction,
@@ -691,13 +687,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
           color: cs.outline.withOpacity(0.12),
           width: 1.0,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: cs.shadow.withOpacity(isDark ? 0.2 : 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: AppShadows.subtle,
       ),
       child: Material(
         color: Colors.transparent,
@@ -715,7 +705,7 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    Icons.handshake_rounded,
+                    LucideIcons.handshake,
                     color: cs.primary,
                     size: 20,
                   ),

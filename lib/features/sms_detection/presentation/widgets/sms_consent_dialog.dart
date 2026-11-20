@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
 
@@ -41,7 +42,7 @@ class SmsConsentDialog extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppDimensions.rMd),
             ),
             child: Icon(
-              Icons.security_rounded,
+              LucideIcons.shield,
               color: cs.primary,
               size: 20,
             ),
@@ -85,14 +86,14 @@ class SmsConsentDialog extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildDataPoint(
-                      icon: Icons.shield_outlined,
+                      icon: LucideIcons.shield,
                       title: '100% On-Device Processing',
                       desc: 'Messages are analyzed entirely on your device. No SMS data is ever sent to cloud or external servers.',
                       context: context,
                     ),
                     const SizedBox(height: 8),
                     _buildDataPoint(
-                      icon: Icons.filter_alt_outlined,
+                      icon: LucideIcons.filter,
                       title: 'Data Minimization',
                       desc: 'Only eligible bank transactions are parsed. Non-financial SMS and OTPs are ignored; full message text is never stored.',
                       context: context,
@@ -120,7 +121,7 @@ class SmsConsentDialog extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          Icons.open_in_new_rounded,
+                          LucideIcons.externalLink,
                           size: 14,
                           color: cs.primary,
                         ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trust_tracker_flutter/features/subscriptions/data/models/subscription_model.dart';
 import 'package:trust_tracker_flutter/features/subscriptions/presentation/providers/subscription_provider.dart';
@@ -19,15 +20,15 @@ class SubscriptionTemplate {
 }
 
 const List<SubscriptionTemplate> kSubscriptionTypes = [
-  SubscriptionTemplate(name: 'OTT Subscription', icon: Icons.tv_rounded),
-  SubscriptionTemplate(name: 'Music Subscription', icon: Icons.music_note_rounded),
-  SubscriptionTemplate(name: 'Mobile Recharge', icon: Icons.phone_android_rounded),
-  SubscriptionTemplate(name: 'DTH Recharge', icon: Icons.satellite_alt_rounded),
-  SubscriptionTemplate(name: 'Cloud Storage', icon: Icons.cloud_outlined),
-  SubscriptionTemplate(name: 'Software', icon: Icons.laptop_mac_rounded),
-  SubscriptionTemplate(name: 'Insurance Renewal', icon: Icons.shield_outlined),
-  SubscriptionTemplate(name: 'Internet / WiFi Plan', icon: Icons.wifi_rounded),
-  SubscriptionTemplate(name: 'Custom', icon: Icons.tune_rounded),
+  SubscriptionTemplate(name: 'OTT Subscription', icon: LucideIcons.tv),
+  SubscriptionTemplate(name: 'Music Subscription', icon: LucideIcons.music),
+  SubscriptionTemplate(name: 'Mobile Recharge', icon: LucideIcons.smartphone),
+  SubscriptionTemplate(name: 'DTH Recharge', icon: LucideIcons.tv),
+  SubscriptionTemplate(name: 'Cloud Storage', icon: LucideIcons.cloud),
+  SubscriptionTemplate(name: 'Software', icon: LucideIcons.laptop),
+  SubscriptionTemplate(name: 'Insurance Renewal', icon: LucideIcons.shield),
+  SubscriptionTemplate(name: 'Internet / WiFi Plan', icon: LucideIcons.wifi),
+  SubscriptionTemplate(name: 'Custom', icon: LucideIcons.sliders),
 ];
 
 class AddSubscriptionPage extends ConsumerStatefulWidget {
@@ -246,7 +247,7 @@ class _AddSubscriptionPageState extends ConsumerState<AddSubscriptionPage> {
                 decoration: const InputDecoration(
                   labelText: 'Service Name',
                   hintText: 'e.g. Netflix, Airtel, Jio',
-                  prefixIcon: Icon(Icons.event_repeat),
+                  prefixIcon: Icon(LucideIcons.repeat, size: 18),
                 ),
                 validator: (val) => val == null || val.isEmpty ? 'Required' : null,
               ),
@@ -282,7 +283,7 @@ class _AddSubscriptionPageState extends ConsumerState<AddSubscriptionPage> {
               CustomDropdownField<BillingCycle>(
                 value: _cycle,
                 label: 'Billing Cycle',
-                prefixIcon: Icons.update,
+                prefixIcon: LucideIcons.clock,
                 itemLabelBuilder: _billingCycleLabel,
                 items: BillingCycle.values.map((c) {
                   return CustomDropdownItem<BillingCycle>(
@@ -302,7 +303,7 @@ class _AddSubscriptionPageState extends ConsumerState<AddSubscriptionPage> {
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: const InputDecoration(
                     labelText: 'Number of Days',
-                    prefixIcon: Icon(Icons.calendar_today),
+                    prefixIcon: Icon(LucideIcons.calendar, size: 18),
                     hintText: 'e.g. 45',
                   ),
                   validator: (val) {
@@ -323,7 +324,7 @@ class _AddSubscriptionPageState extends ConsumerState<AddSubscriptionPage> {
                 child: InputDecorator(
                   decoration: const InputDecoration(
                     labelText: 'First Billing Date',
-                    prefixIcon: Icon(Icons.calendar_today),
+                    prefixIcon: Icon(LucideIcons.calendar, size: 18),
                   ),
                   child: Text(DateFormat.yMMMd().format(_startDate)),
                 ),
@@ -340,7 +341,7 @@ class _AddSubscriptionPageState extends ConsumerState<AddSubscriptionPage> {
                 data: (categories) => CustomDropdownField<int?>(
                   value: _categoryId,
                   label: 'Category (Optional)',
-                  prefixIcon: Icons.category,
+                  prefixIcon: LucideIcons.layoutGrid,
                   itemLabelBuilder: (val) {
                     if (val == null) return 'None';
                     try {
@@ -399,7 +400,7 @@ class _AddSubscriptionPageState extends ConsumerState<AddSubscriptionPage> {
                     ? _notifyBeforeDays
                     : -1,
                 label: 'Reminder',
-                prefixIcon: Icons.notifications,
+                prefixIcon: LucideIcons.bell,
                 itemLabelBuilder: (val) => notificationOptions[val] ?? 'Never',
                 items: notificationOptions.entries.map((e) {
                   return CustomDropdownItem<int>(
@@ -418,7 +419,7 @@ class _AddSubscriptionPageState extends ConsumerState<AddSubscriptionPage> {
                 controller: _notesController,
                 decoration: const InputDecoration(
                   labelText: 'Notes (Optional)',
-                  prefixIcon: Icon(Icons.note),
+                  prefixIcon: Icon(LucideIcons.fileText, size: 18),
                 ),
                 maxLines: 3,
               ),
@@ -474,7 +475,7 @@ class _NextRenewalPreview extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.event_available_rounded, size: 18, color: cs.primary),
+          Icon(LucideIcons.calendarCheck, size: 18, color: cs.primary),
           const SizedBox(width: 10),
           Expanded(
             child: RichText(

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:trust_tracker_flutter/core/theme/app_shadows.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -52,7 +54,7 @@ class BudgetPage extends ConsumerWidget {
         title: Text('${l10n.budgetLabel} ($rangeText)', style: tt.headlineSmall),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add_rounded),
+            icon: const Icon(LucideIcons.plus, size: 20),
             tooltip: 'Add Budget',
             onPressed: () => _openSelectCategorySheet(
               context,
@@ -83,7 +85,7 @@ class BudgetPage extends ConsumerWidget {
             budgetState.budgets.valueOrNull ?? [],
             settings.currency,
           ),
-          icon: const Icon(Icons.add_rounded, size: 20),
+          icon: const Icon(LucideIcons.plus, size: 20),
           label: const Text(
             'Add Budget',
             style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 0.3),
@@ -210,7 +212,7 @@ class BudgetPage extends ConsumerWidget {
                       subtitle: existing != null
                           ? Text('Current: ${existing.amount.toCurrency(currency)}')
                           : const Text('No budget set'),
-                      trailing: const Icon(Icons.chevron_right_rounded),
+                      trailing: const Icon(LucideIcons.chevronRight, size: 18),
                       onTap: () {
                         Navigator.pop(ctx);
                         _openBudgetSheet(pageContext, pageRef, cat, existing, currency);
@@ -408,7 +410,7 @@ class _BudgetSheetState extends ConsumerState<_BudgetSheet> {
           if (widget.existing != null)
             TextButton.icon(
               onPressed: _isSaving ? null : _delete,
-              icon: Icon(Icons.delete_outline, color: cs.error, size: 18),
+              icon: Icon(LucideIcons.trash2, color: cs.error, size: 18),
               label: Text(AppLocalizations.of(context)!.removeBudget,
                   style: tt.labelLarge?.copyWith(color: cs.error)),
             ),
@@ -452,17 +454,18 @@ class _BudgetSummaryCard extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-              colors: [cs.primary, cs.primary.withOpacity(0.8)]),
+          color: cs.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: cs.outline.withOpacity(0.12)),
+          boxShadow: AppShadows.subtle,
         ),
         child: Row(children: [
-          Icon(Icons.info_outline, color: cs.onPrimary),
+          Icon(LucideIcons.info, color: cs.primary, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               AppLocalizations.of(context)!.tapToSetBudget,
-              style: tt.bodyMedium?.copyWith(color: cs.onPrimary, fontWeight: FontWeight.w600),
+              style: tt.bodyMedium?.copyWith(color: cs.onSurface, fontWeight: FontWeight.w600),
             ),
           ),
         ]),
@@ -476,31 +479,20 @@ class _BudgetSummaryCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: isOver
-              ? [cs.error, cs.error.withOpacity(0.8)]
-              : [cs.primary, cs.primary.withOpacity(0.8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: isOver ? cs.errorContainer : cs.primaryContainer,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: (isOver ? cs.error : cs.primary).withOpacity(0.2),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        border: Border.all(color: (isOver ? cs.error : cs.primary).withOpacity(0.2)),
+        boxShadow: AppShadows.subtle,
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(AppLocalizations.of(context)!.monthlyBudgetOverview,
-            style: tt.sectionLabel.copyWith(color: (isOver ? cs.onError : cs.onPrimary).withOpacity(0.7))),
+            style: tt.sectionLabel.copyWith(color: (isOver ? cs.onErrorContainer : cs.onPrimaryContainer).withOpacity(0.8))),
         const SizedBox(height: 8),
         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
           Text(totalSpent.toCurrency(currency),
-              style: tt.displaySmall?.copyWith(color: isOver ? cs.onError : cs.onPrimary, fontWeight: FontWeight.w800)),
+              style: tt.displaySmall?.copyWith(color: isOver ? cs.onErrorContainer : cs.onPrimaryContainer, fontWeight: FontWeight.w800)),
           Text(AppLocalizations.of(context)!.ofAmount(totalBudgeted.toCurrency(currency)),
-              style: tt.labelLarge?.copyWith(color: (isOver ? cs.onError : cs.onPrimary).withOpacity(0.7))),
+              style: tt.labelLarge?.copyWith(color: (isOver ? cs.onErrorContainer : cs.onPrimaryContainer).withOpacity(0.8))),
         ]),
         const SizedBox(height: 20),
         ClipRRect(
@@ -511,8 +503,8 @@ class _BudgetSummaryCard extends StatelessWidget {
             curve: Curves.easeOut,
             builder: (_, val, __) => LinearProgressIndicator(
               value: val,
-              backgroundColor: (isOver ? cs.onError : cs.onPrimary).withOpacity(0.2),
-              color: isOver ? AppColors.warning : cs.onPrimary,
+              backgroundColor: (isOver ? cs.onErrorContainer : cs.onPrimaryContainer).withOpacity(0.15),
+              color: isOver ? cs.error : cs.primary,
               minHeight: 10,
             ),
           ),
@@ -521,8 +513,8 @@ class _BudgetSummaryCard extends StatelessWidget {
         Row(
           children: [
             Icon(
-              isOver ? Icons.warning_amber_rounded : Icons.check_circle_rounded,
-              color: isOver ? cs.onError : cs.onPrimary,
+              isOver ? LucideIcons.alertTriangle : LucideIcons.checkCircle,
+              color: isOver ? cs.error : cs.primary,
               size: 16,
             ),
             const SizedBox(width: 6),
@@ -531,7 +523,7 @@ class _BudgetSummaryCard extends StatelessWidget {
                   ? l10n.overBudgetBy((totalSpent - totalBudgeted).toCurrency(currency))
                   : l10n.remainingAmount(remaining.toCurrency(currency)),
               style: tt.bodyMedium?.copyWith(
-                color: isOver ? cs.onError : cs.onPrimary,
+                color: isOver ? cs.onErrorContainer : cs.onPrimaryContainer,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -653,7 +645,7 @@ class _BudgetCategoryCard extends StatelessWidget {
             child: Row(
               children: [
                 Icon(
-                  isOver ? Icons.warning_amber_rounded : Icons.check_circle_rounded,
+                  isOver ? LucideIcons.alertTriangle : LucideIcons.checkCircle,
                   size: 14,
                   color: progressColor,
                 ),

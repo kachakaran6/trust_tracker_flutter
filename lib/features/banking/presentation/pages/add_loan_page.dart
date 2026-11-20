@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -223,7 +224,7 @@ class _AddLoanPageState extends ConsumerState<AddLoanPage> {
                 decoration: _inputDecoration(
                   context,
                   hintText: 'e.g. HDFC Home Loan, Car EMI',
-                  prefixIcon: Icons.edit_note_rounded,
+                  prefixIcon: LucideIcons.fileText,
                 ),
                 validator: (val) => val == null || val.trim().isEmpty ? 'Loan name is required' : null,
               ),
@@ -240,7 +241,7 @@ class _AddLoanPageState extends ConsumerState<AddLoanPage> {
                 decoration: _inputDecoration(
                   context,
                   hintText: 'Select Loan Type',
-                  prefixIcon: Icons.category_outlined,
+                  prefixIcon: LucideIcons.layoutGrid,
                 ),
                 items: _loanTypes
                     .map((t) => DropdownMenuItem(value: t, child: Text(t)))
@@ -258,7 +259,7 @@ class _AddLoanPageState extends ConsumerState<AddLoanPage> {
                 decoration: _inputDecoration(
                   context,
                   hintText: 'e.g. State Bank of India, HDFC Bank',
-                  prefixIcon: Icons.account_balance_outlined,
+                  prefixIcon: LucideIcons.building2,
                 ),
                 validator: (val) => val == null || val.trim().isEmpty ? 'Bank name is required' : null,
               ),
@@ -274,7 +275,7 @@ class _AddLoanPageState extends ConsumerState<AddLoanPage> {
                   context,
                   hintText: '0',
                   prefixText: '$currency ',
-                  prefixIcon: Icons.payments_outlined,
+                  prefixIcon: LucideIcons.banknote,
                 ),
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) return 'Principal amount is required';
@@ -304,7 +305,7 @@ class _AddLoanPageState extends ConsumerState<AddLoanPage> {
                             context,
                             hintText: 'e.g. 8.5',
                             suffixText: '%',
-                            prefixIcon: Icons.percent_rounded,
+                            prefixIcon: LucideIcons.percent,
                           ),
                           validator: (val) {
                             if (val == null || val.trim().isEmpty) return 'Required';
@@ -334,7 +335,7 @@ class _AddLoanPageState extends ConsumerState<AddLoanPage> {
                             context,
                             hintText: 'e.g. 36',
                             suffixText: 'Mo',
-                            prefixIcon: Icons.timelapse_rounded,
+                            prefixIcon: LucideIcons.clock,
                           ),
                           validator: (val) {
                             if (val == null || val.trim().isEmpty) return 'Required';
@@ -363,7 +364,7 @@ class _AddLoanPageState extends ConsumerState<AddLoanPage> {
                   context,
                   hintText: 'Calculated automatically or custom',
                   prefixText: '$currency ',
-                  prefixIcon: Icons.calculate_outlined,
+                  prefixIcon: LucideIcons.calculator,
                 ),
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) return 'EMI amount is required';
@@ -418,7 +419,7 @@ class _AddLoanPageState extends ConsumerState<AddLoanPage> {
                           children: [
                             Row(
                               children: [
-                                Icon(Icons.calendar_today_rounded, size: 14, color: cs.primary),
+                                Icon(LucideIcons.calendar, size: 14, color: cs.primary),
                                 const SizedBox(width: 6),
                                 Text(
                                   'Taken Date',
@@ -470,7 +471,7 @@ class _AddLoanPageState extends ConsumerState<AddLoanPage> {
                           children: [
                             Row(
                               children: [
-                                Icon(Icons.event_available_rounded, size: 14, color: cs.primary),
+                                Icon(LucideIcons.calendarCheck, size: 14, color: cs.primary),
                                 const SizedBox(width: 6),
                                 Text(
                                   'First EMI Date',
@@ -510,7 +511,7 @@ class _AddLoanPageState extends ConsumerState<AddLoanPage> {
                           decoration: _inputDecoration(
                             context,
                             hintText: '1',
-                            prefixIcon: Icons.calendar_view_day_rounded,
+                            prefixIcon: LucideIcons.calendar,
                           ),
                           validator: (val) {
                             final parsed = int.tryParse(val ?? '');
@@ -534,7 +535,7 @@ class _AddLoanPageState extends ConsumerState<AddLoanPage> {
                           decoration: _inputDecoration(
                             context,
                             hintText: 'e.g. 5010023491...',
-                            prefixIcon: Icons.pin_outlined,
+                            prefixIcon: LucideIcons.hash,
                           ),
                         ),
                       ],
@@ -561,7 +562,7 @@ class _AddLoanPageState extends ConsumerState<AddLoanPage> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
-                        Icons.sync_rounded,
+                        LucideIcons.repeat,
                         size: 20,
                         color: _autoRecordExpense ? cs.primary : cs.onSurfaceVariant,
                       ),
@@ -608,7 +609,7 @@ class _AddLoanPageState extends ConsumerState<AddLoanPage> {
                     elevation: 2,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
-                  icon: const Icon(Icons.check_rounded, size: 20),
+                  icon: const Icon(LucideIcons.check, size: 18),
                   label: const Text(
                     'Save Loan',
                     style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),

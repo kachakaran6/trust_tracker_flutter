@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:trust_tracker_flutter/core/theme/app_shadows.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -315,7 +317,7 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
           SnackBar(
             content: Row(
               children: [
-                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                const Icon(LucideIcons.checkCircle, color: Colors.white, size: 20),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -374,7 +376,7 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.close_rounded, size: 24),
+          icon: const Icon(LucideIcons.x, size: 20),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
@@ -450,7 +452,7 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
-                                  Icons.arrow_upward_rounded,
+                                  LucideIcons.arrowUpRight,
                                   size: 16,
                                   color: isGiven
                                       ? cs.primary
@@ -505,7 +507,7 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
-                                  Icons.arrow_downward_rounded,
+                                  LucideIcons.arrowDownLeft,
                                   size: 16,
                                   color: !isGiven
                                       ? const Color(0xFFF59E0B)
@@ -671,22 +673,8 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                                 width: 40,
                                 height: 40,
                                 decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      activeAccent,
-                                      activeAccent.withValues(alpha: 0.8),
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
+                                  color: activeAccent.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(12),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: activeAccent.withValues(alpha: 0.25),
-                                      blurRadius: 6,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
                                 ),
                                 alignment: Alignment.center,
                                 child: Text(
@@ -732,7 +720,7 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                                           child: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              Icon(Icons.lock_rounded, size: 9, color: activeAccent),
+                                              Icon(LucideIcons.lock, size: 9, color: activeAccent),
                                               const SizedBox(width: 2.5),
                                               Text(
                                                 'Linked',
@@ -780,7 +768,7 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.edit_rounded, size: 12, color: cs.onSurface.withValues(alpha: 0.7)),
+                                      Icon(LucideIcons.pencil, size: 12, color: cs.onSurface.withValues(alpha: 0.7)),
                                       const SizedBox(width: 4),
                                       Text(
                                         'Change',
@@ -810,7 +798,7 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
-                                  Icons.person_rounded,
+                                  LucideIcons.user,
                                   size: 18,
                                   color: activeAccent,
                                 ),
@@ -853,7 +841,7 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                                   child: Padding(
                                     padding: const EdgeInsets.all(6),
                                     child: Icon(
-                                      Icons.cancel_rounded,
+                                      LucideIcons.xCircle,
                                       size: 16,
                                       color: cs.onSurface.withValues(alpha: 0.35),
                                     ),
@@ -867,7 +855,7 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                                   message: 'Lock to contact',
                                   child: IconButton(
                                     icon: Icon(
-                                      Icons.lock_outline_rounded,
+                                      LucideIcons.lock,
                                       size: 18,
                                       color: activeAccent,
                                     ),
@@ -884,7 +872,7 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                                     turns: _showNameDropdown ? 0.5 : 0.0,
                                     duration: const Duration(milliseconds: 200),
                                     child: Icon(
-                                      Icons.keyboard_arrow_down_rounded,
+                                      LucideIcons.chevronDown,
                                       size: 24,
                                       color: _showNameDropdown ? activeAccent : cs.onSurface.withValues(alpha: 0.6),
                                     ),
@@ -933,7 +921,7 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                                   GestureDetector(
                                     onTap: () => setState(() => _showNameDropdown = false),
                                     child: Icon(
-                                      Icons.close_rounded,
+                                      LucideIcons.x,
                                       size: 16,
                                       color: cs.onSurface.withValues(alpha: 0.4),
                                     ),
@@ -1014,7 +1002,7 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                                           ),
                                           if (isSelected) ...[
                                             const SizedBox(width: 4),
-                                            Icon(Icons.check_rounded,
+                                            Icon(LucideIcons.check,
                                                 size: 14, color: activeAccent),
                                           ],
                                         ],
@@ -1045,7 +1033,7 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
-                                Icons.edit_note_rounded,
+                                LucideIcons.fileText,
                                 size: 18,
                                 color: cs.onSurface.withValues(alpha: 0.6),
                               ),
@@ -1116,7 +1104,7 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                                     shape: BoxShape.circle,
                                   ),
                                   child: Icon(
-                                    Icons.event_note_rounded,
+                                    LucideIcons.calendar,
                                     size: 18,
                                     color: activeAccent,
                                   ),
@@ -1171,7 +1159,7 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(
-                                          Icons.calendar_month_rounded,
+                                          LucideIcons.calendar,
                                           size: 15,
                                           color: cs.onSurface.withValues(alpha: 0.8),
                                         ),
@@ -1217,7 +1205,7 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                                     shape: BoxShape.circle,
                                   ),
                                   child: Icon(
-                                    Icons.schedule_rounded,
+                                    LucideIcons.clock,
                                     size: 18,
                                     color: _dueDate != null
                                         ? activeAccent
@@ -1254,7 +1242,7 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                                 ),
                                 if (_dueDate != null)
                                   IconButton(
-                                    icon: const Icon(Icons.cancel_rounded, size: 20),
+                                    icon: const Icon(LucideIcons.xCircle, size: 20),
                                     color: cs.onSurface.withValues(alpha: 0.4),
                                     onPressed: () => setState(() {
                                       _dueDate = null;
@@ -1289,7 +1277,7 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(
-                                          Icons.calendar_month_rounded,
+                                          LucideIcons.calendar,
                                           size: 15,
                                           color: cs.onSurface.withValues(alpha: 0.8),
                                         ),
@@ -1353,7 +1341,7 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
-                                Icons.account_balance_wallet_outlined,
+                                LucideIcons.wallet,
                                 size: 18,
                                 color: cs.primary,
                               ),
@@ -1425,19 +1413,9 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
           child: Container(
             height: 52,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: activeGradient,
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: activeAccent,
               borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: activeAccent.withValues(alpha: 0.35),
-                  blurRadius: 14,
-                  offset: const Offset(0, 5),
-                ),
-              ],
+              boxShadow: AppShadows.subtle,
             ),
             child: Material(
               color: Colors.transparent,
@@ -1458,7 +1436,7 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const Icon(
-                              Icons.check_rounded,
+                              LucideIcons.check,
                               color: Colors.white,
                               size: 20,
                             ),
@@ -1563,7 +1541,7 @@ class _AddDebtBottomSheetState extends ConsumerState<AddDebtBottomSheet> {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (isSelected) ...[
-              Icon(Icons.check_rounded, size: 12, color: accent),
+              Icon(LucideIcons.check, size: 12, color: accent),
               const SizedBox(width: 4),
             ],
             Text(

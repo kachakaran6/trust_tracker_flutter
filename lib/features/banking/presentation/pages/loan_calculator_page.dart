@@ -1,5 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:trust_tracker_flutter/core/theme/app_shadows.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
@@ -78,23 +80,10 @@ class _LoanCalculatorPageState extends ConsumerState<LoanCalculatorPage> {
             Container(
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    cs.primary.withOpacity(0.14),
-                    cs.primary.withOpacity(0.04),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: cs.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: cs.primary.withOpacity(0.2)),
-                boxShadow: [
-                  BoxShadow(
-                    color: cs.primary.withOpacity(0.06),
-                    blurRadius: 18,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
+                border: Border.all(color: cs.outline.withOpacity(0.12)),
+                boxShadow: AppShadows.subtle,
               ),
               child: Column(
                 children: [
@@ -135,7 +124,7 @@ class _LoanCalculatorPageState extends ConsumerState<LoanCalculatorPage> {
             TextFormField(
               controller: _principalController,
               style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-              decoration: _inputDeco(context, prefixText: '$currency ', prefixIcon: Icons.payments_outlined),
+              decoration: _inputDeco(context, prefixText: '$currency ', prefixIcon: LucideIcons.banknote),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               onChanged: (v) {
                 _principal = double.tryParse(v) ?? 0;
@@ -148,7 +137,7 @@ class _LoanCalculatorPageState extends ConsumerState<LoanCalculatorPage> {
             TextFormField(
               controller: _rateController,
               style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-              decoration: _inputDeco(context, suffixText: '%', prefixIcon: Icons.percent_rounded),
+              decoration: _inputDeco(context, suffixText: '%', prefixIcon: LucideIcons.percent),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               onChanged: (v) {
                 _rate = double.tryParse(v) ?? 0;
@@ -161,7 +150,7 @@ class _LoanCalculatorPageState extends ConsumerState<LoanCalculatorPage> {
             TextFormField(
               controller: _tenureController,
               style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-              decoration: _inputDeco(context, suffixText: 'Mo', prefixIcon: Icons.timelapse_rounded),
+              decoration: _inputDeco(context, suffixText: 'Mo', prefixIcon: LucideIcons.clock),
               keyboardType: TextInputType.number,
               onChanged: (v) {
                 _tenureMonths = int.tryParse(v) ?? 0;

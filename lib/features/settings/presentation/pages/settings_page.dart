@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -138,7 +139,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                             shape: BoxShape.circle,
                             border: Border.all(color: cs.surface, width: 2),
                           ),
-                          child: const Icon(Icons.camera_alt, size: 12, color: Colors.white),
+                          child: const Icon(LucideIcons.camera, size: 12, color: Colors.white),
                         ),
                       ),
                     ],
@@ -215,7 +216,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                                   ),
                                 ),
                                 IconButton(
-                                  icon: Icon(Icons.edit_outlined,
+                                  icon: Icon(LucideIcons.pencil,
                                       size: 20,
                                       color: cs.primary.withOpacity(0.8)),
                                   onPressed: () =>
@@ -242,7 +243,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 child: Row(
                   children: [
-                    Icon(Icons.language_rounded, color: cs.onSurface.withOpacity(0.55), size: 20),
+                    Icon(LucideIcons.globe, color: cs.onSurface.withOpacity(0.55), size: 20),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -275,7 +276,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                                     : (settings.languageCode == 'hi' ? l10n.hindi : l10n.gujarati),
                                 style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: cs.primary),
                               ),
-                              Icon(Icons.arrow_drop_down, color: cs.primary),
+                              Icon(LucideIcons.chevronDown, color: cs.primary, size: 18),
                             ],
                           ),
                         ),
@@ -292,7 +293,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
             title: l10n.appearance,
             children: [
               _SettingsToggle(
-                icon: Icons.dark_mode_outlined,
+                icon: LucideIcons.moon,
                 label: l10n.darkMode,
                 value: settings.isDarkMode,
                 onChanged: (v) =>
@@ -346,7 +347,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                               ),
                             ),
                             child: isSelected 
-                                ? const Icon(Icons.check, color: Colors.white, size: 24) 
+                                ? const Icon(LucideIcons.check, color: Colors.white, size: 22) 
                                 : null,
                           ),
                         );
@@ -367,7 +368,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 child: Row(
                   children: [
-                    Icon(Icons.payments_outlined, color: cs.onSurface.withOpacity(0.55), size: 20),
+                    Icon(LucideIcons.banknote, color: cs.onSurface.withOpacity(0.55), size: 20),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -397,7 +398,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                                 settings.currency,
                                 style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: cs.primary),
                               ),
-                              Icon(Icons.arrow_drop_down, color: cs.primary),
+                              Icon(LucideIcons.chevronDown, color: cs.primary, size: 18),
                             ],
                           ),
                         ),
@@ -415,7 +416,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
             title: l10n.financialPreferences,
             children: [
               _SettingsTile(
-                icon: Icons.calendar_month_outlined,
+                icon: LucideIcons.calendar,
                 label: l10n.monthStartDay,
                 trailing: Text(
                   '${settings.monthStartDay}',
@@ -471,7 +472,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                 },
               ),
               _SettingsToggle(
-                icon: Icons.repeat_rounded,
+                icon: LucideIcons.repeat,
                 label: l10n.carryForward,
                 value: settings.carryForwardEnabled,
                 onChanged: (v) {
@@ -495,8 +496,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                     Row(children: [
                       Icon(
                           isTapMode
-                              ? Icons.touch_app_outlined
-                              : Icons.swipe_rounded,
+                              ? LucideIcons.pointer
+                              : LucideIcons.moveHorizontal,
                           size: 20,
                           color: cs.onSurface.withOpacity(0.55)),
                       const SizedBox(width: 12),
@@ -540,7 +541,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
             title: l10n.security,
             children: [
               _SettingsTile(
-                icon: Icons.lock_outline,
+                icon: LucideIcons.lock,
                 label: security.isPinEnabled ? l10n.changePin : l10n.setPin,
                 trailing: security.isPinEnabled
                     ? Container(
@@ -558,7 +559,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
               ),
               if (security.isPinEnabled)
                 _SettingsTile(
-                  icon: Icons.lock_open_outlined,
+                  icon: LucideIcons.unlock,
                   label: l10n.disablePin,
                   iconColor: cs.error,
                   onTap: () async {
@@ -572,7 +573,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                             color: cs.primary.withOpacity(0.1),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(Icons.warning_amber_rounded, size: 32, color: cs.primary),
+                          child: Icon(LucideIcons.alertTriangle, size: 32, color: cs.primary),
                         ),
                         title: Text(l10n.disablePinConfirm, 
                           textAlign: TextAlign.center,
@@ -645,7 +646,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                 ),
               if (security.canUseBiometrics)
                 _SettingsToggle(
-                  icon: Icons.fingerprint,
+                  icon: LucideIcons.fingerprint,
                   label: l10n.biometricUnlock,
                   value: security.isBiometricEnabled,
                   onChanged: (v) async {
@@ -672,7 +673,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
             title: l10n.backupSettings,
             children: [
               _SettingsToggle(
-                icon: Icons.backup_outlined,
+                icon: LucideIcons.cloud,
                 label: l10n.autoBackup,
                 value: settings.autoBackupEnabled,
                 onChanged: (v) {
@@ -682,7 +683,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
               ),
               if (settings.autoBackupEnabled) ...[
                 _SettingsTile(
-                  icon: Icons.history_rounded,
+                  icon: LucideIcons.history,
                   label: l10n.backupInterval,
                   trailing: Text(
                     _getIntervalLabel(settings.backupInterval, settings, l10n),
@@ -718,7 +719,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                 ),
               ],
               _SettingsTile(
-                icon: Icons.sync_rounded,
+                icon: LucideIcons.rotateCcw,
                 label: l10n.backupNow,
                 onTap: () async {
                   HapticFeedback.mediumImpact();
@@ -737,7 +738,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
             title: l10n.summaryNotifications,
             children: [
               _SettingsSwitchTile(
-                icon: Icons.insights_rounded,
+                icon: LucideIcons.barChart2,
                 label: l10n.summaryNotifications,
                 subtitle: l10n.summaryNotificationsDesc,
                 value: settings.summaryNotificationsEnabled,
@@ -759,7 +760,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
               ),
               if (settings.summaryNotificationsEnabled) ...[
                 _SettingsTile(
-                  icon: Icons.repeat_rounded,
+                  icon: LucideIcons.repeat,
                   label: l10n.frequency,
                   trailing: Text(
                     _getSummaryFrequencyLabel(settings.summaryFrequency, l10n),
@@ -769,7 +770,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                 ),
                 if (settings.summaryFrequency == SummaryFrequency.weekly)
                   _SettingsTile(
-                    icon: Icons.calendar_today_rounded,
+                    icon: LucideIcons.calendar,
                     label: l10n.dayOfWeek,
                     trailing: Text(
                       _getDayOfWeekLabel(settings.summaryDayOfWeek, l10n),
@@ -778,7 +779,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                     onTap: () => _showSummaryDayPicker(context, ref, settings, l10n),
                   ),
                 _SettingsTile(
-                  icon: Icons.access_time_rounded,
+                  icon: LucideIcons.clock,
                   label: l10n.preferredTime,
                   trailing: Text(
                     '${settings.summaryTimeHour.toString().padLeft(2, '0')}:${settings.summaryTimeMinute.toString().padLeft(2, '0')}',
@@ -787,7 +788,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                   onTap: () => _showSummaryTimePicker(context, ref, settings),
                 ),
                 _SettingsTile(
-                  icon: Icons.notification_important_outlined,
+                  icon: LucideIcons.bell,
                   label: l10n.previewNotification,
                   onTap: () => _handlePreviewNotification(context, ref, settings, l10n),
                 ),
@@ -801,17 +802,17 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
             title: l10n.dataManagement,
             children: [
               _SettingsTile(
-                icon: Icons.upload_file,
+                icon: LucideIcons.upload,
                 label: l10n.exportDataJson,
                 onTap: () => _handleExport(context, ref),
               ),
               _SettingsTile(
-                icon: Icons.download,
+                icon: LucideIcons.download,
                 label: l10n.importDataJson,
                 onTap: () => _handleImport(context, ref),
               ),
               _SettingsTile(
-                icon: Icons.delete_sweep_rounded,
+                icon: LucideIcons.trash2,
                 label: 'Clear All Transactions',
                 iconColor: cs.error,
                 onTap: () => _handleResetAllData(context, ref, l10n),
@@ -824,7 +825,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
             title: l10n.support,
             children: [
               _SettingsTile(
-                icon: Icons.star_outline_rounded,
+                icon: LucideIcons.star,
                 label: l10n.rateApp,
                 iconColor: AppColors.warning,
                 onTap: () async {
@@ -837,7 +838,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                 },
               ),
               _SettingsTile(
-                icon: Icons.share_outlined,
+                icon: LucideIcons.share2,
                 label: l10n.shareApp,
                 iconColor: cs.primary,
                 onTap: () {
@@ -855,27 +856,27 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
             title: l10n.data,
             children: [
               _SettingsTile(
-                icon: Icons.category_outlined,
+                icon: LucideIcons.layoutGrid,
                 label: l10n.manageCategories,
                 onTap: () => context.push('/categories'),
               ),
               _SettingsTile(
-                icon: Icons.account_balance_wallet_outlined,
+                icon: LucideIcons.wallet,
                 label: l10n.setMonthlyBudgets,
                 onTap: () => context.push('/budget'),
               ),
               _SettingsTile(
-                icon: Icons.subscriptions_outlined,
+                icon: LucideIcons.repeat,
                 label: 'Manage Subscriptions',
                 onTap: () => context.push('/subscriptions'),
               ),
               _SettingsTile(
-                icon: Icons.account_balance_outlined,
+                icon: LucideIcons.landmark,
                 label: 'Banking Management',
                 onTap: () => context.push('/banking-dashboard'),
               ),
               _SettingsTile(
-                icon: Icons.apps_rounded,
+                icon: LucideIcons.grid,
                 label: 'Our Apps',
                 onTap: () => context.push('/our-apps'),
               ),
@@ -886,7 +887,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
             title: l10n.about,
             children: [
               _SettingsTile(
-                icon: Icons.info_outline_rounded,
+                icon: LucideIcons.info,
                 label: l10n.termsPrivacy,
                 onTap: () async {
                   final uri = Uri.parse('https://ap-kk-apps.vercel.app/trust-tracker/privacy');
@@ -905,7 +906,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                title: "Developer Testing",
                children: [
                  _SettingsTile(
-                   icon: Icons.bug_report_outlined,
+                   icon: LucideIcons.bug,
                    label: "Test Update Popup",
                    iconColor: cs.secondary,
                    onTap: () {
@@ -991,7 +992,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
           SnackBar(
             content: const Row(
               children: [
-                Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                Icon(LucideIcons.checkCircle, color: Colors.white, size: 20),
                 SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -1101,7 +1102,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
               color: cs.primary.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.warning_amber_rounded, size: 32, color: cs.primary),
+            child: Icon(LucideIcons.alertTriangle, size: 32, color: cs.primary),
           ),
           title: Text(
             'Import Data',
@@ -1235,7 +1236,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
           mainAxisSize: MainAxisSize.min,
           children: BackupInterval.values.map((interval) => ListTile(
             title: Text(_getIntervalLabel(interval, settings, l10n)),
-            trailing: settings.backupInterval == interval ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary) : null,
+            trailing: settings.backupInterval == interval ? Icon(LucideIcons.check, color: Theme.of(context).colorScheme.primary, size: 18) : null,
             onTap: () async {
               if (interval == BackupInterval.custom) {
                 final hours = await _showCustomHoursDialog(context, l10n);
@@ -1294,10 +1295,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
 
   Icon _getStatusIcon(BackupStatus status, ColorScheme cs) {
     switch (status) {
-      case BackupStatus.success: return Icon(Icons.check_circle_outline, size: 14, color: cs.primary);
-      case BackupStatus.pending: return Icon(Icons.cloud_upload_outlined, size: 14, color: Colors.orange);
-      case BackupStatus.failed: return Icon(Icons.error_outline, size: 14, color: cs.error);
-      case BackupStatus.none: return const Icon(Icons.info_outline, size: 14);
+      case BackupStatus.success: return Icon(LucideIcons.checkCircle, size: 14, color: cs.primary);
+      case BackupStatus.pending: return Icon(LucideIcons.cloud, size: 14, color: Colors.orange);
+      case BackupStatus.failed: return Icon(LucideIcons.alertCircle, size: 14, color: cs.error);
+      case BackupStatus.none: return const Icon(LucideIcons.info, size: 14);
     }
   }
 
@@ -1346,7 +1347,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
               ref.read(settingsProvider.notifier).setSummaryFrequency(f);
               Navigator.pop(context);
             },
-            trailing: settings.summaryFrequency == f ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary) : null,
+            trailing: settings.summaryFrequency == f ? Icon(LucideIcons.check, color: Theme.of(context).colorScheme.primary, size: 18) : null,
           )).toList(),
         ),
       ),
@@ -1367,7 +1368,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
               ref.read(settingsProvider.notifier).setSummaryDayOfWeek(i + 1);
               Navigator.pop(context);
             },
-            trailing: settings.summaryDayOfWeek == (i + 1) ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary) : null,
+            trailing: settings.summaryDayOfWeek == (i + 1) ? Icon(LucideIcons.check, color: Theme.of(context).colorScheme.primary, size: 18) : null,
           )),
         ),
       ),
@@ -1440,7 +1441,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
                     child: Icon(
-                      Icons.sms_rounded,
+                      LucideIcons.messageSquare,
                       size: 20,
                       color: smsSettings.isEnabled
                           ? cs.primary
@@ -1504,7 +1505,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.info_outline, size: 18, color: cs.error),
+                      Icon(LucideIcons.alertCircle, size: 18, color: cs.error),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -1526,7 +1527,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
         if (smsSettings.isEnabled) ...[
           const Divider(height: 1, indent: 16, endIndent: 16),
           _SettingsTile(
-            icon: Icons.mark_email_unread_outlined,
+            icon: LucideIcons.mail,
             label: 'Review Pending Transactions',
             trailing: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
@@ -1549,7 +1550,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
             onTap: () => context.push('/sms-review'),
           ),
           _SettingsToggle(
-            icon: Icons.auto_awesome_rounded,
+            icon: LucideIcons.sparkles,
             label: 'Auto-add high confidence entries',
             value: smsSettings.autoApproveHighConfidence,
             onChanged: (v) => smsNotifier.setAutoApprove(v),
@@ -1557,13 +1558,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
         ],
         const Divider(height: 1, indent: 16, endIndent: 16),
         _SettingsTile(
-          icon: Icons.history_toggle_off_rounded,
+          icon: LucideIcons.history,
           label: 'Sync Past Bank SMS',
           onTap: () => SmsSyncHistorySheet.show(context),
         ),
         const Divider(height: 1, indent: 16, endIndent: 16),
         _SettingsTile(
-          icon: Icons.manage_history_rounded,
+          icon: LucideIcons.history,
           label: 'SMS Activity & History',
           onTap: () => context.push('/sms-activity'),
         ),
@@ -1624,7 +1625,7 @@ class _SlidingSegmentedControl extends StatelessWidget {
           Row(
             children: [
               _ModeLabel(
-                icon: Icons.swipe_rounded,
+                icon: LucideIcons.moveHorizontal,
                 label: l10n.swipeMode,
                 selected: !isSelected,
                 onTap: () {
@@ -1633,7 +1634,7 @@ class _SlidingSegmentedControl extends StatelessWidget {
                 },
               ),
               _ModeLabel(
-                icon: Icons.touch_app_outlined,
+                icon: LucideIcons.pointer,
                 label: l10n.tapMode,
                 selected: isSelected,
                 onTap: () {
@@ -1812,7 +1813,7 @@ class _SettingsTile extends StatelessWidget {
               child:
                   Text(label, style: tt.bodyMedium)),
           if (trailing != null) ...[trailing!, const SizedBox(width: 4)],
-          Icon(Icons.chevron_right,
+          Icon(LucideIcons.chevronRight,
               color: cs.onSurface.withOpacity(0.3), size: 18),
         ]),
       ),

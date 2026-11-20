@@ -1,44 +1,54 @@
 import 'package:flutter/material.dart';
 
+/// Centralized elevation and shadow tokens for TrustTracker.
+///
+/// Strictly adheres to calm, clean, non-neon mobile design:
+/// - No multi-color glow shadows or saturated bloom.
+/// - Neutral, subtle ambient shadows for depth hierarchy.
 class AppShadows {
-  static List<BoxShadow> primary(Color primaryColor) => [
-        BoxShadow(
-          color: primaryColor.withOpacity(0.3),
-          blurRadius: 15,
-          offset: const Offset(0, 8),
-        ),
-      ];
+  const AppShadows._();
 
+  /// Zero shadow for flat, border-delineated surfaces.
+  static const List<BoxShadow> none = [];
+
+  /// Extremely subtle elevation for cards and list items.
+  static final List<BoxShadow> subtle = [
+    BoxShadow(
+      color: Colors.black.withOpacity(0.04),
+      blurRadius: 4,
+      offset: const Offset(0, 1),
+    ),
+  ];
+
+  /// Standard card elevation.
+  static final List<BoxShadow> card = [
+    BoxShadow(
+      color: Colors.black.withOpacity(0.05),
+      blurRadius: 8,
+      offset: const Offset(0, 2),
+    ),
+  ];
+
+  /// Soft elevation for modals and floating elements.
   static final List<BoxShadow> soft = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.03),
-      blurRadius: 10,
+      color: Colors.black.withOpacity(0.06),
+      blurRadius: 12,
       offset: const Offset(0, 4),
     ),
   ];
 
-  static final List<BoxShadow> card = [
+  /// Elevated floating action buttons and sheets.
+  static final List<BoxShadow> floating = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.04),
+      color: Colors.black.withOpacity(0.08),
       blurRadius: 16,
       offset: const Offset(0, 6),
     ),
   ];
 
-  static List<BoxShadow> button(Color primaryColor) => [
-        BoxShadow(
-          color: primaryColor.withOpacity(0.24),
-          blurRadius: 12,
-          offset: const Offset(0, 6),
-        ),
-      ];
-
-  static List<BoxShadow> glow(Color color) => [
-        BoxShadow(
-          color: color.withOpacity(0.15),
-          blurRadius: 20,
-          offset: const Offset(0, 4),
-          spreadRadius: 2,
-        ),
-      ];
+  /// Legacy helper aliases mapped to calm neutral shadows (no colored glow).
+  static List<BoxShadow> primary(Color _) => card;
+  static List<BoxShadow> button(Color _) => subtle;
+  static List<BoxShadow> glow(Color _) => card;
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
@@ -23,7 +24,7 @@ class QuickFeaturesIntroPage extends ConsumerWidget {
                 child: ListView(
                   children: [
                     Icon(
-                      Icons.bolt_rounded,
+                      LucideIcons.zap,
                       size: 80,
                       color: cs.primary,
                     ),
@@ -47,14 +48,14 @@ class QuickFeaturesIntroPage extends ConsumerWidget {
                     const SizedBox(height: 48),
                     _buildFeatureItem(
                       context,
-                      icon: Icons.settings_suggest_rounded,
+                      icon: LucideIcons.settings,
                       title: 'Quick Settings Tile',
                       description: 'Pull down your notification shade and add the Trust Tracker tile (Wallet icon) to quickly add a transaction without opening the app.',
                     ),
                     const SizedBox(height: 32),
                     _buildFeatureItem(
                       context,
-                      icon: Icons.touch_app_rounded,
+                      icon: LucideIcons.mousePointer,
                       title: 'App Shortcuts',
                       description: 'Long press the Trust Tracker app icon on your home screen to jump straight into adding income, expenses, or viewing analytics.',
                     ),

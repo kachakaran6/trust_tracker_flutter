@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trust_tracker_flutter/features/transactions/data/models/transaction_model.dart';
@@ -16,6 +17,7 @@ class QuickAddBottomSheet extends ConsumerStatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) => QuickAddBottomSheet(type: type),
     );
@@ -90,7 +92,7 @@ class _QuickAddBottomSheetState extends ConsumerState<QuickAddBottomSheet> {
           SnackBar(
             content: Row(
               children: [
-                const Icon(Icons.check_circle, color: Colors.white),
+                const Icon(LucideIcons.checkCircle, color: Colors.white, size: 20),
                 const SizedBox(width: 8),
                 Text('${widget.type == TransactionType.expense ? "Expense" : "Income"} Saved: ₹${amount.toStringAsFixed(0)}'),
               ],

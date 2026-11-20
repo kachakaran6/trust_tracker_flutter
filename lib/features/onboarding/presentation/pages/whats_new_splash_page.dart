@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -25,6 +26,7 @@ class WhatsNewSplashPage extends ConsumerWidget {
       showModalBottomSheet(
         context: context,
         isScrollControlled: true,
+        useSafeArea: true,
         backgroundColor: Colors.transparent,
         builder: (context) => const WhatsNewSplashPage(),
       );
@@ -69,23 +71,12 @@ class WhatsNewSplashPage extends ConsumerWidget {
                     width: 72,
                     height: 72,
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF8B5CF6), Color(0xFF6366F1)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      color: cs.primaryContainer,
                       shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF8B5CF6).withOpacity(0.35),
-                          blurRadius: 16,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
                     ),
-                    child: const Icon(
-                      Icons.auto_awesome_rounded,
-                      color: Colors.white,
+                    child: Icon(
+                      LucideIcons.sparkles,
+                      color: cs.primary,
                       size: 36,
                     ),
                   ),
@@ -134,7 +125,7 @@ class WhatsNewSplashPage extends ConsumerWidget {
                   _buildFeatureCard(
                     context,
                     isDark: isDark,
-                    icon: Icons.handshake_rounded,
+                    icon: LucideIcons.handshake,
                     gradientColors: [const Color(0xFF8B5CF6), const Color(0xFF7C3AED)],
                     title: 'Debt & Lent Manager',
                     subtitle: 'Track money given to or borrowed from anyone',
@@ -147,7 +138,7 @@ class WhatsNewSplashPage extends ConsumerWidget {
                   _buildFeatureCard(
                     context,
                     isDark: isDark,
-                    icon: Icons.account_balance_rounded,
+                    icon: LucideIcons.landmark,
                     gradientColors: [const Color(0xFF10B981), const Color(0xFF059669)],
                     title: 'Bank Loans & EMI Tracker',
                     subtitle: 'Manage home, car, or personal bank loans',
@@ -160,7 +151,7 @@ class WhatsNewSplashPage extends ConsumerWidget {
                   _buildFeatureCard(
                     context,
                     isDark: isDark,
-                    icon: Icons.bolt_rounded,
+                    icon: LucideIcons.zap,
                     gradientColors: [const Color(0xFFF59E0B), const Color(0xFFD97706)],
                     title: '1-Tap Settlement & Auto Defaults',
                     subtitle: 'Instant auto-fill & real-time balances',
@@ -187,9 +178,9 @@ class WhatsNewSplashPage extends ConsumerWidget {
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF8B5CF6),
-                  foregroundColor: Colors.white,
-                  elevation: 2,
+                  backgroundColor: cs.primary,
+                  foregroundColor: cs.onPrimary,
+                  elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -233,14 +224,10 @@ class WhatsNewSplashPage extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: gradientColors,
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: cs.primaryContainer,
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(icon, color: Colors.white, size: 24),
+            child: Icon(icon, color: cs.onPrimaryContainer, size: 22),
           ),
           const SizedBox(width: 14),
           Expanded(

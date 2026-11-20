@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:trust_tracker_flutter/core/theme/app_colors.dart';
@@ -42,7 +43,7 @@ class EmiCalendarPage extends ConsumerWidget {
                         color: cs.primary.withOpacity(0.08),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(Icons.calendar_month_outlined, size: 36, color: cs.primary),
+                      child: Icon(LucideIcons.calendar, size: 36, color: cs.primary),
                     ),
                     const SizedBox(height: 16),
                     Text('No Active EMIs', style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
@@ -70,12 +71,12 @@ class EmiCalendarPage extends ConsumerWidget {
 
               Color statusColor = AppColors.getWarning(context);
               String statusText = 'Upcoming';
-              IconData statusIcon = Icons.schedule_rounded;
+              IconData statusIcon = LucideIcons.clock;
 
               if (today.day == loan.emiDueDay) {
                 statusColor = cs.primary;
                 statusText = 'Due Today';
-                statusIcon = Icons.today_rounded;
+                statusIcon = LucideIcons.calendar;
               } else if (today.day > loan.emiDueDay) {
                 bool paidThisMonth = false;
                 if (loan.payments != null) {
@@ -89,11 +90,11 @@ class EmiCalendarPage extends ConsumerWidget {
                 if (paidThisMonth) {
                   statusColor = AppColors.getSuccess(context);
                   statusText = 'Paid';
-                  statusIcon = Icons.check_circle_outline_rounded;
+                  statusIcon = LucideIcons.checkCircle;
                 } else {
                   statusColor = AppColors.getError(context);
                   statusText = 'Overdue';
-                  statusIcon = Icons.warning_amber_rounded;
+                  statusIcon = LucideIcons.alertTriangle;
                 }
               }
 

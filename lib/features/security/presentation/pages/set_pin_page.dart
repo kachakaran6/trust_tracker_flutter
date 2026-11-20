@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -392,13 +393,13 @@ class _SetPinPageState extends ConsumerState<SetPinPage>
                         children: row.map((key) {
                           if (key == '⌫') {
                             return _KeypadButton(
-                              child: Icon(Icons.backspace_rounded, size: 24, color: cs.onSurface),
+                              child: Icon(LucideIcons.delete, size: 22, color: cs.onSurface),
                               onTap: _onBackspace,
                             );
                           }
                           if (key == '✓') {
                             return _KeypadButton(
-                              child: Icon(Icons.check_rounded, size: 30, color: cs.primary),
+                              child: Icon(LucideIcons.check, size: 28, color: cs.primary),
                               onTap: _onSubmit,
                             );
                           }

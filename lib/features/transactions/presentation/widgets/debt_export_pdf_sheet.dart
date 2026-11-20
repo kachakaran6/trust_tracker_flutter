@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter/services.dart';
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
@@ -26,6 +27,7 @@ class DebtExportPdfSheet extends StatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => DebtExportPdfSheet(
         allTransactions: allTransactions,
@@ -205,22 +207,11 @@ class _DebtExportPdfSheetState extends State<DebtExportPdfSheet> {
                     width: 46,
                     height: 46,
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFE11D48), Color(0xFFBE123C)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      color: cs.primaryContainer,
                       borderRadius: BorderRadius.circular(14),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFFE11D48).withValues(alpha: 0.3),
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
                     ),
-                    child: const Center(
-                      child: Icon(Icons.picture_as_pdf_rounded, color: Colors.white, size: 24),
+                    child: Center(
+                      child: Icon(LucideIcons.fileText, color: cs.onPrimaryContainer, size: 22),
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -248,7 +239,7 @@ class _DebtExportPdfSheetState extends State<DebtExportPdfSheet> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 20),
+                    icon: const Icon(LucideIcons.x, size: 18),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -277,7 +268,7 @@ class _DebtExportPdfSheetState extends State<DebtExportPdfSheet> {
                       child: ChoiceChip(
                         showCheckmark: false,
                         avatar: Icon(
-                          Icons.people_alt_rounded,
+                          LucideIcons.users,
                           size: 15,
                           color: _selectedPerson == null ? cs.onPrimary : cs.onSurfaceVariant,
                         ),
@@ -366,11 +357,11 @@ class _DebtExportPdfSheetState extends State<DebtExportPdfSheet> {
 
               Row(
                 children: [
-                  _buildScopeSegment(0, 'All Records', Icons.list_alt_rounded, cs),
+                  _buildScopeSegment(0, 'All Records', LucideIcons.list, cs),
                   const SizedBox(width: 8),
-                  _buildScopeSegment(1, 'Active Only', Icons.pending_actions_rounded, cs),
+                  _buildScopeSegment(1, 'Active Only', LucideIcons.clock, cs),
                   const SizedBox(width: 8),
-                  _buildScopeSegment(2, 'Settled Only', Icons.check_circle_outline_rounded, cs),
+                  _buildScopeSegment(2, 'Settled Only', LucideIcons.checkCircle, cs),
                 ],
               ),
               const SizedBox(height: 18),
@@ -388,7 +379,7 @@ class _DebtExportPdfSheetState extends State<DebtExportPdfSheet> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline_rounded, size: 16, color: cs.primary),
+                    Icon(LucideIcons.info, size: 16, color: cs.primary),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -435,7 +426,7 @@ class _DebtExportPdfSheetState extends State<DebtExportPdfSheet> {
                         height: 50,
                         child: OutlinedButton.icon(
                           onPressed: matchingTxns.isEmpty ? null : _handlePreviewAndPrint,
-                          icon: const Icon(Icons.print_rounded, size: 19),
+                          icon: const Icon(LucideIcons.printer, size: 18),
                           label: const Text(
                             'Preview / Print',
                             style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
@@ -456,7 +447,7 @@ class _DebtExportPdfSheetState extends State<DebtExportPdfSheet> {
                         height: 50,
                         child: FilledButton.icon(
                           onPressed: matchingTxns.isEmpty ? null : _handleShare,
-                          icon: const Icon(Icons.share_rounded, size: 19),
+                          icon: const Icon(LucideIcons.share2, size: 18),
                           label: const Text(
                             'Share PDF',
                             style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),

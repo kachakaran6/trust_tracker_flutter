@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:trust_tracker_flutter/core/widgets/liquid_glass_bottom_nav_bar.dart';
 import 'package:trust_tracker_flutter/generated/app_localizations.dart';
 
@@ -153,7 +154,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.add_rounded));
+    await tester.tap(find.byIcon(LucideIcons.plus));
     await tester.pumpAndSettle();
     expect(addTapped, isTrue);
   });

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter/services.dart';
 import 'package:in_app_update/in_app_update.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -153,7 +154,7 @@ class UpdateService {
               color: cs.primary.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.system_update_rounded, size: 32, color: cs.primary),
+            child: Icon(LucideIcons.download, size: 32, color: cs.primary),
           ),
           title: Text(
             'Update Available',

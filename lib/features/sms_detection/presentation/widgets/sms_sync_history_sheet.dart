@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
@@ -14,6 +15,7 @@ class SmsSyncHistorySheet extends ConsumerStatefulWidget {
       context: context,
       isScrollControlled: true,
       useRootNavigator: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => const SmsSyncHistorySheet(),
     );
@@ -122,7 +124,7 @@ class _SmsSyncHistorySheetState extends ConsumerState<SmsSyncHistorySheet> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
-                      Icons.history_toggle_off_rounded,
+                      LucideIcons.history,
                       color: cs.primary,
                       size: 24,
                     ),
@@ -164,7 +166,7 @@ class _SmsSyncHistorySheetState extends ConsumerState<SmsSyncHistorySheet> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.shield_outlined, color: AppColors.getSuccess(context), size: 20),
+                    Icon(LucideIcons.shield, color: AppColors.getSuccess(context), size: 18),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -220,7 +222,7 @@ class _SmsSyncHistorySheetState extends ConsumerState<SmsSyncHistorySheet> {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.error_outline, color: cs.error, size: 18),
+                        Icon(LucideIcons.alertCircle, color: cs.error, size: 18),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
@@ -254,7 +256,7 @@ class _SmsSyncHistorySheetState extends ConsumerState<SmsSyncHistorySheet> {
                         borderRadius: BorderRadius.circular(AppDimensions.rLg),
                       ),
                     ),
-                    icon: const Icon(Icons.sync_rounded),
+                    icon: const Icon(LucideIcons.rotateCcw, size: 20),
                     label: const Text(
                       'Scan Device Inbox',
                       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
@@ -360,7 +362,7 @@ class _SmsSyncHistorySheetState extends ConsumerState<SmsSyncHistorySheet> {
       children: [
         Row(
           children: [
-            Icon(Icons.check_circle_rounded, color: AppColors.getSuccess(context), size: 26),
+            Icon(LucideIcons.checkCircle, color: AppColors.getSuccess(context), size: 24),
             const SizedBox(width: 8),
             Text(
               'Inbox Scan Complete!',

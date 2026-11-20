@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:trust_tracker_flutter/core/theme/app_colors.dart';
 import 'package:trust_tracker_flutter/core/utils/extensions.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
@@ -175,6 +176,7 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
         return StatefulBuilder(
@@ -232,28 +234,14 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                                 width: 44,
                                 height: 44,
                                 decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      cs.primary,
-                                      cs.primary.withValues(alpha: 0.8),
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
+                                  color: cs.primaryContainer,
                                   borderRadius: BorderRadius.circular(14),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: cs.primary.withValues(alpha: 0.25),
-                                      blurRadius: 6,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
                                 ),
                                 child: Center(
                                   child: Text(
                                     person.isNotEmpty ? person[0].toUpperCase() : '?',
                                     style: TextStyle(
-                                      color: cs.onPrimary,
+                                      color: cs.onPrimaryContainer,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 19,
                                     ),
@@ -287,7 +275,7 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                               ),
                               IconButton(
                                 onPressed: () => Navigator.pop(context, null),
-                                icon: const Icon(Icons.close_rounded),
+                                icon: const Icon(LucideIcons.x, size: 18),
                                 style: IconButton.styleFrom(
                                   backgroundColor: cs.onSurface.withValues(alpha: 0.06),
                                   foregroundColor: cs.onSurfaceVariant,
@@ -417,7 +405,7 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                                           shape: BoxShape.circle,
                                         ),
                                         child: Icon(
-                                          isNetPositive ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
+                                          isNetPositive ? LucideIcons.arrowDownLeft : LucideIcons.arrowUpRight,
                                           color: cs.primary,
                                           size: 16,
                                         ),
@@ -597,7 +585,7 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Icon(
-                                    Icons.account_balance_wallet_rounded,
+                                    LucideIcons.wallet,
                                     color: cs.primary,
                                     size: 20,
                                   ),
@@ -691,7 +679,7 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                                               ),
                                             )
                                         : null,
-                                    icon: const Icon(Icons.check_rounded, size: 18),
+                                    icon: const Icon(LucideIcons.check, size: 18),
                                     label: Text(
                                       isPartial && remaining > 0
                                           ? 'Settle $currency${settleAmount.toStringAsFixed(0)}'
@@ -836,7 +824,7 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                   color: errorColor.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.delete_outline_rounded, color: errorColor, size: 22),
+                child: Icon(LucideIcons.trash2, color: errorColor, size: 20),
               ),
               const SizedBox(width: 12),
               const Expanded(
@@ -902,18 +890,14 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [cs.primary, cs.primary.withValues(alpha: 0.8)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: cs.primaryContainer,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Center(
                 child: Text(
                   widget.personName.isNotEmpty ? widget.personName[0].toUpperCase() : '?',
                   style: TextStyle(
-                    color: cs.onPrimary,
+                    color: cs.onPrimaryContainer,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
@@ -961,7 +945,7 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.picture_as_pdf_rounded, size: 16, color: cs.primary),
+                  Icon(LucideIcons.fileText, size: 16, color: cs.primary),
                   const SizedBox(width: 4),
                   Text(
                     'PDF',
@@ -977,7 +961,7 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
             onPressed: _openPdfExport,
           ),
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert_rounded),
+            icon: const Icon(LucideIcons.moreVertical, size: 20),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             onSelected: (val) {
               if (val == 'pdf') {
@@ -991,45 +975,45 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
               }
             },
             itemBuilder: (ctx) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'pdf',
                 child: Row(
                   children: [
-                    Icon(Icons.picture_as_pdf_outlined, size: 18),
-                    SizedBox(width: 10),
-                    Text('Export PDF Statement'),
+                    Icon(LucideIcons.fileText, size: 18, color: cs.onSurface),
+                    const SizedBox(width: 10),
+                    const Text('Export PDF Statement'),
                   ],
                 ),
               ),
               if (_activeCount > 0)
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'settle',
                   child: Row(
                     children: [
-                      Icon(Icons.check_circle_outline_rounded, size: 18),
-                      SizedBox(width: 10),
-                      Text('Settle All Debts'),
+                      Icon(LucideIcons.checkCircle, size: 18, color: cs.onSurface),
+                      const SizedBox(width: 10),
+                      const Text('Settle All Debts'),
                     ],
                   ),
                 ),
               const PopupMenuDivider(),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'add_lent',
                 child: Row(
                   children: [
-                    Icon(Icons.arrow_upward_rounded, size: 18, color: Colors.teal),
-                    SizedBox(width: 10),
-                    Text('Record Lent (Given)'),
+                    Icon(LucideIcons.arrowUpRight, size: 18, color: positiveColor),
+                    const SizedBox(width: 10),
+                    const Text('Record Lent (Given)'),
                   ],
                 ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'add_borrowed',
                 child: Row(
                   children: [
-                    Icon(Icons.arrow_downward_rounded, size: 18, color: Colors.orange),
-                    SizedBox(width: 10),
-                    Text('Record Borrowed (Taken)'),
+                    Icon(LucideIcons.arrowDownLeft, size: 18, color: errorColor),
+                    const SizedBox(width: 10),
+                    const Text('Record Borrowed (Taken)'),
                   ],
                 ),
               ),
@@ -1086,7 +1070,7 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                                     if (_activeCount == 0) ...[
                                       Row(
                                         children: [
-                                          Icon(Icons.check_circle_rounded, color: positiveColor, size: 24),
+                                          Icon(LucideIcons.checkCircle, color: positiveColor, size: 24),
                                           const SizedBox(width: 6),
                                           Text(
                                             'All Settled',
@@ -1139,7 +1123,7 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Icon(Icons.warning_amber_rounded, size: 14, color: errorColor),
+                                        Icon(LucideIcons.alertTriangle, size: 14, color: errorColor),
                                         const SizedBox(width: 4),
                                         Text(
                                           '$_overdueCount Overdue',
@@ -1178,7 +1162,7 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                                                 color: positiveColor.withValues(alpha: 0.12),
                                                 shape: BoxShape.circle,
                                               ),
-                                              child: Icon(Icons.arrow_upward_rounded, size: 12, color: positiveColor),
+                                              child: Icon(LucideIcons.arrowUpRight, size: 12, color: positiveColor),
                                             ),
                                             const SizedBox(width: 6),
                                             Expanded(
@@ -1230,7 +1214,7 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                                                 color: errorColor.withValues(alpha: 0.12),
                                                 shape: BoxShape.circle,
                                               ),
-                                              child: Icon(Icons.arrow_downward_rounded, size: 12, color: errorColor),
+                                              child: Icon(LucideIcons.arrowDownLeft, size: 12, color: errorColor),
                                             ),
                                             const SizedBox(width: 6),
                                             Expanded(
@@ -1284,7 +1268,7 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                                         elevation: 0,
                                       ),
                                       onPressed: _settlePersonDialog,
-                                      icon: const Icon(Icons.check_rounded, size: 17),
+                                      icon: const Icon(LucideIcons.check, size: 17),
                                       label: const Text(
                                         'Settle',
                                         style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
@@ -1306,7 +1290,7 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                                       ),
                                     ),
                                     onPressed: () => _openAddTransaction(),
-                                    icon: const Icon(Icons.add_rounded, size: 17),
+                                    icon: const Icon(LucideIcons.plus, size: 17),
                                     label: const Text(
                                       'Add Entry',
                                       style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
@@ -1325,7 +1309,7 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(color: cs.primary.withValues(alpha: 0.2)),
                                     ),
-                                    child: Icon(Icons.picture_as_pdf_rounded, size: 19, color: cs.primary),
+                                    child: Icon(LucideIcons.fileText, size: 18, color: cs.primary),
                                   ),
                                 ),
                               ],
@@ -1406,7 +1390,7 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
-                                  Icons.receipt_long_rounded,
+                                  LucideIcons.receipt,
                                   size: 48,
                                   color: cs.primary.withValues(alpha: 0.6),
                                 ),
@@ -1430,7 +1414,7 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 ),
                                 onPressed: () => _openAddTransaction(),
-                                icon: const Icon(Icons.add_rounded, size: 18),
+                                icon: const Icon(LucideIcons.plus, size: 18),
                                 label: const Text('Add Transaction'),
                               ),
                             ],
@@ -1468,7 +1452,7 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
         backgroundColor: cs.primary,
         foregroundColor: cs.onPrimary,
         elevation: 3,
-        icon: const Icon(Icons.add_rounded),
+        icon: const Icon(LucideIcons.plus, size: 20),
         label: const Text('Add Entry', style: TextStyle(fontWeight: FontWeight.w700)),
         onPressed: () => _openAddTransaction(),
       ),
@@ -1618,7 +1602,7 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            isGiven ? Icons.arrow_outward_rounded : Icons.arrow_downward_rounded,
+                            isGiven ? LucideIcons.arrowUpRight : LucideIcons.arrowDownLeft,
                             size: 11.5,
                             color: typeColor,
                           ),
@@ -1672,7 +1656,7 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                         iconSize: 18,
                         splashRadius: 14,
                         icon: Icon(
-                          Icons.more_vert_rounded,
+                          LucideIcons.moreVertical,
                           size: 18,
                           color: cs.onSurfaceVariant.withValues(alpha: 0.65),
                         ),
@@ -1707,7 +1691,7 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                               height: 36,
                               child: Row(
                                 children: [
-                                  Icon(Icons.check_circle_outline_rounded, size: 16),
+                                  Icon(LucideIcons.checkCircle, size: 16),
                                   SizedBox(width: 8),
                                   Text('Mark Settled', style: TextStyle(fontSize: 13)),
                                 ],
@@ -1718,7 +1702,7 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                             height: 36,
                             child: Row(
                               children: [
-                                Icon(Icons.edit_outlined, size: 16),
+                                Icon(LucideIcons.pencil, size: 16),
                                 SizedBox(width: 8),
                                 Text('Edit Record', style: TextStyle(fontSize: 13)),
                               ],
@@ -1730,7 +1714,7 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                               height: 36,
                               child: Row(
                                 children: [
-                                  Icon(Icons.flag_outlined, size: 16),
+                                  Icon(LucideIcons.flag, size: 16),
                                   SizedBox(width: 8),
                                   Text('Remove Debt Flag', style: TextStyle(fontSize: 13)),
                                 ],
@@ -1741,7 +1725,7 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                             height: 36,
                             child: Row(
                               children: [
-                                Icon(Icons.delete_outline_rounded, color: errorColor, size: 16),
+                                Icon(LucideIcons.trash2, color: errorColor, size: 16),
                                 const SizedBox(width: 8),
                                 Text('Delete', style: TextStyle(color: errorColor, fontSize: 13)),
                               ],
@@ -1787,7 +1771,7 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                           // Due date tag if set and not settled
                           if (!txn.isSettled && dueStatusText != null) ...[
                             Icon(
-                              diffDays < 0 ? Icons.warning_amber_rounded : Icons.schedule_rounded,
+                              diffDays < 0 ? LucideIcons.alertTriangle : LucideIcons.clock,
                               size: 11.5,
                               color: dueStatusColor,
                             ),
@@ -1815,8 +1799,8 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                           // Wallet Balance Indicator
                           Icon(
                             txn.affectsBalance
-                                ? Icons.account_balance_wallet_outlined
-                                : Icons.bookmark_border_rounded,
+                                ? LucideIcons.wallet
+                                : LucideIcons.bookmark,
                             size: 11.5,
                             color: cs.onSurfaceVariant.withValues(alpha: 0.6),
                           ),
@@ -1849,7 +1833,7 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.check_rounded, size: 11.5, color: cs.primary),
+                              Icon(LucideIcons.check, size: 11.5, color: cs.primary),
                               const SizedBox(width: 3),
                               Text(
                                 'Settle',
@@ -1873,7 +1857,7 @@ class _PersonDebtDetailPageState extends ConsumerState<PersonDebtDetailPage> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.check_circle_rounded, size: 11, color: positiveColor),
+                            Icon(LucideIcons.checkCircle, size: 11, color: positiveColor),
                             const SizedBox(width: 3),
                             Text(
                               'Settled',

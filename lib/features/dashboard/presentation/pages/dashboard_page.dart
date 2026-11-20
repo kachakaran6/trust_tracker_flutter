@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:trust_tracker_flutter/core/router/app_router.dart';
 import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
 import 'package:trust_tracker_flutter/core/utils/extensions.dart';
@@ -341,18 +342,18 @@ class DashboardPage extends ConsumerWidget {
                 PopupMenuItem(
                   value: 'avatar',
                   height: 44,
-                  child: _buildPopupItem(ctx, Icons.person_outline_rounded, l10n.chooseAvatar),
+                  child: _buildPopupItem(ctx, LucideIcons.user, l10n.chooseAvatar),
                 ),
                 PopupMenuItem(
                   value: 'pin',
                   height: 44,
-                  child: _buildPopupItem(ctx, Icons.lock_outline_rounded, 
+                  child: _buildPopupItem(ctx, LucideIcons.lock, 
                       security.isPinEnabled ? l10n.changePin : l10n.setPin),
                 ),
                 PopupMenuItem(
                   value: 'budget',
                   height: 44,
-                  child: _buildPopupItem(ctx, Icons.account_balance_wallet_outlined, l10n.setBudget),
+                  child: _buildPopupItem(ctx, LucideIcons.wallet, l10n.setBudget),
                 ),
               ],
               child: CircleAvatar(
@@ -462,8 +463,8 @@ class _DashboardTransactionTile extends StatelessWidget {
                 color: cs3.primary.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(Icons.content_copy_rounded,
-                  size: 18, color: cs3.primary),
+              child: Icon(LucideIcons.copy,
+                  size: 16, color: cs3.primary),
             ),
           ),
           if (isTapMode) ...[
@@ -477,8 +478,8 @@ class _DashboardTransactionTile extends StatelessWidget {
                   color: theme.colorScheme.error.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(Icons.close,
-                    size: 18, color: theme.colorScheme.error),
+                child: Icon(LucideIcons.x,
+                    size: 16, color: theme.colorScheme.error),
               ),
             ),
           ],
@@ -514,7 +515,7 @@ class _DashboardTransactionTile extends StatelessWidget {
               onPressed: (_) => onEdit(),
               backgroundColor: cs3.primary,
               foregroundColor: cs3.onPrimary,
-              icon: Icons.edit_rounded,
+              icon: LucideIcons.pencil,
               borderRadius: BorderRadius.circular(14),
             ),
           ],
@@ -527,7 +528,7 @@ class _DashboardTransactionTile extends StatelessWidget {
               onPressed: (_) => onDelete(),
               backgroundColor: theme.colorScheme.error,
               foregroundColor: theme.colorScheme.onError,
-              icon: Icons.delete_outline_rounded,
+              icon: LucideIcons.trash2,
               borderRadius: BorderRadius.circular(14),
             ),
           ],
@@ -614,8 +615,8 @@ class _DashboardTransactionTile extends StatelessWidget {
                     children: [
                       Icon(
                         transaction.isSettled
-                            ? Icons.check_circle_outline_rounded
-                            : (isGiven ? Icons.arrow_outward_rounded : Icons.south_west_rounded),
+                            ? LucideIcons.checkCircle
+                            : (isGiven ? LucideIcons.arrowUpRight : LucideIcons.arrowDownLeft),
                         size: 10,
                         color: transaction.isSettled
                             ? cs3.onSurface.withValues(alpha: 0.7)
@@ -734,7 +735,7 @@ class _FintechHeaderRow extends StatelessWidget {
                 children: [
                   Text("Monthly Summary", style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
                   const SizedBox(width: 4),
-                  Icon(Icons.arrow_forward_ios_rounded, size: 10, color: cs.onSurfaceVariant),
+                  Icon(LucideIcons.chevronRight, size: 12, color: cs.onSurfaceVariant),
                 ],
               ),
             ],
@@ -748,7 +749,7 @@ class _FintechHeaderRow extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(isPositive ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded, 
+              Icon(isPositive ? LucideIcons.arrowUp : LucideIcons.arrowDown, 
                    size: 14, color: isPositive ? AppColors.success : AppColors.error),
               const SizedBox(width: 4),
               Text(
@@ -795,26 +796,13 @@ class _UnifiedSummaryCard extends ConsumerWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            cs.primary.withValues(alpha: isDark ? 0.14 : 0.08),
-            cs.surface,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(22),
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(AppDimensions.rLg),
         border: Border.all(
-          color: cs.outlineVariant.withValues(alpha: isDark ? 0.22 : 0.4),
-          width: 1.1,
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+          width: 1.0,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        boxShadow: AppShadows.subtle,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -830,7 +818,7 @@ class _UnifiedSummaryCard extends ConsumerWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.calendar_today_rounded, size: 11, color: cs.primary),
+                Icon(LucideIcons.calendar, size: 11, color: cs.primary),
                 const SizedBox(width: 5),
                 Text(
                   '${intl.DateFormat('d MMM').format(startDate)} — ${intl.DateFormat('d MMM').format(endDate)}',
@@ -887,7 +875,7 @@ class _UnifiedSummaryCard extends ConsumerWidget {
                   income,
                   currency,
                   AppColors.success,
-                  Icons.arrow_upward_rounded,
+                  LucideIcons.arrowUp,
                   onTap: () {
                     ref.read(transactionListProvider.notifier).applyFilter(
                       const TransactionFilter(type: 'income'),
@@ -909,7 +897,7 @@ class _UnifiedSummaryCard extends ConsumerWidget {
                   expense,
                   currency,
                   AppColors.error,
-                  Icons.arrow_downward_rounded,
+                  LucideIcons.arrowDown,
                   onTap: () {
                     ref.read(transactionListProvider.notifier).applyFilter(
                       const TransactionFilter(type: 'expense'),
@@ -1036,15 +1024,15 @@ class _EmptyTransactions extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 32),
         child: Column(children: [
-          Icon(Icons.receipt_long_outlined,
-              size: 56, color: cs.onSurface.withOpacity(0.2)),
+          Icon(LucideIcons.receipt,
+              size: 48, color: cs.onSurface.withOpacity(0.2)),
           const SizedBox(height: 12),
           Text(l10n.noTransactionsYet,
               style: tt.bodyMedium?.copyWith(color: cs.onSurface.withOpacity(0.45))),
           const SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: onAdd,
-            icon: const Icon(Icons.add),
+            icon: const Icon(LucideIcons.plus, size: 18),
             label: Text(l10n.addFirstTransaction),
           ),
         ]),
@@ -1142,73 +1130,18 @@ class _BalanceCardAnimationWrapperState
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
-        return Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Opacity(
-              opacity: _fadeAnimation.value,
-              child: Transform.translate(
-                offset: Offset(0, _slideAnimation.value),
-                child: ShaderMask(
-                  shaderCallback: (bounds) {
-                    return LinearGradient(
-                      colors: [
-                        Colors.white.withOpacity(0),
-                        // Very subtle shimmer (0.05 for premium feel)
-                        (isDark ? Colors.white : Colors.blue.shade200).withOpacity(0.05),
-                        Colors.white.withOpacity(0),
-                      ],
-                      stops: const [0.35, 0.5, 0.65],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      transform: _GradientRotation(_shimmerAnimation.value),
-                    ).createShader(bounds);
-                  },
-                  blendMode: BlendMode.srcOver,
-                  child: widget.child,
-                ),
-              ),
-            ),
-            // Refined Floating particles (Subtle hints of motion)
-            ..._buildParticles(),
-          ],
+        return Opacity(
+          opacity: _fadeAnimation.value,
+          child: Transform.translate(
+            offset: Offset(0, _slideAnimation.value),
+            child: widget.child,
+          ),
         );
       },
     );
-  }
-
-  List<Widget> _buildParticles() {
-    final cs = Theme.of(context).colorScheme;
-    return List.generate(3, (i) {
-      final delay = i * 0.12;
-      final progress = (_controller.value - delay).clamp(0.0, 0.4) * 2.5;
-      if (progress <= 0 || progress >= 1) return const SizedBox.shrink();
-
-      return Positioned(
-        left: 80.0 + (i * 100),
-        bottom: 20 + (progress * 40),
-        child: Opacity(
-          opacity: (1 - progress) * 0.2, // Significantly reduced opacity
-          child: Icon(Icons.circle,
-              size: 4 + i.toDouble(), color: cs.primary.withOpacity(0.3)),
-        ),
-      );
-    });
-  }
-}
-
-class _GradientRotation extends GradientTransform {
-  final double progress;
-  const _GradientRotation(this.progress);
-
-  @override
-  Matrix4? transform(Rect bounds, {TextDirection? textDirection}) {
-    return Matrix4.translationValues(bounds.width * progress * 2, 0, 0);
   }
 }
 
@@ -1263,7 +1196,7 @@ class _UpcomingRenewalsWidget extends ConsumerWidget {
                             color: cs.surfaceContainerHighest,
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(Icons.event_repeat, color: cs.onSurfaceVariant.withOpacity(0.7), size: 22),
+                          child: Icon(LucideIcons.repeat, color: cs.onSurfaceVariant.withOpacity(0.7), size: 20),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -1306,7 +1239,7 @@ class _UpcomingRenewalsWidget extends ConsumerWidget {
                           children: [
                             Row(
                               children: [
-                                Icon(Icons.event_repeat, size: 16, color: cs.primary),
+                                Icon(LucideIcons.repeat, size: 16, color: cs.primary),
                                 const SizedBox(width: 8),
                                 Text('${sub.name} — $dueText', style: tt.bodyMedium),
                               ],
@@ -1344,6 +1277,7 @@ class _DebtSummaryWidget extends ConsumerWidget {
     final tt = theme.textTheme;
     final successColor = AppColors.getSuccess(context);
     final errorColor = AppColors.getError(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return debtAsync.when(
       data: (summary) {
@@ -1358,17 +1292,11 @@ class _DebtSummaryWidget extends ConsumerWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: cs.surface,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppDimensions.rLg),
             border: Border.all(
-              color: overdueCount > 0 ? errorColor.withOpacity(0.3) : cs.outline.withOpacity(0.12),
+              color: overdueCount > 0 ? errorColor.withOpacity(0.3) : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
             ),
-            boxShadow: [
-              BoxShadow(
-                color: cs.shadow.withOpacity(0.02),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            boxShadow: AppShadows.subtle,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1384,7 +1312,7 @@ class _DebtSummaryWidget extends ConsumerWidget {
                           color: cs.primary.withOpacity(0.12),
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(Icons.handshake_outlined, color: cs.primary, size: 18),
+                        child: Icon(LucideIcons.handshake, color: cs.primary, size: 18),
                       ),
                       const SizedBox(width: 8),
                       Text(
@@ -1402,7 +1330,7 @@ class _DebtSummaryWidget extends ConsumerWidget {
                           style: tt.labelSmall?.copyWith(fontSize: 12, fontWeight: FontWeight.bold, color: cs.primary),
                         ),
                         const SizedBox(width: 2),
-                        Icon(Icons.chevron_right_rounded, size: 16, color: cs.primary),
+                        Icon(LucideIcons.chevronRight, size: 16, color: cs.primary),
                       ],
                     ),
                   ),
@@ -1414,7 +1342,7 @@ class _DebtSummaryWidget extends ConsumerWidget {
                   Expanded(
                     child: Row(
                       children: [
-                        Icon(Icons.arrow_upward_rounded, color: successColor, size: 16),
+                        Icon(LucideIcons.arrowUp, color: successColor, size: 16),
                         const SizedBox(width: 4),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1432,7 +1360,7 @@ class _DebtSummaryWidget extends ConsumerWidget {
                   Expanded(
                     child: Row(
                       children: [
-                        Icon(Icons.arrow_downward_rounded, color: errorColor, size: 16),
+                        Icon(LucideIcons.arrowDown, color: errorColor, size: 16),
                         const SizedBox(width: 4),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1459,7 +1387,7 @@ class _DebtSummaryWidget extends ConsumerWidget {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.warning_amber_rounded, size: 14, color: errorColor),
+                      Icon(LucideIcons.alertTriangle, size: 14, color: errorColor),
                       const SizedBox(width: 6),
                       Text(
                         '$overdueCount debt reminder(s) are overdue today!',
