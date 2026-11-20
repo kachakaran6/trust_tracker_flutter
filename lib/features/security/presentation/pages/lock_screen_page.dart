@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trust_tracker_flutter/core/security/security_provider.dart';
@@ -316,19 +317,19 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
                               children: row.map((key) {
                                 if (key == '⌫') {
                                   return _KeypadButton(
-                                    child: Icon(Icons.backspace_rounded, size: 24, color: cs.onSurface),
+                                    child: Icon(LucideIcons.delete, size: 22, color: cs.onSurface),
                                     onTap: isLocked ? () {} : _onBackspace,
                                   );
                                 }
                                 if (key == 'bio') {
                                   if (security.isBiometricEnabled) {
                                     return _KeypadButton(
-                                      child: Icon(Icons.fingerprint_rounded, size: 32, color: cs.primary),
+                                      child: Icon(LucideIcons.fingerprint, size: 28, color: cs.primary),
                                       onTap: isLocked ? () {} : _tryBiometric,
                                     );
                                   } else {
                                     return _KeypadButton(
-                                      child: Icon(Icons.check_rounded, size: 28, color: cs.primary),
+                                      child: Icon(LucideIcons.check, size: 26, color: cs.primary),
                                       onTap: isLocked ? () {} : _onSubmit,
                                     );
                                   }
@@ -351,7 +352,7 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
                 final isLocked = security.lockUntil != null && DateTime.now().isBefore(security.lockUntil!);
                 return TextButton.icon(
                   onPressed: isLocked ? null : _onSubmit,
-                  icon: const Icon(Icons.lock_open_rounded, size: 18),
+                  icon: const Icon(LucideIcons.unlock, size: 18),
                   label: const Text('Unlock', style: TextStyle(fontWeight: FontWeight.w700)),
                 );
               },

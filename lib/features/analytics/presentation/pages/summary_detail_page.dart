@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trust_tracker_flutter/core/database/database_helper.dart';
 import 'package:trust_tracker_flutter/core/services/summary_service.dart';
@@ -82,7 +83,7 @@ class _SummaryDetailPageState extends ConsumerState<SummaryDetailPage> {
                 Center(
                   child: OutlinedButton.icon(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.arrow_back),
+                    icon: const Icon(LucideIcons.arrowLeft, size: 20),
                     label: const Text('Back to Dashboard'),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -180,21 +181,21 @@ class _SummaryDetailPageState extends ConsumerState<SummaryDetailPage> {
         Text("Smart Insights", style: tt.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 16),
         _buildInsightTile(
-          Icons.category_outlined,
+          LucideIcons.layoutGrid,
           "Top Category",
           "Most of your expenses went to $topCat.",
           cs.secondary,
         ),
         const SizedBox(height: 12),
         _buildInsightTile(
-          Icons.receipt_outlined,
+          LucideIcons.receipt,
           "Activity",
           "You recorded $count transactions in this period.",
           cs.tertiary,
         ),
         const SizedBox(height: 12),
         _buildInsightTile(
-          bal >= 0 ? Icons.trending_up : Icons.trending_down,
+          bal >= 0 ? LucideIcons.trendingUp : LucideIcons.trendingDown,
           bal >= 0 ? "Savings Streak" : "Spending Alert",
           bal >= 0 
             ? "Your balance is positive. Keep maintaining this streak!"

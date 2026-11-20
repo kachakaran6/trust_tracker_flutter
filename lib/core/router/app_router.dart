@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:trust_tracker_flutter/generated/app_localizations.dart';
 import 'package:trust_tracker_flutter/features/onboarding/presentation/pages/onboarding_page.dart';
@@ -515,9 +516,9 @@ Future<bool?> showExitConfirmationDialog(BuildContext context) {
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
-                          Icons.power_settings_new_rounded,
+                          LucideIcons.power,
                           color: cs.primary,
-                          size: 32,
+                          size: 28,
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -625,25 +626,13 @@ class _FloatingCtaButton extends StatelessWidget {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  buttonColor,
-                  buttonColor.withValues(alpha: 0.90),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(18),
+              color: buttonColor,
+              borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.12),
+                  color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
                   blurRadius: 8,
                   offset: const Offset(0, 3),
-                ),
-                BoxShadow(
-                  color: buttonColor.withValues(alpha: isDark ? 0.20 : 0.22),
-                  blurRadius: 6,
-                  offset: const Offset(0, 1),
                 ),
               ],
             ),
@@ -651,22 +640,19 @@ class _FloatingCtaButton extends StatelessWidget {
               color: Colors.transparent,
               child: InkWell(
                 onTap: onTap,
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(16),
                 child: Center(
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 250),
                     transitionBuilder: (child, animation) => ScaleTransition(
                       scale: animation,
-                      child: RotationTransition(
-                        turns: animation.drive(Tween(begin: 0.75, end: 1.0)),
-                        child: child,
-                      ),
+                      child: child,
                     ),
                     child: Icon(
-                      Icons.add_rounded,
+                      LucideIcons.plus,
                       key: ValueKey<int>(currentIndex),
                       color: Colors.white,
-                      size: 30,
+                      size: 26,
                     ),
                   ),
                 ),
@@ -687,6 +673,7 @@ void _showQuickAddActionSheet(BuildContext context) {
     context: context,
     backgroundColor: Colors.transparent,
     isScrollControlled: true,
+    useSafeArea: true,
     builder: (ctx) => Container(
       decoration: BoxDecoration(
         color: cs.surface,
@@ -735,7 +722,7 @@ void _showQuickAddActionSheet(BuildContext context) {
                 ],
               ),
               IconButton(
-                icon: const Icon(Icons.close_rounded, size: 20),
+                icon: const Icon(LucideIcons.x, size: 18),
                 onPressed: () => Navigator.pop(ctx),
                 style: IconButton.styleFrom(
                   backgroundColor: cs.onSurface.withValues(alpha: 0.05),
@@ -747,7 +734,7 @@ void _showQuickAddActionSheet(BuildContext context) {
           ),
           const SizedBox(height: 16),
           _QuickActionTile(
-            icon: Icons.receipt_long_rounded,
+            icon: LucideIcons.receipt,
             color: cs.primary,
             title: 'Add Transaction',
             subtitle: 'Record an income or expense',
@@ -758,7 +745,7 @@ void _showQuickAddActionSheet(BuildContext context) {
           ),
           const SizedBox(height: 10),
           _QuickActionTile(
-            icon: Icons.handshake_rounded,
+            icon: LucideIcons.handshake,
             color: cs.primary,
             title: 'Add Debt & Lent',
             subtitle: 'Record money lent out or borrowed',
@@ -769,7 +756,7 @@ void _showQuickAddActionSheet(BuildContext context) {
           ),
           const SizedBox(height: 10),
           _QuickActionTile(
-            icon: Icons.event_repeat_rounded,
+            icon: LucideIcons.repeat,
             color: cs.primary,
             title: 'Add Subscription',
             subtitle: 'Track recurring bill or subscription',
@@ -845,7 +832,8 @@ class _QuickActionTile extends StatelessWidget {
                 ),
               ),
               Icon(
-                Icons.chevron_right_rounded,
+                LucideIcons.chevronRight,
+                size: 18,
                 color: cs.onSurface.withValues(alpha: 0.3),
               ),
             ],

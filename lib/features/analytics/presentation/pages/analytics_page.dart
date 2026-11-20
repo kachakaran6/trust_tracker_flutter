@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:trust_tracker_flutter/core/theme/app_shadows.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
@@ -176,7 +178,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
         scrolledUnderElevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.picture_as_pdf_outlined),
+            icon: const Icon(LucideIcons.fileText, size: 20),
             tooltip: 'Generate Report',
             onPressed: () => _showReportOptions(context),
           ),
@@ -202,7 +204,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.chevron_left_rounded, size: 28),
+                  icon: const Icon(LucideIcons.chevronLeft, size: 24),
                   onPressed: _previousMonth,
                   color: cs.onSurface,
                 ),
@@ -221,13 +223,13 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
                           ),
                         ),
                         const SizedBox(width: 4),
-                        Icon(Icons.arrow_drop_down_rounded, size: 20, color: cs.onSurfaceVariant),
+                        Icon(LucideIcons.chevronDown, size: 18, color: cs.onSurfaceVariant),
                       ],
                     ),
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.chevron_right_rounded, size: 28),
+                  icon: const Icon(LucideIcons.chevronRight, size: 24),
                   onPressed: canGoForward ? _nextMonth : null,
                   color: canGoForward
                       ? cs.onSurface
@@ -265,6 +267,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setModalState) => Padding(
@@ -277,7 +280,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text('Report Options', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
-                  IconButton(onPressed: () => Navigator.pop(ctx), icon: const Icon(Icons.close)),
+                  IconButton(onPressed: () => Navigator.pop(ctx), icon: const Icon(LucideIcons.x, size: 20)),
                 ],
               ),
               const SizedBox(height: 24),
@@ -289,6 +292,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
                   await showModalBottomSheet(
                     context: context,
                     isScrollControlled: true,
+                    useSafeArea: true,
                     backgroundColor: Colors.transparent,
                     builder: (context) => FilterBottomSheet(
                       initialFilter: currentFilter,
@@ -306,7 +310,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.tune_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
+                      Icon(LucideIcons.sliders, size: 20, color: Theme.of(context).colorScheme.primary),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -314,7 +318,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                         ),
                       ),
-                      Icon(Icons.chevron_right_rounded, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
+                      Icon(LucideIcons.chevronRight, size: 18, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
                     ],
                   ),
                 ),
@@ -348,7 +352,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
                       includeSummary: includeSummary,
                     );
                   },
-                  icon: const Icon(Icons.picture_as_pdf_outlined),
+                  icon: const Icon(LucideIcons.fileText, size: 20),
                   label: const Text('Generate PDF Report', style: TextStyle(fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -469,28 +473,28 @@ class _AnalyticsSelector extends StatelessWidget {
         children: [
           _SelectorChip(
             label: l10n.overview,
-            icon: Icons.dashboard_outlined,
+            icon: LucideIcons.layoutDashboard,
             selected: currentMode == AnalyticsMode.overview,
             onTap: () => onChanged(AnalyticsMode.overview),
           ),
           const SizedBox(width: 10),
           _SelectorChip(
             label: l10n.spending,
-            icon: Icons.bar_chart_rounded,
+            icon: LucideIcons.barChart2,
             selected: currentMode == AnalyticsMode.spending,
             onTap: () => onChanged(AnalyticsMode.spending),
           ),
           const SizedBox(width: 10),
           _SelectorChip(
             label: l10n.categories,
-            icon: Icons.category_outlined,
+            icon: LucideIcons.pieChart,
             selected: currentMode == AnalyticsMode.categories,
             onTap: () => onChanged(AnalyticsMode.categories),
           ),
           const SizedBox(width: 10),
           _SelectorChip(
             label: l10n.trends,
-            icon: Icons.show_chart_rounded,
+            icon: LucideIcons.lineChart,
             selected: currentMode == AnalyticsMode.trends,
             onTap: () => onChanged(AnalyticsMode.trends),
           ),
@@ -580,7 +584,7 @@ class _OverviewModule extends ConsumerWidget {
                         amount: inc,
                         currency: settings.currency,
                         color: AppColors.success,
-                        icon: Icons.south_west_rounded,
+                        icon: LucideIcons.arrowDownLeft,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -590,7 +594,7 @@ class _OverviewModule extends ConsumerWidget {
                         amount: exp,
                         currency: settings.currency,
                         color: cs.error,
-                        icon: Icons.north_east_rounded,
+                        icon: LucideIcons.arrowUpRight,
                       ),
                     ),
                   ],
@@ -862,16 +866,10 @@ class _SavingsRateCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            cs.primaryContainer.withOpacity(0.5),
-            cs.primaryContainer.withOpacity(0.2),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: cs.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: cs.primary.withOpacity(0.1)),
+        border: Border.all(color: cs.outline.withOpacity(0.12)),
+        boxShadow: AppShadows.subtle,
       ),
       child: Row(
         children: [
@@ -1500,11 +1498,7 @@ class _SavingsTrendLineChart extends StatelessWidget {
               dotData: const FlDotData(show: true),
               belowBarData: BarAreaData(
                 show: true,
-                gradient: LinearGradient(
-                  colors: [cs.primary.withOpacity(0.2), cs.primary.withOpacity(0.0)],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
+                color: cs.primary.withOpacity(0.08),
               ),
             ),
           ],
@@ -1529,7 +1523,7 @@ class _IntensityPlaceholder extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(Icons.grid_view_rounded, size: 48, color: cs.primary.withOpacity(0.2)),
+          Icon(LucideIcons.grid, size: 48, color: cs.primary.withOpacity(0.2)),
           const SizedBox(height: 16),
           Text(
             AppLocalizations.of(context)!.spendingIntensity,
@@ -1591,7 +1585,7 @@ class _EmptyNamedChart extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 32),
         child: Column(children: [
-          Icon(Icons.query_stats_rounded, size: 48, color: cs.onSurface.withOpacity(0.1)),
+          Icon(LucideIcons.barChart, size: 48, color: cs.onSurface.withOpacity(0.1)),
           const SizedBox(height: 16),
           Text(AppLocalizations.of(context)!.noDataFor(label), style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant, fontWeight: FontWeight.w500)),
         ]),
@@ -1612,7 +1606,7 @@ class _EmptyState extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 60),
         child: Column(
           children: [
-            Icon(Icons.analytics_outlined, size: 80, color: cs.primary.withOpacity(0.1)),
+            Icon(LucideIcons.barChart2, size: 80, color: cs.primary.withOpacity(0.1)),
             const SizedBox(height: 24),
             Text(message, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600, color: cs.onSurfaceVariant)),
           ],

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -86,7 +87,7 @@ void showAvatarSelectionModal({
                           color: cs.primary,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.add_a_photo, color: Colors.white, size: 20),
+                        child: const Icon(LucideIcons.camera, color: Colors.white, size: 20),
                       ),
                       const SizedBox(width: 16),
                       Text(

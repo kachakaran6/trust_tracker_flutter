@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trust_tracker_flutter/core/constants/app_constants.dart';
 import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
@@ -93,7 +94,7 @@ class _TransactionCategoryDropdownState
             value: _addCategoryValue,
             label: 'Add New Category',
             leadingIcon: Icon(
-              Icons.add_circle_outline_rounded,
+              LucideIcons.plusCircle,
               color: accentColor,
               size: 20,
             ),
@@ -394,7 +395,7 @@ class _AddCategoryDialogState extends State<_AddCategoryDialog> {
               decoration: InputDecoration(
                 hintText: 'Category name',
                 errorText: _errorText,
-                prefixIcon: const Icon(Icons.drive_file_rename_outline_rounded),
+                prefixIcon: const Icon(LucideIcons.pencil, size: 18),
               ),
             ),
             const SizedBox(height: 24),

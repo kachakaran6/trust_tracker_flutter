@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -43,17 +44,17 @@ class SmsReviewPage extends ConsumerWidget {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.history_rounded),
+            icon: const Icon(LucideIcons.history, size: 20),
             tooltip: 'SMS Activity & History',
             onPressed: () => context.push('/sms-activity'),
           ),
           IconButton(
-            icon: const Icon(Icons.sync_rounded),
+            icon: const Icon(LucideIcons.rotateCcw, size: 20),
             tooltip: 'Sync Past Bank SMS',
             onPressed: () => SmsSyncHistorySheet.show(context),
           ),
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert_rounded),
+            icon: const Icon(LucideIcons.moreVertical, size: 20),
             tooltip: 'More actions',
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
@@ -80,7 +81,7 @@ class SmsReviewPage extends ConsumerWidget {
                   child: Row(
                     children: [
                       Icon(
-                        allSelected ? Icons.deselect_rounded : Icons.select_all_rounded,
+                        allSelected ? LucideIcons.checkSquare : LucideIcons.square,
                         color: cs.primary,
                         size: 20,
                       ),
@@ -93,7 +94,7 @@ class SmsReviewPage extends ConsumerWidget {
                 value: 'activity',
                 child: Row(
                   children: [
-                    Icon(Icons.manage_history_rounded, size: 20),
+                    Icon(LucideIcons.history, size: 20),
                     SizedBox(width: 12),
                     Text('SMS Activity Log'),
                   ],
@@ -105,7 +106,7 @@ class SmsReviewPage extends ConsumerWidget {
                   value: 'discard_all',
                   child: Row(
                     children: [
-                      Icon(Icons.close_rounded, color: cs.error, size: 20),
+                      Icon(LucideIcons.x, color: cs.error, size: 18),
                       const SizedBox(width: 12),
                       Text('Discard All (${state.pendingList.length})'),
                     ],
@@ -115,7 +116,7 @@ class SmsReviewPage extends ConsumerWidget {
                   value: 'clear_all',
                   child: Row(
                     children: [
-                      Icon(Icons.delete_sweep_outlined, color: cs.error, size: 20),
+                      Icon(LucideIcons.trash2, color: cs.error, size: 18),
                       const SizedBox(width: 12),
                       const Text('Clear Pending Queue'),
                     ],
@@ -166,7 +167,7 @@ class SmsReviewPage extends ConsumerWidget {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                Icons.mark_email_read_rounded,
+                LucideIcons.mailCheck,
                 size: 68,
                 color: cs.primary.withValues(alpha: 0.45),
               ),
@@ -189,13 +190,13 @@ class SmsReviewPage extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 OutlinedButton.icon(
-                  icon: const Icon(Icons.manage_history_rounded, size: 18),
+                  icon: const Icon(LucideIcons.history, size: 18),
                   label: const Text('Activity Log'),
                   onPressed: () => context.push('/sms-activity'),
                 ),
                 const SizedBox(width: 12),
                 ElevatedButton.icon(
-                  icon: const Icon(Icons.sync_rounded, size: 18),
+                  icon: const Icon(LucideIcons.rotateCcw, size: 18),
                   label: const Text('Sync Past SMS'),
                   onPressed: () => SmsSyncHistorySheet.show(context),
                 ),
@@ -421,7 +422,7 @@ class SmsReviewPage extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    icon: const Icon(Icons.close_rounded, size: 16),
+                    icon: const Icon(LucideIcons.x, size: 16),
                     label: const Text('Reject', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
                     onPressed: () {
                       if (item.id != null) {
@@ -442,7 +443,7 @@ class SmsReviewPage extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    icon: const Icon(Icons.edit_note_rounded, size: 17),
+                    icon: const Icon(LucideIcons.fileText, size: 17),
                     label: const Text('Review & Edit', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                     onPressed: () => SmsReviewSheet.show(context, item),
                   ),
@@ -460,7 +461,7 @@ class SmsReviewPage extends ConsumerWidget {
                       ),
                       elevation: 0,
                     ),
-                    icon: const Icon(Icons.check_rounded, size: 16),
+                    icon: const Icon(LucideIcons.check, size: 16),
                     label: const Text('Approve', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold)),
                     onPressed: () {
                       ref.read(smsDetectionProvider.notifier).approveTransaction(item);
@@ -572,7 +573,7 @@ class SmsReviewPage extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              icon: const Icon(Icons.close_rounded, size: 17),
+              icon: const Icon(LucideIcons.x, size: 17),
               label: Text(
                 isSelectedOnly ? 'Discard ($count)' : 'Discard All ($count)',
                 style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
@@ -602,7 +603,7 @@ class SmsReviewPage extends ConsumerWidget {
                 ),
                 elevation: 0,
               ),
-              icon: const Icon(Icons.done_all_rounded, size: 17),
+              icon: const Icon(LucideIcons.checkCheck, size: 17),
               label: Text(
                 isSelectedOnly
                     ? 'Approve Selected ($count)'

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
 
 class CustomDropdownField<T> extends StatelessWidget {
   final T value;
@@ -20,24 +22,29 @@ class CustomDropdownField<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final cs = theme.colorScheme;
+    final tt = theme.textTheme;
 
     return Theme(
-      data: Theme.of(context).copyWith(
+      data: theme.copyWith(
         popupMenuTheme: PopupMenuThemeData(
-          color: const Color(0xFF18181B), // dark background similar to Shadcn UI
+          color: isDark ? AppColors.darkSurfaceElevated : AppColors.lightSurface,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: Colors.white.withOpacity(0.1), width: 1),
+            borderRadius: BorderRadius.circular(AppDimensions.rMd),
+            side: BorderSide(
+              color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+              width: 1,
+            ),
           ),
-          elevation: 12,
+          elevation: 4,
         ),
       ),
       child: PopupMenuButton<T>(
         initialValue: value,
         onSelected: onChanged,
-        offset: const Offset(0, 60),
+        offset: const Offset(0, 56),
         constraints: const BoxConstraints(minWidth: 200, maxWidth: 300),
         position: PopupMenuPosition.over,
         clipBehavior: Clip.antiAlias,
@@ -45,16 +52,16 @@ class CustomDropdownField<T> extends StatelessWidget {
         child: InputDecorator(
           decoration: InputDecoration(
             labelText: label,
-            prefixIcon: Icon(prefixIcon),
-            suffixIcon: const Icon(Icons.unfold_more_rounded),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            prefixIcon: Icon(prefixIcon, size: 20),
+            suffixIcon: const Icon(LucideIcons.chevronsUpDown, size: 18),
+            contentPadding: const EdgeInsets.symmetric(horizontal: AppDimensions.lg, vertical: AppDimensions.md),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: cs.outline.withOpacity(0.2)),
+              borderRadius: BorderRadius.circular(AppDimensions.rMd),
+              borderSide: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: cs.outline.withOpacity(0.2)),
+              borderRadius: BorderRadius.circular(AppDimensions.rMd),
+              borderSide: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
             ),
           ),
           child: Text(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
@@ -23,6 +24,7 @@ class SmsReviewSheet extends ConsumerStatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => SmsReviewSheet(transaction: transaction),
     );
@@ -150,7 +152,7 @@ class _SmsReviewSheetState extends ConsumerState<SmsReviewSheet> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded),
+                  icon: const Icon(LucideIcons.x, size: 20),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ],
@@ -178,7 +180,7 @@ class _SmsReviewSheetState extends ConsumerState<SmsReviewSheet> {
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.warning_amber_rounded, color: Color(0xFFF59E0B), size: 22),
+                          const Icon(LucideIcons.alertTriangle, color: Color(0xFFF59E0B), size: 20),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
@@ -242,7 +244,7 @@ class _SmsReviewSheetState extends ConsumerState<SmsReviewSheet> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.account_balance_wallet_outlined, size: 18, color: cs.primary),
+                          Icon(LucideIcons.wallet, size: 18, color: cs.primary),
                           const SizedBox(width: 10),
                           Text(
                             'Available Account Balance:',
@@ -389,7 +391,7 @@ class _SmsReviewSheetState extends ConsumerState<SmsReviewSheet> {
                   TextField(
                     controller: _merchantController,
                     decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.storefront_rounded, size: 20),
+                      prefixIcon: const Icon(LucideIcons.store, size: 18),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -424,7 +426,7 @@ class _SmsReviewSheetState extends ConsumerState<SmsReviewSheet> {
                             ? _selectedCategoryId
                             : null,
                         decoration: InputDecoration(
-                          prefixIcon: const Icon(Icons.category_rounded, size: 20),
+                          prefixIcon: const Icon(LucideIcons.layoutGrid, size: 18),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -486,14 +488,14 @@ class _SmsReviewSheetState extends ConsumerState<SmsReviewSheet> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.calendar_today_rounded, size: 18, color: cs.primary),
+                          Icon(LucideIcons.calendar, size: 18, color: cs.primary),
                           const SizedBox(width: 12),
                           Text(
                             DateFormat('d MMMM yyyy').format(_selectedDate),
                             style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                           ),
                           const Spacer(),
-                          const Icon(Icons.arrow_drop_down_rounded),
+                          const Icon(LucideIcons.chevronDown, size: 18),
                         ],
                       ),
                     ),
@@ -504,7 +506,7 @@ class _SmsReviewSheetState extends ConsumerState<SmsReviewSheet> {
                     const SizedBox(height: 14),
                     Row(
                       children: [
-                        Icon(Icons.tag_rounded, size: 16, color: cs.onSurface.withValues(alpha: 0.45)),
+                        Icon(LucideIcons.hash, size: 16, color: cs.onSurface.withValues(alpha: 0.45)),
                         const SizedBox(width: 6),
                         Text(
                           'Reference: ${txn.referenceNumber}',
@@ -536,7 +538,7 @@ class _SmsReviewSheetState extends ConsumerState<SmsReviewSheet> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    icon: const Icon(Icons.close_rounded, size: 18),
+                    icon: const Icon(LucideIcons.x, size: 18),
                     label: const Text('Reject', style: TextStyle(fontWeight: FontWeight.w600)),
                     onPressed: () {
                       if (txn.id != null) {
@@ -559,7 +561,7 @@ class _SmsReviewSheetState extends ConsumerState<SmsReviewSheet> {
                       ),
                       elevation: 0,
                     ),
-                    icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
+                    icon: const Icon(LucideIcons.checkCircle, size: 18),
                     label: const Text('Save & Approve', style: TextStyle(fontWeight: FontWeight.bold)),
                     onPressed: () async {
                       final parsedAmount = Money.tryParse(_amountController.text);

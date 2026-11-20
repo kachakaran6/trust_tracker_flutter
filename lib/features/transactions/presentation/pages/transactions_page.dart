@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
 import 'package:trust_tracker_flutter/core/utils/extensions.dart';
 import 'package:trust_tracker_flutter/features/categories/data/models/category_model.dart';
@@ -255,6 +256,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) => FilterBottomSheet(
         initialFilter: currentFilter,
@@ -277,6 +279,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) => ExportBottomSheet(
         transactions: txns,
@@ -306,12 +309,12 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
           title: Text(AppLocalizations.of(context)!.transactions, style: tt.headlineMedium),
           actions: [
             IconButton(
-              icon: Icon(Icons.bar_chart_rounded, color: cs.primary),
+              icon: Icon(LucideIcons.barChart2, size: 20, color: cs.primary),
               tooltip: AppLocalizations.of(context)?.analytics ?? 'Analytics',
               onPressed: () => context.push('/analytics'),
             ),
             IconButton(
-              icon: Icon(Icons.file_download_outlined, color: cs.onSurface.withOpacity(0.6)),
+              icon: Icon(LucideIcons.download, size: 20, color: cs.onSurface.withOpacity(0.6)),
               onPressed: _openExportBottomSheet,
             ),
             const SizedBox(width: 8),
@@ -430,14 +433,14 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                     style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                     decoration: InputDecoration(
                       hintText: AppLocalizations.of(context)!.searchTransactions,
-                      prefixIcon: Icon(Icons.search_rounded, color: _isSearching ? cs.primary : cs.onSurface.withOpacity(0.4), size: 20),
+                      prefixIcon: Icon(LucideIcons.search, color: _isSearching ? cs.primary : cs.onSurface.withOpacity(0.4), size: 20),
                       border: InputBorder.none,
                       enabledBorder: InputBorder.none,
                       focusedBorder: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(vertical: 12),
                       suffixIcon: filter.searchQuery.isNotEmpty
                           ? IconButton(
-                              icon: Icon(Icons.cancel_rounded, size: 18, color: cs.onSurface.withOpacity(0.4)),
+                              icon: Icon(LucideIcons.xCircle, size: 18, color: cs.onSurface.withOpacity(0.4)),
                               onPressed: () {
                                 _searchController.clear();
                                 ref.read(transactionListProvider.notifier).applyFilter(filter.copyWith(searchQuery: ''));
@@ -459,7 +462,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Icon(
-                    Icons.tune_rounded,
+                    LucideIcons.slidersHorizontal,
                     color: !filter.isDefault ? cs.onPrimary : cs.onSurface.withOpacity(0.6),
                     size: 20,
                   ),
@@ -532,7 +535,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                     if (filter.type != 'all')
                       _FilterChip(
                         label: filter.type.toUpperCase(),
-                        icon: filter.type == 'income' ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+                        icon: filter.type == 'income' ? LucideIcons.arrowUp : LucideIcons.arrowDown,
                         onRemove: () => ref.read(transactionListProvider.notifier).applyFilter(filter.copyWith(type: 'all')),
                       ).animate().scale(duration: 200.ms).fadeIn(),
 
@@ -540,7 +543,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                     if (filter.dateRange != null)
                       _FilterChip(
                         label: '${DateFormat('MMM d').format(filter.dateRange!.start)} - ${DateFormat('MMM d').format(filter.dateRange!.end)}',
-                        icon: Icons.calendar_today_rounded,
+                        icon: LucideIcons.calendar,
                         onRemove: () => ref.read(transactionListProvider.notifier).applyFilter(filter.copyWith(clearDateRange: true)),
                       ).animate().scale(duration: 200.ms).fadeIn(),
 
@@ -568,14 +571,14 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                     if (filter.sortBy != TransactionSortBy.date || filter.isAscending)
                       _FilterChip(
                         label: '${filter.sortBy.name.toUpperCase()} ${filter.isAscending ? "↑" : "↓"}',
-                        icon: Icons.sort_rounded,
+                        icon: LucideIcons.arrowUpDown,
                         onRemove: () => ref.read(transactionListProvider.notifier).applyFilter(filter.copyWith(sortBy: TransactionSortBy.date, isAscending: false)),
                       ).animate().scale(duration: 200.ms).fadeIn(),
 
                     // --- Clear All Chip ---
                     _FilterChip(
                       label: 'Clear All',
-                      icon: Icons.refresh_rounded,
+                      icon: LucideIcons.rotateCcw,
                       onRemove: () {
                         _searchController.clear();
                         ref.read(transactionListProvider.notifier).applyFilter(const TransactionFilter());
@@ -615,19 +618,9 @@ class _SummaryStrip extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [cs.primary, cs.primary.withBlue(200)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: cs.primary.withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        color: cs.primary,
+        borderRadius: BorderRadius.circular(AppDimensions.rLg),
+        boxShadow: AppShadows.subtle,
       ),
       child: Row(
         children: [
@@ -705,19 +698,9 @@ class _FilteredSummaryCard extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [cs.primary, cs.primary.withBlue(200)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: cs.primary.withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        color: cs.primary,
+        borderRadius: BorderRadius.circular(AppDimensions.rLg),
+        boxShadow: AppShadows.subtle,
       ),
       child: Row(
         children: [
@@ -1052,8 +1035,8 @@ class _SwipeableTransactionTile extends StatelessWidget {
                                 children: [
                                   Icon(
                                     transaction.isSettled
-                                        ? Icons.check_circle_outline_rounded
-                                        : (isGiven ? Icons.arrow_outward_rounded : Icons.south_west_rounded),
+                                        ? LucideIcons.checkCircle
+                                        : (isGiven ? LucideIcons.arrowUpRight : LucideIcons.arrowDownLeft),
                                     size: 11,
                                     color: transaction.isSettled
                                         ? cs.onSurface.withValues(alpha: 0.7)
@@ -1117,9 +1100,9 @@ class _SwipeableTransactionTile extends StatelessWidget {
                     Row(
                       children: [
                         if (transaction.note != null && transaction.note!.isNotEmpty)
-                          Icon(Icons.sticky_note_2_outlined, size: 12, color: cs.onSurface.withOpacity(0.2)),
+                          Icon(LucideIcons.fileText, size: 12, color: cs.onSurface.withOpacity(0.2)),
                         const SizedBox(width: 4),
-                        Icon(Icons.chevron_right_rounded, size: 16, color: cs.onSurface.withOpacity(0.2)),
+                        Icon(LucideIcons.chevronRight, size: 16, color: cs.onSurface.withOpacity(0.2)),
                       ],
                     ),
                   ],
@@ -1139,6 +1122,7 @@ class _SwipeableTransactionTile extends StatelessWidget {
           useRootNavigator: true,
           backgroundColor: Colors.transparent,
           isScrollControlled: true,
+          useSafeArea: true,
           builder: (ctx) => _QuickActionsSheet(
             transaction: transaction,
             onEdit: onEdit,
@@ -1164,7 +1148,7 @@ class _SwipeableTransactionTile extends StatelessWidget {
             onPressed: (_) => onEdit(),
             backgroundColor: cs.primary,
             foregroundColor: cs.onPrimary,
-            icon: Icons.edit_rounded,
+            icon: LucideIcons.pencil,
             borderRadius: const BorderRadius.horizontal(right: Radius.circular(18)),
           ),
         ],
@@ -1177,7 +1161,7 @@ class _SwipeableTransactionTile extends StatelessWidget {
             onPressed: (_) => onDelete(),
             backgroundColor: cs.error,
             foregroundColor: cs.onError,
-            icon: Icons.delete_outline_rounded,
+            icon: LucideIcons.trash2,
             borderRadius: const BorderRadius.horizontal(left: Radius.circular(18)),
           ),
         ],
@@ -1246,8 +1230,8 @@ class _SwipeableTransactionTile extends StatelessWidget {
       ),
       child: Center(
         child: Icon(
-          Icons.receipt_long_rounded,
-          size: 22,
+          LucideIcons.receipt,
+          size: 20,
           color: cs.onSurfaceVariant.withValues(alpha: 0.7),
         ),
       ),
@@ -1326,9 +1310,9 @@ class _QuickActionsSheet extends StatelessWidget {
             const SizedBox(height: 6),
             Divider(height: 1, color: cs.outlineVariant.withValues(alpha: isDark ? 0.15 : 0.25)),
             const SizedBox(height: 6),
-            _buildAction(context, Icons.edit_rounded, 'Edit', onEdit),
-            _buildAction(context, Icons.content_copy_rounded, 'Duplicate', onDuplicate),
-            _buildAction(context, Icons.delete_outline_rounded, 'Delete', onDelete, isDestructive: true),
+            _buildAction(context, LucideIcons.pencil, 'Edit', onEdit),
+            _buildAction(context, LucideIcons.copy, 'Duplicate', onDuplicate),
+            _buildAction(context, LucideIcons.trash2, 'Delete', onDelete, isDestructive: true),
             const SizedBox(height: 4),
           ],
         ),
@@ -1376,7 +1360,7 @@ class _EmptyState extends StatelessWidget {
                 color: cs.primary.withOpacity(0.05),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.receipt_long_rounded, size: 80, color: cs.primary.withOpacity(0.2)),
+              child: Icon(LucideIcons.receipt, size: 64, color: cs.primary.withOpacity(0.2)),
             ),
             const SizedBox(height: 24),
             Text(
@@ -1443,7 +1427,7 @@ class _FilterChip extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 6),
-                Icon(Icons.close_rounded, size: 14, color: cs.primary.withOpacity(0.4)),
+                Icon(LucideIcons.x, size: 12, color: cs.primary.withOpacity(0.4)),
               ],
             ),
           ),

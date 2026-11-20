@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:intl/intl.dart';
 import 'package:trust_tracker_flutter/core/utils/extensions.dart';
 import 'package:trust_tracker_flutter/features/subscriptions/data/models/subscription_model.dart';
@@ -52,50 +53,50 @@ class SubscriptionCard extends StatelessWidget {
   static (IconData, Color) _getBrandStyle(String name, String? type) {
     final lower = name.toLowerCase();
     if (lower.contains('spotify')) {
-      return (Icons.music_note_rounded, const Color(0xFF1DB954));
+      return (LucideIcons.music, const Color(0xFF1DB954));
     }
     if (lower.contains('netflix')) {
-      return (Icons.movie_rounded, const Color(0xFFE50914));
+      return (LucideIcons.film, const Color(0xFFE50914));
     }
     if (lower.contains('youtube')) {
-      return (Icons.play_arrow_rounded, const Color(0xFFFF0000));
+      return (LucideIcons.play, const Color(0xFFFF0000));
     }
     if (lower.contains('prime') || lower.contains('amazon')) {
-      return (Icons.shopping_bag_rounded, const Color(0xFF00A8E1));
+      return (LucideIcons.shoppingBag, const Color(0xFF00A8E1));
     }
     if (lower.contains('apple') || lower.contains('icloud')) {
-      return (Icons.apple_rounded, const Color(0xFF64748B));
+      return (LucideIcons.smartphone, const Color(0xFF64748B));
     }
     if (lower.contains('gym') || lower.contains('fitness')) {
-      return (Icons.fitness_center_rounded, const Color(0xFFF97316));
+      return (LucideIcons.activity, const Color(0xFFF97316));
     }
     if (lower.contains('disney') || lower.contains('hotstar')) {
-      return (Icons.tv_rounded, const Color(0xFF113CCF));
+      return (LucideIcons.tv, const Color(0xFF113CCF));
     }
     if (lower.contains('wifi') || lower.contains('internet') || lower.contains('broadband')) {
-      return (Icons.wifi_rounded, const Color(0xFF06B6D4));
+      return (LucideIcons.wifi, const Color(0xFF06B6D4));
     }
     if (lower.contains('jio') || lower.contains('airtel') || lower.contains('vi ') || lower.contains('recharge')) {
-      return (Icons.phone_android_rounded, const Color(0xFF6366F1));
+      return (LucideIcons.smartphone, const Color(0xFF6366F1));
     }
     if (lower.contains('cloud') || lower.contains('drive') || lower.contains('dropbox')) {
-      return (Icons.cloud_queue_rounded, const Color(0xFF3B82F6));
+      return (LucideIcons.cloud, const Color(0xFF3B82F6));
     }
     if (lower.contains('code') || lower.contains('github') || lower.contains('chatgpt') || lower.contains('ai')) {
-      return (Icons.terminal_rounded, const Color(0xFF10B981));
+      return (LucideIcons.laptop, const Color(0xFF10B981));
     }
 
     if (type != null) {
-      if (type.contains('Music')) return (Icons.music_note_rounded, const Color(0xFFEC4899));
-      if (type.contains('OTT')) return (Icons.tv_rounded, const Color(0xFF8B5CF6));
-      if (type.contains('Mobile')) return (Icons.phone_android_rounded, const Color(0xFF6366F1));
-      if (type.contains('Cloud')) return (Icons.cloud_rounded, const Color(0xFF3B82F6));
-      if (type.contains('Software')) return (Icons.laptop_rounded, const Color(0xFF10B981));
-      if (type.contains('Insurance')) return (Icons.shield_rounded, const Color(0xFFF59E0B));
-      if (type.contains('Internet')) return (Icons.wifi_rounded, const Color(0xFF06B6D4));
+      if (type.contains('Music')) return (LucideIcons.music, const Color(0xFFEC4899));
+      if (type.contains('OTT')) return (LucideIcons.tv, const Color(0xFF8B5CF6));
+      if (type.contains('Mobile')) return (LucideIcons.smartphone, const Color(0xFF6366F1));
+      if (type.contains('Cloud')) return (LucideIcons.cloud, const Color(0xFF3B82F6));
+      if (type.contains('Software')) return (LucideIcons.laptop, const Color(0xFF10B981));
+      if (type.contains('Insurance')) return (LucideIcons.shield, const Color(0xFFF59E0B));
+      if (type.contains('Internet')) return (LucideIcons.wifi, const Color(0xFF06B6D4));
     }
 
-    return (Icons.autorenew_rounded, const Color(0xFF3B82F6));
+    return (LucideIcons.repeat, const Color(0xFF3B82F6));
   }
 
   @override
@@ -173,7 +174,7 @@ class SubscriptionCard extends StatelessWidget {
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
-                            Icons.pause_circle_filled_rounded,
+                            LucideIcons.pauseCircle,
                             size: 14,
                             color: cs.onSurfaceVariant,
                           ),
@@ -206,7 +207,7 @@ class SubscriptionCard extends StatelessWidget {
                       Row(
                         children: [
                           Icon(
-                            Icons.repeat_rounded,
+                            LucideIcons.repeat,
                             size: 13,
                             color: cs.onSurfaceVariant.withValues(alpha: 0.7),
                           ),
@@ -259,7 +260,7 @@ class SubscriptionCard extends StatelessWidget {
                             iconSize: 18,
                             splashRadius: 16,
                             icon: Icon(
-                              Icons.more_vert_rounded,
+                              LucideIcons.moreVertical,
                               size: 18,
                               color: cs.onSurfaceVariant.withValues(alpha: 0.6),
                             ),
@@ -279,7 +280,7 @@ class SubscriptionCard extends StatelessWidget {
                                 height: 40,
                                 child: Row(
                                   children: [
-                                    Icon(Icons.edit_outlined,
+                                    Icon(LucideIcons.pencil,
                                         size: 16, color: cs.onSurface),
                                     const SizedBox(width: 10),
                                     const Text('Edit Subscription',
@@ -293,7 +294,7 @@ class SubscriptionCard extends StatelessWidget {
                                 height: 40,
                                 child: Row(
                                   children: [
-                                    Icon(Icons.delete_outline_rounded,
+                                    Icon(LucideIcons.trash2,
                                         size: 16, color: Colors.red),
                                     const SizedBox(width: 10),
                                     Text('Delete',

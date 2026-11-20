@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
 import 'package:trust_tracker_flutter/core/constants/app_constants.dart';
@@ -43,6 +44,7 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (ctx) => StatefulBuilder(
@@ -147,7 +149,7 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
                           : null,
                     ),
                     child: isSelected
-                        ? Icon(Icons.check, color: color.computeLuminance() > 0.5 ? Colors.black : Colors.white, size: 16)
+                        ? Icon(LucideIcons.check, color: color.computeLuminance() > 0.5 ? Colors.black : Colors.white, size: 16)
                         : null,
                   ),
                 );
@@ -198,7 +200,7 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
         title: Text(AppLocalizations.of(context)!.categories, style: tt.headlineMedium),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: const Icon(LucideIcons.plus, size: 20),
             onPressed: _showCategoryDialog,
           ),
         ],
@@ -310,9 +312,9 @@ class _CategoryTile extends StatelessWidget {
             child: Text(AppLocalizations.of(context)!.defaultLabel,
                 style: tt.labelSmall?.copyWith(fontSize: 9, fontWeight: FontWeight.bold)),
           ),
-        IconButton(icon: Icon(Icons.edit_outlined, size: 18, color: theme.colorScheme.onSurfaceVariant), onPressed: onEdit),
+        IconButton(icon: Icon(LucideIcons.pencil, size: 18, color: theme.colorScheme.onSurfaceVariant), onPressed: onEdit),
         IconButton(
-            icon: Icon(Icons.delete_outline, size: 18, color: theme.colorScheme.error),
+            icon: Icon(LucideIcons.trash2, size: 18, color: theme.colorScheme.error),
             onPressed: onDelete),
       ]),
     );

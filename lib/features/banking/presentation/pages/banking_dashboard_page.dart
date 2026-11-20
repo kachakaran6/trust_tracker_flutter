@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:trust_tracker_flutter/core/theme/app_shadows.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -30,12 +32,12 @@ class BankingDashboardPage extends ConsumerWidget {
         actions: [
           IconButton(
             tooltip: 'EMI Calculator',
-            icon: const Icon(Icons.calculate_outlined),
+            icon: const Icon(LucideIcons.calculator, size: 20),
             onPressed: () => context.push('/loan-calculator'),
           ),
           IconButton(
             tooltip: 'EMI Calendar',
-            icon: const Icon(Icons.calendar_month_outlined),
+            icon: const Icon(LucideIcons.calendar, size: 20),
             onPressed: () => context.push('/emi-calendar'),
           ),
           const SizedBox(width: 4),
@@ -96,7 +98,7 @@ class BankingDashboardPage extends ConsumerWidget {
                         isDark,
                         title: 'Monthly EMI',
                         amount: currencyFormat.format(totalMonthlyEmi),
-                        icon: Icons.calendar_month_rounded,
+                        icon: LucideIcons.calendar,
                         iconColor: AppColors.getWarning(context),
                       ),
                     ),
@@ -108,7 +110,7 @@ class BankingDashboardPage extends ConsumerWidget {
                         isDark,
                         title: 'Active Loans',
                         amount: activeLoans.length.toString(),
-                        icon: Icons.account_balance_outlined,
+                        icon: LucideIcons.building2,
                         iconColor: cs.primary,
                       ),
                     ),
@@ -146,7 +148,7 @@ class BankingDashboardPage extends ConsumerWidget {
                                   color: cs.primary.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: Icon(Icons.date_range_rounded, size: 16, color: cs.primary),
+                                child: Icon(LucideIcons.calendar, size: 16, color: cs.primary),
                               ),
                               const SizedBox(width: 10),
                               Text(
@@ -178,7 +180,7 @@ class BankingDashboardPage extends ConsumerWidget {
                                   color: cs.primary.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: Icon(Icons.trending_up_rounded, size: 16, color: cs.primary),
+                                child: Icon(LucideIcons.trendingUp, size: 16, color: cs.primary),
                               ),
                               const SizedBox(width: 10),
                               Text(
@@ -333,7 +335,7 @@ class BankingDashboardPage extends ConsumerWidget {
         foregroundColor: cs.onPrimary,
         elevation: 3,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        icon: const Icon(Icons.add_rounded, size: 20),
+        icon: const Icon(LucideIcons.plus, size: 20),
         label: const Text(
           'Add Loan',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
@@ -363,23 +365,10 @@ class BankingDashboardPage extends ConsumerWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            cs.primary.withOpacity(0.14),
-            cs.primary.withOpacity(0.04),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: cs.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: cs.primary.withOpacity(0.2)),
-        boxShadow: [
-          BoxShadow(
-            color: cs.primary.withOpacity(0.06),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        border: Border.all(color: cs.outline.withOpacity(0.12)),
+        boxShadow: AppShadows.subtle,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -395,7 +384,7 @@ class BankingDashboardPage extends ConsumerWidget {
                       color: cs.primary.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(Icons.account_balance_wallet_rounded, size: 18, color: cs.primary),
+                    child: Icon(LucideIcons.wallet, size: 18, color: cs.primary),
                   ),
                   const SizedBox(width: 10),
                   Text(
@@ -532,7 +521,7 @@ class BankingDashboardPage extends ConsumerWidget {
               color: cs.primary.withOpacity(0.08),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.account_balance_outlined, size: 36, color: cs.primary),
+            child: Icon(LucideIcons.building2, size: 36, color: cs.primary),
           ),
           const SizedBox(height: 16),
           Text(
@@ -554,7 +543,7 @@ class BankingDashboardPage extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
             ),
             onPressed: () => context.push('/add-loan'),
-            icon: const Icon(Icons.add_rounded, size: 18),
+            icon: const Icon(LucideIcons.plus, size: 18),
             label: const Text('Add Your First Loan', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
@@ -600,7 +589,7 @@ class BankingDashboardPage extends ConsumerWidget {
                     color: cs.primary.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.account_balance_rounded, size: 18, color: cs.primary),
+                  child: Icon(LucideIcons.landmark, size: 18, color: cs.primary),
                 ),
                 const SizedBox(width: 12),
                 Expanded(

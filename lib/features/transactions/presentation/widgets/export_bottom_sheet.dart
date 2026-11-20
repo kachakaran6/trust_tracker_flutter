@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
@@ -124,7 +125,7 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
                         format: ExportFormat.pdf,
                         title: l10n.pdfReport,
                         description: l10n.pdfReportDesc,
-                        icon: Icons.picture_as_pdf_outlined,
+                        icon: LucideIcons.fileText,
                         isSelected: _selectedFormat == ExportFormat.pdf,
                         onTap: () => setState(() => _selectedFormat = ExportFormat.pdf),
                         activeColor: cs.error,
@@ -136,7 +137,7 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
                         format: ExportFormat.excel,
                         title: l10n.excelExport,
                         description: l10n.excelExportDesc,
-                        icon: Icons.table_chart_outlined,
+                        icon: LucideIcons.sheet,
                         isSelected: _selectedFormat == ExportFormat.excel,
                         onTap: () => setState(() => _selectedFormat = ExportFormat.excel),
                         activeColor: AppColors.success,
@@ -219,7 +220,7 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
                   : Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.file_download_outlined, size: 22),
+                        const Icon(LucideIcons.download, size: 20),
                         const SizedBox(width: 8),
                         Text(
                           _matchingCount != null && _matchingCount! > 0
@@ -277,7 +278,7 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
             const SizedBox(width: 4),
             IconButton(
               onPressed: () => Navigator.pop(context),
-              icon: Icon(Icons.close, color: cs.onSurfaceVariant),
+              icon: Icon(LucideIcons.x, color: cs.onSurfaceVariant, size: 20),
               style: IconButton.styleFrom(backgroundColor: cs.surfaceContainerHighest),
             ),
           ],
@@ -288,9 +289,9 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
 
   Widget _buildTypeSelector(ColorScheme cs, TextTheme tt, AppLocalizations l10n) {
     final types = [
-      {'key': 'all', 'label': l10n.all, 'color': cs.primary, 'icon': Icons.swap_horiz_rounded},
-      {'key': 'income', 'label': l10n.income, 'color': AppColors.success, 'icon': Icons.arrow_downward_rounded},
-      {'key': 'expense', 'label': l10n.expense, 'color': cs.error, 'icon': Icons.arrow_upward_rounded},
+      {'key': 'all', 'label': l10n.all, 'color': cs.primary, 'icon': LucideIcons.arrowLeftRight},
+      {'key': 'income', 'label': l10n.income, 'color': AppColors.success, 'icon': LucideIcons.arrowDownLeft},
+      {'key': 'expense', 'label': l10n.expense, 'color': cs.error, 'icon': LucideIcons.arrowUpRight},
     ];
 
     return Container(
@@ -485,7 +486,7 @@ class _ExportBottomSheetState extends ConsumerState<ExportBottomSheet> {
       child: Row(
         children: [
           Icon(
-            isNone ? Icons.warning_amber_rounded : Icons.check_circle_outline_rounded,
+            isNone ? LucideIcons.alertTriangle : LucideIcons.checkCircle,
             size: 18,
             color: isNone ? cs.error : cs.primary,
           ),
@@ -857,7 +858,7 @@ class _CustomRangePicker extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.date_range_outlined, size: 20, color: cs.primary),
+            Icon(LucideIcons.calendar, size: 18, color: cs.primary),
             const SizedBox(width: 12),
             Text(
               range == null
@@ -866,7 +867,7 @@ class _CustomRangePicker extends StatelessWidget {
               style: tt.titleSmall,
             ),
             const Spacer(),
-            Icon(Icons.chevron_right_rounded, size: 20, color: cs.onSurfaceVariant),
+            Icon(LucideIcons.chevronRight, size: 18, color: cs.onSurfaceVariant),
           ],
         ),
       ),

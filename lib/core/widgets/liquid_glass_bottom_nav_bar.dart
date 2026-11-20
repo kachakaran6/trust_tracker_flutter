@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:trust_tracker_flutter/generated/app_localizations.dart';
 
 /// Design tokens for the liquid glass bottom navigation bar.
@@ -195,7 +196,7 @@ class LiquidGlassBottomNavBar extends StatelessWidget {
         ),
         extraButton: onAddTap != null
             ? GlassTabBarExtraButton(
-                icon: const Icon(Icons.add_rounded, size: 28),
+                icon: const Icon(LucideIcons.plus, size: 24),
                 label: 'Add',
                 iconColor: tokens.selectedColor,
                 onTap: () {
@@ -206,28 +207,28 @@ class LiquidGlassBottomNavBar extends StatelessWidget {
             : null,
         tabs: [
           GlassTab(
-            icon: const Icon(Icons.dashboard_outlined),
-            activeIcon: const Icon(Icons.dashboard_rounded),
+            icon: const Icon(LucideIcons.layoutDashboard, size: 20),
+            activeIcon: const Icon(LucideIcons.layoutDashboard, size: 20),
             label: l10n.home,
           ),
           GlassTab(
-            icon: const Icon(Icons.receipt_long_outlined),
-            activeIcon: const Icon(Icons.receipt_long_rounded),
+            icon: const Icon(LucideIcons.receipt, size: 20),
+            activeIcon: const Icon(LucideIcons.receipt, size: 20),
             label: l10n.activity,
           ),
           const GlassTab(
-            icon: Icon(Icons.handshake_outlined),
-            activeIcon: Icon(Icons.handshake_rounded),
+            icon: Icon(LucideIcons.handshake, size: 20),
+            activeIcon: Icon(LucideIcons.handshake, size: 20),
             label: 'Debt / Lent',
           ),
           const GlassTab(
-            icon: Icon(Icons.event_repeat_outlined),
-            activeIcon: Icon(Icons.event_repeat_rounded),
+            icon: Icon(LucideIcons.repeat, size: 20),
+            activeIcon: Icon(LucideIcons.repeat, size: 20),
             label: 'Subs',
           ),
           GlassTab(
-            icon: const Icon(Icons.settings_outlined),
-            activeIcon: const Icon(Icons.settings_rounded),
+            icon: const Icon(LucideIcons.settings, size: 20),
+            activeIcon: const Icon(LucideIcons.settings, size: 20),
             label: l10n.settings,
           ),
         ],

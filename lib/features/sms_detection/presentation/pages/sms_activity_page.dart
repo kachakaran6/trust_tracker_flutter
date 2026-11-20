@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -98,7 +99,7 @@ class _SmsActivityPageState extends ConsumerState<SmsActivityPage> {
         title: const Text('SMS Activity Log'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(LucideIcons.rotateCcw, size: 20),
             tooltip: 'Refresh',
             onPressed: () => ref.read(smsDetectionProvider.notifier).loadAllHistory(),
           ),
@@ -129,10 +130,10 @@ class _SmsActivityPageState extends ConsumerState<SmsActivityPage> {
                           controller: _searchController,
                           decoration: InputDecoration(
                             hintText: 'Search merchant, bank, ref, or amount...',
-                            prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                            prefixIcon: const Icon(LucideIcons.search, size: 18),
                             suffixIcon: _searchQuery.isNotEmpty
                                 ? IconButton(
-                                    icon: const Icon(Icons.clear_rounded, size: 18),
+                                    icon: const Icon(LucideIcons.x, size: 16),
                                     onPressed: () {
                                       _searchController.clear();
                                       setState(() => _searchQuery = '');
@@ -152,7 +153,7 @@ class _SmsActivityPageState extends ConsumerState<SmsActivityPage> {
                         const SizedBox(width: 8),
                         PopupMenuButton<String?>(
                           icon: Icon(
-                            Icons.filter_list_rounded,
+                            LucideIcons.slidersHorizontal,
                             color: _selectedBank != null ? cs.primary : cs.onSurface,
                           ),
                           tooltip: 'Filter by bank',
@@ -343,17 +344,17 @@ class _SmsActivityPageState extends ConsumerState<SmsActivityPage> {
       case 'approved':
         statusColor = AppColors.getSuccess(context);
         statusLabel = 'Approved';
-        statusIcon = Icons.check_circle_rounded;
+        statusIcon = LucideIcons.checkCircle;
         break;
       case 'rejected':
         statusColor = cs.error;
         statusLabel = 'Rejected';
-        statusIcon = Icons.cancel_rounded;
+        statusIcon = LucideIcons.xCircle;
         break;
       default:
         statusColor = cs.primary;
         statusLabel = 'Pending Review';
-        statusIcon = Icons.pending_rounded;
+        statusIcon = LucideIcons.clock;
         break;
     }
 
@@ -467,6 +468,7 @@ class _SmsActivityPageState extends ConsumerState<SmsActivityPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
         decoration: BoxDecoration(
@@ -558,7 +560,7 @@ class _SmsActivityPageState extends ConsumerState<SmsActivityPage> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  icon: const Icon(Icons.edit_note_rounded),
+                  icon: const Icon(LucideIcons.fileText, size: 18),
                   label: const Text('Review & Approve'),
                   onPressed: () {
                     Navigator.of(context).pop();
@@ -606,7 +608,7 @@ class _SmsActivityPageState extends ConsumerState<SmsActivityPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.inbox_rounded, size: 54, color: cs.onSurface.withValues(alpha: 0.3)),
+            Icon(LucideIcons.inbox, size: 54, color: cs.onSurface.withValues(alpha: 0.3)),
             const SizedBox(height: 14),
             Text(
               'No Matching SMS Records',

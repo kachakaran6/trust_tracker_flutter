@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -286,7 +287,7 @@ class _SecureAppOverlay extends StatelessWidget {
                 color: theme.colorScheme.primary.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.security_rounded, size: 40, color: theme.colorScheme.primary),
+              child: Icon(LucideIcons.shield, size: 40, color: theme.colorScheme.primary),
             ),
             const SizedBox(height: 24),
             Text(
