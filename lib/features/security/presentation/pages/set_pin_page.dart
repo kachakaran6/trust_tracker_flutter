@@ -30,6 +30,7 @@ class _SetPinPageState extends ConsumerState<SetPinPage>
   final List<String> _pin = [];
   String? _newPin;
   bool _hasError = false;
+  String? _customErrorMessage;
   bool _isLoading = false;
 
   late _PinStep _step;
@@ -140,6 +141,35 @@ class _SetPinPageState extends ConsumerState<SetPinPage>
     setState(() => _pin.removeLast());
   }
 
+  void _onSubmit() {
+    if (_isLoading) return;
+    if (_pin.isEmpty) {
+      _showValidationError('Please enter your 4-digit PIN');
+      return;
+    }
+    if (_pin.length < 4) {
+      _showValidationError('PIN must be 4 digits');
+      return;
+    }
+    _processPin(_pin.join());
+  }
+
+  Future<void> _showValidationError(String message) async {
+    HapticFeedback.vibrate();
+    _shakeController.forward(from: 0);
+    setState(() {
+      _hasError = true;
+      _customErrorMessage = message;
+    });
+    await Future.delayed(const Duration(milliseconds: 1500));
+    if (mounted) {
+      setState(() {
+        _hasError = false;
+        _customErrorMessage = null;
+      });
+    }
+  }
+
   Future<void> _processPin(String enteredPin) async {
     setState(() => _isLoading = true);
     final securityNotifier = ref.read(securityProvider.notifier);
@@ -179,10 +209,14 @@ class _SetPinPageState extends ConsumerState<SetPinPage>
 
       case _PinStep.confirmNew:
         if (enteredPin == _newPin) {
-          await securityNotifier.setPin(enteredPin);
-          _showSuccess(widget.isChangingPin 
-            ? AppLocalizations.of(context)!.pinChangedSuccess 
-            : AppLocalizations.of(context)!.pinSetSuccess);
+          try {
+            await securityNotifier.setPin(enteredPin);
+            _showSuccess(widget.isChangingPin 
+              ? AppLocalizations.of(context)!.pinChangedSuccess 
+              : AppLocalizations.of(context)!.pinSetSuccess);
+          } catch (e) {
+            await _showError();
+          }
         } else {
           _newPin = null;
           _shakeController.forward(from: 0);
@@ -289,13 +323,14 @@ class _SetPinPageState extends ConsumerState<SetPinPage>
                   Text(_title, style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.5)),
                   const SizedBox(height: spTight),
                   Text(
-                    _hasError
-                        ? (_step == _PinStep.verifyOld
-                            ? (widget.isDisabling
-                                ? AppLocalizations.of(context)!.incorrectPinDisable
-                                : AppLocalizations.of(context)!.incorrectPin)
-                            : AppLocalizations.of(context)!.pinsDontMatch)
-                        : _subtitle,
+                    _customErrorMessage ??
+                        (_hasError
+                            ? (_step == _PinStep.verifyOld
+                                ? (widget.isDisabling
+                                    ? AppLocalizations.of(context)!.incorrectPinDisable
+                                    : AppLocalizations.of(context)!.incorrectPin)
+                                : AppLocalizations.of(context)!.pinsDontMatch)
+                            : _subtitle),
                     textAlign: TextAlign.center,
                     style: tt.bodyMedium?.copyWith(
                       color: _hasError ? cs.error : labelColor.withOpacity(0.6),
@@ -350,7 +385,7 @@ class _SetPinPageState extends ConsumerState<SetPinPage>
               padding: const EdgeInsets.symmetric(horizontal: 40),
               child: Column(
                 children: [
-                  for (final row in [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9'], ['', '0', '⌫']])
+                  for (final row in [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9'], ['✓', '0', '⌫']])
                     Padding(
                       padding: const EdgeInsets.only(bottom: spStd),
                       child: Row(
@@ -359,6 +394,12 @@ class _SetPinPageState extends ConsumerState<SetPinPage>
                             return _KeypadButton(
                               child: Icon(Icons.backspace_rounded, size: 24, color: cs.onSurface),
                               onTap: _onBackspace,
+                            );
+                          }
+                          if (key == '✓') {
+                            return _KeypadButton(
+                              child: Icon(Icons.check_rounded, size: 30, color: cs.primary),
+                              onTap: _onSubmit,
                             );
                           }
                           if (key.isEmpty) return const Expanded(child: SizedBox());

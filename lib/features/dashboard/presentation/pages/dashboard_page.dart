@@ -722,12 +722,23 @@ class _FintechHeaderRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(AppLocalizations.of(context)!.netBalance, style: tt.labelLarge?.copyWith(fontWeight: FontWeight.w800)),
-            Text("Monthly Summary", style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
-          ],
+        InkWell(
+          onTap: () => context.go('/analytics'),
+          borderRadius: BorderRadius.circular(8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(AppLocalizations.of(context)!.netBalance, style: tt.labelLarge?.copyWith(fontWeight: FontWeight.w800)),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text("Monthly Summary", style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
+                  const SizedBox(width: 4),
+                  Icon(Icons.arrow_forward_ios_rounded, size: 10, color: cs.onSurfaceVariant),
+                ],
+              ),
+            ],
+          ),
         ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

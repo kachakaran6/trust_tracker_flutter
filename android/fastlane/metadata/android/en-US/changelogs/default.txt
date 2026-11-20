@@ -1,4 +1,4 @@
-• Budget Experience: Centered and elevated "Add Budget" quick action with zero card overlap.
-• UI Polish: Completely removed emojis across the application, replaced with sleek Material vector icons.
-• Language & Subscriptions: Modernized language selector and subscription categories with native icons.
-• Performance & Stability: Enhanced overall layout responsiveness and financial tracking accuracy.
+• Transaction Validation: Enforced strict amount validation for zero and negative amounts across income and expenses.
+• Security & PIN: Added input validation for PIN setup/unlock, safe biometric cancellation, and secure PIN lifecycle updates.
+• Reports & Analytics: Enabled full monthly financial reporting with flexible month selection and summary metrics.
+• Stability & Quality: Resolved QA test suite issues and improved overall application robustness.

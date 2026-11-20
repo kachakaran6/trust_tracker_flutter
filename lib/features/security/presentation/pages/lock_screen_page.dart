@@ -16,6 +16,8 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
     with TickerProviderStateMixin {
   final List<String> _pin = [];
   bool _hasError = false;
+  String? _validationError;
+  String? _statusMessage;
   static const int _pinLength = 4;
 
   late final AnimationController _shakeController;
@@ -69,13 +71,53 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
     final isLocked = security.lockUntil != null && DateTime.now().isBefore(security.lockUntil!);
     if (isLocked) return;
     
-    // Feature 7: Handle biometric gracefully
-    await Future.delayed(const Duration(milliseconds: 400));
-    final success = await ref.read(securityProvider.notifier).authenticateBiometric();
-    
-    if (!success && mounted) {
-      // Haptic feedback for failure
-      HapticFeedback.lightImpact();
+    await Future.delayed(const Duration(milliseconds: 300));
+    try {
+      final success = await ref.read(securityProvider.notifier).authenticateBiometric();
+      if (!success && mounted) {
+        HapticFeedback.lightImpact();
+        setState(() {
+          _statusMessage = 'Biometric cancelled. Enter PIN to unlock.';
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _statusMessage = 'Biometric cancelled. Enter PIN to unlock.';
+        });
+      }
+    }
+  }
+
+  void _onSubmit() {
+    final security = ref.read(securityProvider);
+    final isLocked = security.lockUntil != null && DateTime.now().isBefore(security.lockUntil!);
+    if (isLocked) return;
+
+    if (_pin.isEmpty) {
+      _showValidationError('Please enter your 4-digit PIN');
+      return;
+    }
+    if (_pin.length < _pinLength) {
+      _showValidationError('PIN must be 4 digits');
+      return;
+    }
+    _verifyPin();
+  }
+
+  Future<void> _showValidationError(String message) async {
+    HapticFeedback.vibrate();
+    _shakeController.forward(from: 0);
+    setState(() {
+      _hasError = true;
+      _validationError = message;
+    });
+    await Future.delayed(const Duration(milliseconds: 1500));
+    if (mounted) {
+      setState(() {
+        _hasError = false;
+        _validationError = null;
+      });
     }
   }
 
@@ -183,11 +225,38 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
                     ),
                   );
                 }
+                if (_validationError != null) {
+                  return Text(
+                    _validationError!,
+                    style: tt.bodyMedium?.copyWith(
+                      color: cs.error,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  );
+                }
+                if (_hasError) {
+                  return Text(
+                    'Incorrect PIN (${security.failedAttempts}/5)',
+                    style: tt.bodyMedium?.copyWith(
+                      color: cs.error,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  );
+                }
+                if (_statusMessage != null) {
+                  return Text(
+                    _statusMessage!,
+                    style: tt.bodyMedium?.copyWith(
+                      color: cs.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  );
+                }
                 return Text(
-                  _hasError ? 'Incorrect PIN (${security.failedAttempts}/5)' : 'Enter your security PIN',
+                  'Enter your security PIN',
                   style: tt.bodyMedium?.copyWith(
-                    color: _hasError ? cs.error : cs.onSurface.withOpacity(0.4),
-                    fontWeight: _hasError ? FontWeight.w700 : FontWeight.w500,
+                    color: cs.onSurface.withOpacity(0.4),
+                    fontWeight: FontWeight.w500,
                   ),
                 );
               },
@@ -252,12 +321,17 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
                                   );
                                 }
                                 if (key == 'bio') {
-                                  return security.isBiometricEnabled
-                                      ? _KeypadButton(
-                                          child: Icon(Icons.fingerprint_rounded, size: 32, color: cs.primary),
-                                          onTap: isLocked ? () {} : _tryBiometric,
-                                        )
-                                      : const Expanded(child: SizedBox());
+                                  if (security.isBiometricEnabled) {
+                                    return _KeypadButton(
+                                      child: Icon(Icons.fingerprint_rounded, size: 32, color: cs.primary),
+                                      onTap: isLocked ? () {} : _tryBiometric,
+                                    );
+                                  } else {
+                                    return _KeypadButton(
+                                      child: Icon(Icons.check_rounded, size: 28, color: cs.primary),
+                                      onTap: isLocked ? () {} : _onSubmit,
+                                    );
+                                  }
                                 }
                                 return _KeypadButton(
                                   child: Text(key, style: tt.displaySmall?.copyWith(fontSize: 32, fontWeight: FontWeight.w700, color: cs.onSurface)),
@@ -269,6 +343,16 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
                       ],
                     ),
                   ),
+                );
+              },
+            ),
+            Builder(
+              builder: (context) {
+                final isLocked = security.lockUntil != null && DateTime.now().isBefore(security.lockUntil!);
+                return TextButton.icon(
+                  onPressed: isLocked ? null : _onSubmit,
+                  icon: const Icon(Icons.lock_open_rounded, size: 18),
+                  label: const Text('Unlock', style: TextStyle(fontWeight: FontWeight.w700)),
                 );
               },
             ),

@@ -65,8 +65,16 @@ class SecurityNotifier extends StateNotifier<SecurityState> {
   }
 
   Future<void> _init() async {
-    final pinEnabled = await _storage.read(key: _kPinEnabled);
-    final bioEnabled = await _storage.read(key: _kBioEnabled);
+    String? pinEnabled;
+    try {
+      pinEnabled = await _storage.read(key: _kPinEnabled);
+    } catch (_) {}
+    pinEnabled ??= (_prefs.getBool('backup_pin_enabled') == true ? 'true' : 'false');
+
+    String? bioEnabled;
+    try {
+      bioEnabled = await _storage.read(key: _kBioEnabled);
+    } catch (_) {}
     final canAuth = await _localAuth.canCheckBiometrics;
     final available = await _localAuth.getAvailableBiometrics();
     final hasBio = canAuth && (available.isNotEmpty || await _localAuth.isDeviceSupported());
@@ -91,7 +99,12 @@ class SecurityNotifier extends StateNotifier<SecurityState> {
       return false; // Still locked
     }
 
-    final stored = await _storage.read(key: _kPin);
+    String? stored;
+    try {
+      stored = await _storage.read(key: _kPin);
+    } catch (_) {}
+    stored ??= _prefs.getString('backup_pin_val');
+
     if (stored == pin) {
       await _resetAttempts();
       state = state.copyWith(isLocked: false);
@@ -124,7 +137,11 @@ class SecurityNotifier extends StateNotifier<SecurityState> {
 
   /// Verify OLD pin without unlocking – used during flows where verification is required.
   Future<bool> verifyOldPin(String pin) async {
-    final stored = await _storage.read(key: _kPin);
+    String? stored;
+    try {
+      stored = await _storage.read(key: _kPin);
+    } catch (_) {}
+    stored ??= _prefs.getString('backup_pin_val');
     return stored == pin;
   }
 
@@ -137,8 +154,8 @@ class SecurityNotifier extends StateNotifier<SecurityState> {
         localizedReason: 'Authenticate to access your Trust Tracker',
         options: const AuthenticationOptions(
           biometricOnly: true,
-          stickyAuth: true,
-          useErrorDialogs: true,
+          stickyAuth: false,
+          useErrorDialogs: false,
         ),
       );
       
@@ -153,15 +170,27 @@ class SecurityNotifier extends StateNotifier<SecurityState> {
 
   /// Set a brand new PIN (replaces existing).
   Future<void> setPin(String pin) async {
+    try {
+      await _storage.delete(key: _kPin);
+    } catch (_) {}
     await _storage.write(key: _kPin, value: pin);
+    try {
+      await _storage.delete(key: _kPinEnabled);
+    } catch (_) {}
     await _storage.write(key: _kPinEnabled, value: 'true');
+    await _prefs.setString('backup_pin_val', pin);
+    await _prefs.setBool('backup_pin_enabled', true);
     state = state.copyWith(isPinEnabled: true, isLocked: false);
   }
 
   Future<void> disablePin() async {
-    await _storage.delete(key: _kPin);
-    await _storage.delete(key: _kPinEnabled);
-    await _storage.delete(key: _kBioEnabled);
+    try {
+      await _storage.delete(key: _kPin);
+      await _storage.delete(key: _kPinEnabled);
+      await _storage.delete(key: _kBioEnabled);
+    } catch (_) {}
+    await _prefs.remove('backup_pin_val');
+    await _prefs.remove('backup_pin_enabled');
     
     state = state.copyWith(
       isPinEnabled: false,

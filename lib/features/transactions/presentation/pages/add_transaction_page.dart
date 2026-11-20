@@ -164,11 +164,14 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
   }
 
   Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
-    if (_selectedCategory == null && !_isEditMode) {
+    final amountText = _amountController.text.trim().replaceAll(',', '');
+    final amount = double.tryParse(amountText);
+
+    if (amountText.isEmpty) {
+      _formKey.currentState?.validate();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Please select a category'),
+          content: const Text('Please enter an amount'),
           behavior: SnackBarBehavior.floating,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -177,12 +180,24 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
       return;
     }
 
-    final amountText = _amountController.text.trim().replaceAll(',', '');
-    final amount = double.tryParse(amountText);
     if (amount == null || amount <= 0) {
+      _formKey.currentState?.validate();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Amount must be greater than 0'),
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+      return;
+    }
+
+    if (!_formKey.currentState!.validate()) return;
+    if (_selectedCategory == null && !_isEditMode) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please select a category'),
           behavior: SnackBarBehavior.floating,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -325,47 +340,51 @@ class _AddTransactionPageState extends ConsumerState<AddTransactionPage>
                         ),
                       ),
                       const SizedBox(width: spTight),
-                      IntrinsicWidth(
-                        child: TextFormField(
-                          controller: _amountController,
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
-                          ],
-                          validator: (val) {
-                            final text = val?.trim() ?? '';
-                            if (text.isEmpty) {
-                              return 'Please enter an amount';
-                            }
-                            final amt = double.tryParse(text.replaceAll(',', ''));
-                            if (amt == null) {
-                              return 'Please enter a valid amount';
-                            }
-                            if (amt <= 0) {
-                              return 'Amount must be greater than 0';
-                            }
-                            return null;
-                          },
-                          style: tt.displayLarge?.copyWith(
-                            fontSize: 64, // Slightly reduced for tightness
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -1,
-                            color: cs.onSurface,
-                            height: 1.0,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: '0.00',
-                            hintStyle: tt.displayLarge?.copyWith(
-                              fontSize: 64,
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(minWidth: 100),
+                        child: IntrinsicWidth(
+                          child: TextFormField(
+                            controller: _amountController,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(RegExp(r'^-?\d*\.?\d{0,2}')),
+                            ],
+                            validator: (val) {
+                              final text = val?.trim() ?? '';
+                              if (text.isEmpty) {
+                                return 'Please enter an amount';
+                              }
+                              final amt = double.tryParse(text.replaceAll(',', ''));
+                              if (amt == null) {
+                                return 'Please enter a valid amount';
+                              }
+                              if (amt <= 0) {
+                                return 'Amount must be greater than 0';
+                              }
+                              return null;
+                            },
+                            style: tt.displayLarge?.copyWith(
+                              fontSize: 64, // Slightly reduced for tightness
                               fontWeight: FontWeight.w900,
-                              color: cs.outline.withOpacity(0.2),
+                              letterSpacing: -1,
+                              color: cs.onSurface,
+                              height: 1.0,
                             ),
-                            border: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            fillColor: Colors.transparent,
-                            filled: false,
-                            contentPadding: EdgeInsets.zero,
+                            decoration: InputDecoration(
+                              hintText: '0.00',
+                              hintStyle: tt.displayLarge?.copyWith(
+                                fontSize: 64,
+                                fontWeight: FontWeight.w900,
+                                color: cs.outline.withOpacity(0.2),
+                              ),
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              fillColor: Colors.transparent,
+                              filled: false,
+                              contentPadding: EdgeInsets.zero,
+                              errorStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                            ),
                           ),
                         ),
                       ),

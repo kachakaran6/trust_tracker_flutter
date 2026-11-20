@@ -140,10 +140,24 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
 
   void _nextMonth() {
     final current = ref.read(selectedMonthProvider);
-    final now = DateTime.now();
     final candidate = DateTime(current.year, current.month + 1);
-    if (candidate.isAfter(DateTime(now.year, now.month))) return;
+    if (candidate.year > 2030) return;
     ref.read(selectedMonthProvider.notifier).state = candidate;
+  }
+
+  Future<void> _selectMonth(BuildContext context) async {
+    final current = ref.read(selectedMonthProvider);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: current,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030, 12, 31),
+      initialDatePickerMode: DatePickerMode.year,
+      helpText: 'Select Month & Year',
+    );
+    if (picked != null) {
+      ref.read(selectedMonthProvider.notifier).state = DateTime(picked.year, picked.month);
+    }
   }
 
   @override
@@ -153,9 +167,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
-    final now = DateTime.now();
-    final canGoForward = selectedMonth.year < now.year ||
-        (selectedMonth.year == now.year && selectedMonth.month < now.month);
+    final canGoForward = selectedMonth.year < 2030;
 
     return Scaffold(
       appBar: AppBar(
@@ -194,10 +206,24 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
                   onPressed: _previousMonth,
                   color: cs.onSurface,
                 ),
-                Text(
-                  selectedMonth.toMonthYear(),
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
+                InkWell(
+                  onTap: () => _selectMonth(context),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          selectedMonth.toMonthYear(),
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(Icons.arrow_drop_down_rounded, size: 20, color: cs.onSurfaceVariant),
+                      ],
+                    ),
                   ),
                 ),
                 IconButton(
@@ -544,10 +570,6 @@ class _OverviewModule extends ConsumerWidget {
             final bal = summary['balance'] ?? 0;
             final savingsRate = inc > 0 ? ((inc - exp) / inc * 100) : 0.0;
 
-            if (inc == 0 && exp == 0) {
-              return _EmptyState(message: l10n.noTransactionsMonth);
-            }
-
             return Column(
               children: [
                 Row(
@@ -576,12 +598,16 @@ class _OverviewModule extends ConsumerWidget {
                 const SizedBox(height: 16),
                 _SavingsRateCard(rate: savingsRate, balance: bal, currency: settings.currency),
                 const SizedBox(height: 24),
-                _SectionTitle(title: l10n.incomeVsExpense),
-                const SizedBox(height: 16),
-                RepaintBoundary(
-                  key: trendChartKey,
-                  child: _MiniTrendChart(summary: summary, currency: settings.currency),
-                ),
+                if (inc == 0 && exp == 0)
+                  _EmptyState(message: l10n.noTransactionsMonth)
+                else ...[
+                  _SectionTitle(title: l10n.incomeVsExpense),
+                  const SizedBox(height: 16),
+                  RepaintBoundary(
+                    key: trendChartKey,
+                    child: _MiniTrendChart(summary: summary, currency: settings.currency),
+                  ),
+                ],
               ],
             );
           },
