@@ -70,8 +70,12 @@ platform :android do
       target_build = next_build
     end
 
-    # Update pubspec.yaml in place
-    new_version_line = "version: #{version_name}+#{target_build}"
+    # Update pubspec.yaml in place with patch number synchronized to build number
+    parts = version_name.split(".")
+    major = parts[0] || "1"
+    minor = parts[1] || "2"
+    new_version_name = "#{major}.#{minor}.#{target_build}"
+    new_version_line = "version: #{new_version_name}+#{target_build}"
     updated_content = content.sub(/^version:\s*[^\s+]+(?:\+\d+)?/, new_version_line)
     File.write(pubspec_path, updated_content)
     UI.success("📝 Updated pubspec.yaml to #{new_version_line}")
@@ -544,19 +548,41 @@ platform :android do
     # 4. Promote to Closed Testing (alpha) track with changelogs
     UI.message("🚀 Step 2/2: Promoting build ##{build_num} to Closed Testing (alpha) track...")
     track_name = options[:track] || 'alpha'
-    upload_to_play_store(
-      json_key: json_key,
-      package_name: "com.trusttracker.trust_tracker_flutter",
-      track: "internal",
-      track_promote_to: track_name,
-      version_code: build_num,
-      metadata_path: metadata_dir,
-      skip_upload_metadata: true,
-      skip_upload_images: true,
-      skip_upload_screenshots: true,
-      skip_upload_changelogs: false,
-      release_status: "completed"
-    )
+    begin
+      upload_to_play_store(
+        json_key: json_key,
+        package_name: "com.trusttracker.trust_tracker_flutter",
+        track: "internal",
+        track_promote_to: track_name,
+        version_code: build_num,
+        metadata_path: metadata_dir,
+        skip_upload_metadata: true,
+        skip_upload_images: true,
+        skip_upload_screenshots: true,
+        skip_upload_changelogs: false,
+        release_status: "completed"
+      )
+    rescue => e
+      if e.message.include?("Track") && track_name == 'alpha'
+        UI.important("Track 'alpha' not found, retrying with 'Alpha-1'...")
+        track_name = 'Alpha-1'
+        upload_to_play_store(
+          json_key: json_key,
+          package_name: "com.trusttracker.trust_tracker_flutter",
+          track: "internal",
+          track_promote_to: track_name,
+          version_code: build_num,
+          metadata_path: metadata_dir,
+          skip_upload_metadata: true,
+          skip_upload_images: true,
+          skip_upload_screenshots: true,
+          skip_upload_changelogs: false,
+          release_status: "completed"
+        )
+      else
+        raise e
+      end
+    end
     UI.success("✅ Step 2/2 Complete: Successfully published to Closed Testing (#{track_name})!")
 
     # 5. Git archiving & backup
