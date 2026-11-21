@@ -57,6 +57,7 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
 
   @override
   void dispose() {
+    ref.read(securityProvider.notifier).cancelBiometricAuthentication();
     _shakeController.dispose();
     _cooldownTimer?.cancel();
     for (var c in _digitControllers) {
@@ -71,8 +72,14 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
     
     final isLocked = security.lockUntil != null && DateTime.now().isBefore(security.lockUntil!);
     if (isLocked) return;
+
+    if (mounted) {
+      setState(() {
+        _statusMessage = null;
+      });
+    }
     
-    await Future.delayed(const Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: 250));
     try {
       final success = await ref.read(securityProvider.notifier).authenticateBiometric();
       if (!success && mounted) {
@@ -130,6 +137,7 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
     setState(() {
       _pin.add(digit);
       _hasError = false;
+      _statusMessage = null;
     });
     _digitControllers[_pin.length - 1].forward(from: 0);
 
@@ -144,7 +152,12 @@ class _LockScreenPageState extends ConsumerState<LockScreenPage>
     if (isLocked || _pin.isEmpty) return;
     HapticFeedback.lightImpact();
     _digitControllers[_pin.length - 1].reverse();
-    setState(() => _pin.removeLast());
+    setState(() {
+      _pin.removeLast();
+      if (_pin.isEmpty) {
+        _statusMessage = null;
+      }
+    });
   }
 
   Future<void> _verifyPin() async {

@@ -227,8 +227,10 @@ class _TrustTrackerAppState extends ConsumerState<TrustTrackerApp>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final securityNotifier = ref.read(securityProvider.notifier);
     if (state == AppLifecycleState.inactive || state == AppLifecycleState.paused) {
-      securityNotifier.lock();
-      securityNotifier.setVisibility(false);
+      if (!securityNotifier.isAuthenticating) {
+        securityNotifier.lock();
+        securityNotifier.setVisibility(false);
+      }
     } else if (state == AppLifecycleState.resumed) {
       securityNotifier.setVisibility(true);
       ref.read(smsSettingsProvider.notifier).checkPermissionState();

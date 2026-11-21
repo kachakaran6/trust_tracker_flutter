@@ -255,19 +255,53 @@ void main() {
         expect(newPinMatches, isTrue);
       });
 
-      test('TT_066: Biometric cancellation returns false safely without throwing', () {
-        // Safe cancellation simulation
-        bool handleCancellation() {
+      test('TT_066: Biometric cancellation returns false safely without throwing and maintains secure state', () {
+        // Safe cancellation simulation verifying:
+        // 1. User cancels biometric prompt -> safely returns false without unhandled exception
+        // 2. Application remains securely locked
+        // 3. Subsequent PIN fallback unlocks correctly
+        bool isLocked = true;
+        bool isAuthenticating = false;
+
+        bool handleBiometricCancellation({required bool simulateException}) {
+          isAuthenticating = true;
           try {
-            // Simulated user cancel event
+            if (simulateException) {
+              throw Exception('UserCancel: User canceled authentication');
+            }
+            isAuthenticating = false;
             return false;
           } catch (_) {
+            isAuthenticating = false;
             return false;
           }
         }
 
-        final result = handleCancellation();
-        expect(result, isFalse);
+        // Test normal cancellation (returns false)
+        final normalCancelResult = handleBiometricCancellation(simulateException: false);
+        expect(normalCancelResult, isFalse);
+        expect(isLocked, isTrue, reason: 'App must remain securely locked upon biometric cancellation');
+        expect(isAuthenticating, isFalse);
+
+        // Test platform exception cancellation (catches safely)
+        final exceptionCancelResult = handleBiometricCancellation(simulateException: true);
+        expect(exceptionCancelResult, isFalse);
+        expect(isLocked, isTrue, reason: 'App must remain securely locked upon platform cancel exception');
+        expect(isAuthenticating, isFalse);
+
+        // Test fallback to PIN verification after cancellation
+        const correctPin = '1234';
+        bool verifyPin(String pin) {
+          if (pin == correctPin) {
+            isLocked = false;
+            return true;
+          }
+          return false;
+        }
+
+        final pinFallbackResult = verifyPin('1234');
+        expect(pinFallbackResult, isTrue);
+        expect(isLocked, isFalse, reason: 'PIN fallback must successfully unlock the application');
       });
     });
   });

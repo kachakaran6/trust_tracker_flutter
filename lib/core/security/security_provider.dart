@@ -59,6 +59,9 @@ class SecurityState {
 class SecurityNotifier extends StateNotifier<SecurityState> {
   final LocalAuthentication _localAuth;
   final SharedPreferences _prefs;
+  bool _isAuthenticating = false;
+
+  bool get isAuthenticating => _isAuthenticating;
 
   SecurityNotifier(this._localAuth, this._prefs) : super(const SecurityState()) {
     _init();
@@ -145,25 +148,51 @@ class SecurityNotifier extends StateNotifier<SecurityState> {
     return stored == pin;
   }
 
+  /// Safely cancel any active or in-progress biometric authentication.
+  Future<bool> cancelBiometricAuthentication() async {
+    try {
+      _isAuthenticating = false;
+      return await _localAuth.stopAuthentication();
+    } catch (_) {
+      _isAuthenticating = false;
+      return false;
+    }
+  }
+
   /// Attempt biometric authentication. On success, unlocks the app.
+  /// Safely handles cancellation, concurrent attempts, and platform errors.
   Future<bool> authenticateBiometric() async {
     if (!state.isBiometricEnabled || !state.canUseBiometrics) return false;
-    
+    if (state.lockUntil != null && DateTime.now().isBefore(state.lockUntil!)) {
+      return false;
+    }
+
+    if (_isAuthenticating) {
+      await cancelBiometricAuthentication();
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+
+    _isAuthenticating = true;
     try {
       final success = await _localAuth.authenticate(
         localizedReason: 'Authenticate to access your Trust Tracker',
         options: const AuthenticationOptions(
           biometricOnly: true,
-          stickyAuth: false,
+          stickyAuth: true,
           useErrorDialogs: false,
         ),
       );
-      
+
+      _isAuthenticating = false;
       if (success) {
         state = state.copyWith(isLocked: false);
+      } else {
+        await cancelBiometricAuthentication();
       }
       return success;
     } catch (e) {
+      _isAuthenticating = false;
+      await cancelBiometricAuthentication();
       return false;
     }
   }
