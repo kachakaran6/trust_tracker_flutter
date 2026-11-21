@@ -9,6 +9,7 @@ import 'package:trust_tracker_flutter/core/security/security_provider.dart';
 import 'package:trust_tracker_flutter/core/theme/app_theme.dart';
 import 'package:trust_tracker_flutter/features/settings/presentation/providers/settings_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:trust_tracker_flutter/core/services/backup_service.dart';
 import 'package:trust_tracker_flutter/generated/app_localizations.dart';
@@ -42,6 +43,7 @@ class SettingsPage extends ConsumerStatefulWidget {
 class _SettingsPageState extends ConsumerState<SettingsPage>
     with WidgetsBindingObserver {
   late TextEditingController _nameController;
+  PackageInfo? _packageInfo;
 
   // _pickCustomAvatar removed (now in shared showAvatarSelectionModal)
   // _showAvatarPicker removed (now in shared showAvatarSelectionModal)
@@ -52,6 +54,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
     WidgetsBinding.instance.addObserver(this);
     _nameController =
         TextEditingController(text: ref.read(settingsProvider).userName);
+    PackageInfo.fromPlatform().then((info) {
+      if (mounted) {
+        setState(() => _packageInfo = info);
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         ref.read(smsSettingsProvider.notifier).checkPermissionState();
@@ -887,6 +894,34 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
             title: l10n.about,
             children: [
               _SettingsTile(
+                icon: LucideIcons.globe,
+                label: 'Built with love by Samyukt',
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'samyukt.pro',
+                      style: tt.labelSmall?.copyWith(
+                        color: cs.primary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      LucideIcons.externalLink,
+                      size: 13,
+                      color: cs.primary,
+                    ),
+                  ],
+                ),
+                onTap: () async {
+                  final uri = Uri.parse('https://samyukt.pro');
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  }
+                },
+              ),
+              _SettingsTile(
                 icon: LucideIcons.info,
                 label: l10n.termsPrivacy,
                 onTap: () async {
@@ -930,10 +965,49 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                   textAlign: TextAlign.center,
                   style: tt.labelSmall?.copyWith(fontWeight: FontWeight.bold),
                 ),
+                const SizedBox(height: 6),
+                InkWell(
+                  borderRadius: BorderRadius.circular(6),
+                  onTap: () async {
+                    final uri = Uri.parse('https://samyukt.pro');
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    }
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          l10n.builtWithLove('Samyukt'),
+                          style: tt.labelSmall?.copyWith(
+                            color: cs.primary,
+                            fontWeight: FontWeight.w600,
+                            decoration: TextDecoration.underline,
+                            decorationColor: cs.primary.withOpacity(0.5),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          LucideIcons.externalLink,
+                          size: 11,
+                          color: cs.primary,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 4),
                 Text(
-                  l10n.builtWithLove('Karan'),
-                  style: tt.labelSmall?.copyWith(color: cs.onSurface.withOpacity(0.5)),
+                  _packageInfo != null
+                      ? 'v${_packageInfo!.version}+${_packageInfo!.buildNumber}'
+                      : 'v1.2.48+48',
+                  style: tt.labelSmall?.copyWith(
+                    color: cs.onSurface.withOpacity(0.5),
+                    fontFamily: 'monospace',
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
