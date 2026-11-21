@@ -1,0 +1,3 @@
+• Biometric Security (TT_066): Resolved biometric cancellation handling with safe session termination and graceful PIN fallback.
+• Concurrency & Interruption: Prevented lock screen freezes and active prompt collisions during background transitions.
+• UI & Performance: Sleek interface polish, refined light/dark themes, and full test suite verification.
