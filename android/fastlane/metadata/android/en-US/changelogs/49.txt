@@ -1,0 +1,3 @@
+• About & Creator: Added "Built with love by Samyukt" with direct website link to samyukt.pro in Settings and About.
+• Version Info: Dynamic application version and build number indicator for live updates.
+• UI & Performance: Interface refinements and overall stability enhancements.
